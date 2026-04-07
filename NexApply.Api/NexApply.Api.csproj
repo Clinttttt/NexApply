@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.14" />
+  </ItemGroup>
+
+  <ItemGroup>
+	  
+	  
+	  
+	  
+    <Folder Include="Features\Admin\ModerateListing\" />
+    <Folder Include="Features\Admin\ManageUsers\" />
+    <Folder Include="Features\Admin\Dashboard\" />
+    <Folder Include="Features\Applications\ViewAll\" />
+    <Folder Include="Features\Applications\UpdateStatus\" />
+    <Folder Include="Features\Auth\Logout\" />
+    <Folder Include="Features\Auth\Refresh\" />
+    <Folder Include="Features\JobListings\CreateJobListing\" />
+    <Folder Include="Features\JobListings\EditJobListing\" />
+    <Folder Include="Features\JobListings\DeleteJobListing\" />
+    <Folder Include="Features\JobListings\ApproveJobListing\" />
+    <Folder Include="Features\JobListings\BrowseJobListings\" />
+    <Folder Include="Features\ResumeMatching\Match\" />
+    <Folder Include="Features\ResumeMatching\Parse\" />
+    <Folder Include="Features\ResumeMatching\Upload\" />
+    <Folder Include="Features\Search\SearchListings\" />
+    <Folder Include="Infrastructure\Storage\" />
+  </ItemGroup>
+
+</Project>
