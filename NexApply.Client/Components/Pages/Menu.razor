@@ -1,0 +1,445 @@
+@page "/menu"
+
+<div class="app-shell">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+
+        <!-- Brand -->
+        <div class="brand-wrap">
+            <div class="brand-icon">
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Outer hexagon -->
+                    <path d="M14 2L24 8V20L14 26L4 20V8L14 2Z" fill="#1D4ED8"/>
+                    <!-- Inner N shape -->
+                    <path d="M10 10V18M10 10L18 18M18 18V10" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <span class="brand-name">NexApply</span>
+        </div>
+
+        <!-- Profile Card -->
+        <div class="profile-card">
+            <div class="avatar-ring">
+                <img src="/images/clint_2.jpeg" alt="Clint Villanueva" class="avatar-image" />
+            </div>
+            <div class="profile-meta">
+                <span class="profile-name">Clint Villanueva</span>
+                <span class="profile-badge">
+                    <span class="badge-dot"></span>Student
+                </span>
+            </div>
+            <button class="profile-chevron" title="Edit profile">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="nav-section">
+            <p class="nav-group-label">Overview</p>
+
+            <a href="#" class="nav-item active">
+                <span class="nav-icon">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2" />
+                        <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2" />
+                        <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2" />
+                        <rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2" />
+                    </svg>
+                </span>
+                Dashboard
+            </a>
+
+            <a href="#" class="nav-item">
+                <span class="nav-icon">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                        <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
+                        <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                </span>
+                Browse Jobs
+                <span class="nav-badge">24</span>
+            </a>
+
+            <a href="#" class="nav-item">
+                <span class="nav-icon">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                              stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                </span>
+                My Applications
+                <span class="nav-badge-neutral">3</span>
+            </a>
+
+            <a href="#" class="nav-item">
+                <span class="nav-icon">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                        <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9l-7-7z"
+                              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <polyline points="13,2 13,9 20,9" stroke="currentColor" stroke-width="2"
+                                  stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </span>
+                Resume & Profile
+            </a>
+
+            <p class="nav-group-label" style="margin-top:1.25rem;">Discover</p>
+
+            <a href="#" class="nav-item">
+                <span class="nav-icon">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                        <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26 12,2"
+                                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </span>
+                Job Matches
+                <span class="nav-badge-green">New</span>
+            </a>
+
+            <a href="#" class="nav-item">
+                <span class="nav-icon">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                        <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"
+                              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </span>
+                Notifications
+                <span class="nav-dot"></span>
+            </a>
+        </nav>
+
+        <!-- Bottom -->
+        <div class="sidebar-footer">
+            <a href="#" class="nav-item">
+                <span class="nav-icon">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" />
+                        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"
+                              stroke="currentColor" stroke-width="2" />
+                    </svg>
+                </span>
+                Settings
+            </a>
+
+            <a href="#" class="nav-item logout-item">
+                <span class="nav-icon">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"
+                              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </span>
+                Log Out
+            </a>
+        </div>
+
+    </aside>
+
+    <!-- ── Main Content ── -->
+    <main class="main-content">
+
+        <!-- Top Bar -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <h1 class="page-title">Dashboard</h1>
+                <p class="page-subtitle">Welcome back, Clint — here's your job hunt at a glance.</p>
+            </div>
+            <div class="topbar-right">
+                <div class="search-wrap">
+                    <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none">
+                        <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
+                        <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                    <input class="search-input" type="text" placeholder="Search jobs, companies…" />
+                </div>
+                <button class="notif-btn">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                        <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"
+                              stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                    <span class="notif-indicator"></span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Stat Cards -->
+        <section class="stats-grid">
+
+            <!-- Applications -->
+            <div class="stat-card stat-card--highlight">
+                <div class="stat-header">
+                    <span class="stat-label">Applications</span>
+                    <span class="stat-icon-wrap blue">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                                  stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                    </span>
+                </div>
+                <span class="stat-value">3</span>
+                <div class="stat-footer">
+                    <span class="stat-trend up">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+                        </svg>
+                        +1 this week
+                    </span>
+                    <a href="#" class="stat-view-btn stat-view-btn--blue">View</a>
+                </div>
+            </div>
+
+            <!-- Under Review -->
+            <div class="stat-card stat-card--highlight">
+                <div class="stat-header">
+                    <span class="stat-label">Under Review</span>
+                    <span class="stat-icon-wrap amber">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                            <polyline points="12,6 12,12 16,14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                    </span>
+                </div>
+                <span class="stat-value">1</span>
+                <div class="stat-footer">
+                    <span class="stat-trend neutral">No change</span>
+                    <a href="#" class="stat-view-btn stat-view-btn--amber">View</a>
+                </div>
+            </div>
+
+            <!-- Job Matches -->
+            <div class="stat-card stat-card--highlight">
+                <div class="stat-header">
+                    <span class="stat-label">Job Matches</span>
+                    <span class="stat-icon-wrap green">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26 12,2"
+                                     stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                    </span>
+                </div>
+                <span class="stat-value">12</span>
+                <div class="stat-footer">
+                    <span class="stat-trend up">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+                        </svg>
+                        Resume matched
+                    </span>
+                    <a href="#" class="stat-view-btn stat-view-btn--green">View</a>
+                </div>
+            </div>
+
+            <!-- Shortlisted — replaces Profile Views -->
+            <div class="stat-card stat-card--highlight">
+                <div class="stat-header">
+                    <span class="stat-label">Shortlisted</span>
+                    <span class="stat-icon-wrap green">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                            <path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                            <polyline points="22,4 12,14.01 9,11.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </span>
+                </div>
+                <span class="stat-value">1</span>
+                <div class="stat-footer">
+                    <span class="stat-trend up">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+                        </svg>
+                        NexaTech Solutions
+                    </span>
+                    <a href="#" class="stat-view-btn stat-view-btn--green">View</a>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Application Pipeline -->
+        <section class="pipeline-section">
+            <div class="pipeline-card">
+                <div class="pipeline-header">
+                    <span class="pipeline-title">Application Pipeline</span>
+                    <span class="pipeline-sub">Your 3 applications across all stages</span>
+                </div>
+                <div class="pipeline-track">
+                    <div class="pipeline-step done">
+                        <div class="pipeline-step-dot"></div>
+                        <div class="pipeline-step-label">Submitted</div>
+                        <div class="pipeline-step-count">3</div>
+                    </div>
+                    <div class="pipeline-connector done"></div>
+                    <div class="pipeline-step active">
+                        <div class="pipeline-step-dot"></div>
+                        <div class="pipeline-step-label">Under Review</div>
+                        <div class="pipeline-step-count">1</div>
+                    </div>
+                    <div class="pipeline-connector"></div>
+                    <div class="pipeline-step done pipeline-step--shortlisted">
+                        <div class="pipeline-step-dot"></div>
+                        <div class="pipeline-step-label">Shortlisted</div>
+                        <div class="pipeline-step-count">1</div>
+                    </div>
+                    <div class="pipeline-connector"></div>
+                    <div class="pipeline-step inactive">
+                        <div class="pipeline-step-dot"></div>
+                        <div class="pipeline-step-label">For Interview</div>
+                        <div class="pipeline-step-count">0</div>
+                    </div>
+                    <div class="pipeline-connector"></div>
+                    <div class="pipeline-step inactive">
+                        <div class="pipeline-step-dot"></div>
+                        <div class="pipeline-step-label">Declined</div>
+                        <div class="pipeline-step-count">0</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Lower Grid -->
+        <section class="lower-grid">
+
+            <!-- Recent Applications -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <h2 class="card-title">Recent Applications</h2>
+                        <span class="card-count-badge">3 total</span>
+                    </div>
+                    <a href="#" class="card-link">View all →</a>
+                </div>
+
+                <div class="app-list">
+
+                    <div class="app-row">
+                        <div class="company-logo logo-sf">SF</div>
+                        <div class="app-info">
+                            <span class="app-job-title">Frontend Developer Intern</span>
+                            <span class="app-company">SoftForge Inc. · Remote</span>
+                        </div>
+                        <div class="app-right">
+                            <span class="status-chip review">Under Review</span>
+                            <span class="app-date">Apr 5</span>
+                        </div>
+                    </div>
+
+                    <div class="app-row">
+                        <div class="company-logo logo-ts">TS</div>
+                        <div class="app-info">
+                            <span class="app-job-title">Junior .NET Developer</span>
+                            <span class="app-company">TechSpark PH · On-site</span>
+                        </div>
+                        <div class="app-right">
+                            <span class="status-chip submitted">Submitted</span>
+                            <span class="app-date">Apr 3</span>
+                        </div>
+                    </div>
+
+                    <div class="app-row app-row--featured">
+                        <div class="company-logo logo-nx">NX</div>
+                        <div class="app-info">
+                            <span class="app-job-title">Backend Intern</span>
+                            <span class="app-company">NexaTech Solutions · Hybrid</span>
+                        </div>
+                        <div class="app-right">
+                            <span class="status-chip shortlisted">✓ Shortlisted</span>
+                            <span class="app-date">Mar 28</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Top Matches -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <h2 class="card-title">Top Job Matches</h2>
+                        <span class="card-count-badge">12 found</span>
+                    </div>
+                    <a href="#" class="card-link">See all →</a>
+                </div>
+
+                <div class="match-list">
+
+                    <div class="match-row">
+                        <div class="match-logo logo-cb">CB</div>
+                        <div class="match-body">
+                            <div class="match-top">
+                                <div class="match-info">
+                                    <span class="match-title">Full-Stack Developer Intern</span>
+                                    <span class="match-company">CodeBridge Co. · Makati</span>
+                                </div>
+                                <span class="score-label score-excellent">91%</span>
+                            </div>
+                            <div class="match-score-wrap">
+                                <div class="score-bar-bg">
+                                    <div class="score-bar score-bar--excellent" style="width:91%"></div>
+                                </div>
+                            </div>
+                            <div class="match-tags">
+                                <span class="match-tag">React</span>
+                                <span class="match-tag">C#</span>
+                                <span class="match-tag">Full-time</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="match-row">
+                        <div class="match-logo logo-sn">SN</div>
+                        <div class="match-body">
+                            <div class="match-top">
+                                <div class="match-info">
+                                    <span class="match-title">C# Backend Intern</span>
+                                    <span class="match-company">SkyNet Systems · BGC</span>
+                                </div>
+                                <span class="score-label score-good">84%</span>
+                            </div>
+                            <div class="match-score-wrap">
+                                <div class="score-bar-bg">
+                                    <div class="score-bar score-bar--good" style="width:84%"></div>
+                                </div>
+                            </div>
+                            <div class="match-tags">
+                                <span class="match-tag">.NET</span>
+                                <span class="match-tag">SQL</span>
+                                <span class="match-tag">Internship</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="match-row">
+                        <div class="match-logo logo-ll">LL</div>
+                        <div class="match-body">
+                            <div class="match-top">
+                                <div class="match-info">
+                                    <span class="match-title">Junior Software Engineer</span>
+                                    <span class="match-company">Luminary Labs · Remote</span>
+                                </div>
+                                <span class="score-label score-fair">77%</span>
+                            </div>
+                            <div class="match-score-wrap">
+                                <div class="score-bar-bg">
+                                    <div class="score-bar score-bar--fair" style="width:77%"></div>
+                                </div>
+                            </div>
+                            <div class="match-tags">
+                                <span class="match-tag">Blazor</span>
+                                <span class="match-tag">PostgreSQL</span>
+                                <span class="match-tag">Remote</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+@code {
+}

@@ -1,6 +1,17 @@
-﻿namespace NexApply.Api.Features.Auth.Login
+﻿using MediatR;
+using NexApply.Api.Common;
+
+namespace NexApply.Api.Features.Auth.Login
 {
-    public class LoginEndpoint
+    public static class LoginEndpoint
     {
+        public static void MapLoginEndpoint(this WebApplication app)
+        {
+            app.MapPost("/api/auth/login", async (LoginCommand request, ISender mediator) =>
+            {
+                var result = await mediator.Send(request);
+                return ResultExtensions.ToIResult(result);
+            });
+        }
     }
 }
