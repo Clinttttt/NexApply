@@ -1,0 +1,987 @@
+﻿@page "/browse-jobs"
+@rendermode InteractiveServer
+
+<div class="app-shell">
+
+    <Sidebar />
+
+    <main class="main-content">
+
+        <PageHeader Title="Browse Jobs" Subtitle="@($"{FilteredJobs.Count} listings — updated today")">
+            <div class="search-wrap">
+                <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none">
+                    <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
+                    <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <input class="search-input" type="text"
+                       placeholder="Search jobs, companies, skills..."
+                       @bind="SearchQuery"
+                       @bind:event="oninput" />
+            </div>
+            <button class="notif-btn">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"
+                          stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <span class="notif-indicator"></span>
+            </button>
+        </PageHeader>
+
+        <div class="browse-body">
+
+            <!-- ══════════════════════════════════
+                 LEFT — FILTER PANEL
+            ══════════════════════════════════ -->
+            <aside class="filter-panel">
+
+                <!-- ── FILTERS HEADER ── -->
+                <div class="filter-header">
+                    <span class="filter-title">Filters</span>
+                    <button class="filter-clear" @onclick="ClearAllFilters">Clear all</button>
+                </div>
+
+                @if (ActiveFilterChips.Any())
+                {
+                    <div class="active-filters">
+                        @foreach (var chip in ActiveFilterChips)
+                        {
+                            <span class="active-chip" @onclick="() => RemoveFilter(chip)">
+                                @chip
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                                    <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+                                </svg>
+                            </span>
+                        }
+                    </div>
+                }
+
+                <!-- Job Type -->
+                <div class="filter-group">
+                    <p class="filter-group-label">Job Type</p>
+                    <div class="filter-options">
+                        @foreach (var opt in JobTypeOptions)
+                        {
+                            <label class="filter-check @(SelectedJobTypes.Contains(opt.Label) ? "active-filter" : "")">
+                                <input type="checkbox"
+                                       checked="@SelectedJobTypes.Contains(opt.Label)"
+                                       @onchange="() => ToggleJobType(opt.Label)" />
+                                <span class="checkmark"></span>
+                                @opt.Label
+                                <span class="filter-count">@opt.Count</span>
+                            </label>
+                        }
+                    </div>
+                </div>
+
+                <div class="filter-divider"></div>
+
+                <!-- Work Setup -->
+                <div class="filter-group">
+                    <p class="filter-group-label">Work Setup</p>
+                    <div class="filter-options">
+                        @foreach (var opt in WorkSetupOptions)
+                        {
+                            <label class="filter-check @(SelectedSetups.Contains(opt.Label) ? "active-filter" : "")">
+                                <input type="checkbox"
+                                       checked="@SelectedSetups.Contains(opt.Label)"
+                                       @onchange="() => ToggleSetup(opt.Label)" />
+                                <span class="checkmark"></span>
+                                @opt.Label
+                                <span class="filter-count">@opt.Count</span>
+                            </label>
+                        }
+                    </div>
+                </div>
+
+                <div class="filter-divider"></div>
+
+                <!-- Location -->
+                <div class="filter-group">
+                    <p class="filter-group-label">Location</p>
+                    <div class="filter-search-wrap">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
+                            <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                        <input class="filter-search-input" type="text"
+                               placeholder="Search location..."
+                               @bind="LocationSearch"
+                               @bind:event="oninput" />
+                    </div>
+                    <div class="filter-options" style="margin-top:10px;">
+                        @foreach (var loc in FilteredLocationOptions)
+                        {
+                            <label class="filter-check @(SelectedLocations.Contains(loc.Label) ? "active-filter" : "")">
+                                <input type="checkbox"
+                                       checked="@SelectedLocations.Contains(loc.Label)"
+                                       @onchange="() => ToggleLocation(loc.Label)" />
+                                <span class="checkmark"></span>
+                                @loc.Label
+                                <span class="filter-count">@loc.Count</span>
+                            </label>
+                        }
+                    </div>
+                </div>
+
+                <div class="filter-divider"></div>
+
+                <!-- ── SKILLS / TECH STACK ── -->
+                <div class="filter-group">
+                    <div class="filter-group-header-row">
+                        <p class="filter-group-label" style="margin:0;">Skills / Tech Stack</p>
+                        <button class="add-skill-btn" @onclick="ToggleSkillPicker">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+                            </svg>
+                            Add
+                        </button>
+                    </div>
+
+                    <!-- Active skill chips -->
+                    <div class="skill-chips">
+                        @foreach (var skill in DisplayedSkills)
+                        {
+                            <button class="skill-chip @(SelectedSkills.Contains(skill) ? "selected" : "")"
+                                    @onclick="() => ToggleSkill(skill)">
+                                @skill
+                            </button>
+                        }
+                    </div>
+
+                    <!-- ── TECH STACK PICKER ── -->
+                    @if (ShowSkillPicker)
+                    {
+                        <div class="skill-picker">
+                            <div class="picker-search-wrap">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                                    <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
+                                    <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                </svg>
+                                <input class="picker-search" type="text"
+                                       placeholder="Search tech stack..."
+                                       @bind="SkillPickerSearch"
+                                       @bind:event="oninput"
+                                       autofocus />
+                                <button class="picker-close" @onclick="ToggleSkillPicker">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                                        <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div class="picker-body">
+                                @foreach (var cat in FilteredSkillCategories)
+                                {
+                                    <div class="picker-category">
+                                        <p class="picker-cat-label">@cat.Key</p>
+                                        <div class="picker-chips">
+                                            @foreach (var s in cat.Value)
+                                            {
+                                                <button class="picker-chip @(DisplayedSkills.Contains(s) ? "picker-chip--added" : "")"
+                                                        @onclick="() => AddSkillFromPicker(s)">
+                                                    @if (DisplayedSkills.Contains(s))
+                                                    {
+                                                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none">
+                                                            <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+                                                        </svg>
+                                                    }
+                                                    @s
+                                                </button>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                                @if (!FilteredSkillCategories.Any())
+                                {
+                                    <p class="picker-empty">No results for "@SkillPickerSearch"</p>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="filter-divider"></div>
+
+                <!-- Match Score -->
+                <div class="filter-group">
+                    <p class="filter-group-label">Min. Resume Match</p>
+                    <div class="match-range-wrap">
+                        <input type="range" class="match-range" min="0" max="100" step="5"
+                               value="@MinMatchScore"
+                               @oninput="OnMatchScoreChange" />
+                        <div class="match-range-labels">
+                            <span>@MinMatchScore%+</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                    <label class="filter-check" style="margin-top:8px;">
+                        <input type="checkbox"
+                               checked="@OnlyShowMatched"
+                               @onchange="() => OnlyShowMatched = !OnlyShowMatched" />
+                        <span class="checkmark"></span>
+                        Only show matched jobs
+                    </label>
+                </div>
+
+            </aside>
+
+            <!-- CENTER JOB LIST -->
+            <section class="job-list-section">
+
+                <div class="results-bar">
+                    <span class="results-count"><strong>@FilteredJobs.Count</strong> jobs found</span>
+                    <div class="sort-wrap">
+                        <span class="sort-label">Sort by</span>
+                        <select class="sort-select" @bind="SortBy">
+                            <option value="recent">Most Recent</option>
+                            <option value="match">Best Match</option>
+                            <option value="company">Company A-Z</option>
+                        </select>
+                    </div>
+                </div>
+
+                @if (!FilteredJobs.Any())
+                {
+                    <div class="empty-state">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                            <circle cx="11" cy="11" r="8" stroke="#CBD5E1" stroke-width="1.5" />
+                            <path d="M21 21l-4.35-4.35" stroke="#CBD5E1" stroke-width="1.5" stroke-linecap="round" />
+                        </svg>
+                        <p class="empty-title">No jobs found</p>
+                        <p class="empty-sub">Try adjusting your filters or search.</p>
+                        <button class="filter-clear-btn" @onclick="ClearAllFilters">Clear all filters</button>
+                    </div>
+                }
+                else
+                {
+                    <div class="job-list">
+                        @foreach (var job in SortedFilteredJobs)
+                        {
+                            <div class="job-card @(SelectedJob?.Id == job.Id ? "job-card--selected" : "")"
+                                 @onclick="() => SelectJob(job)">
+                                <div class="job-card-top">
+                                    <div class="jc-meta">
+                                        <span class="jc-company">@job.Company</span>
+                                        <span class="jc-title">@job.Title</span>
+                                    </div>
+                                    <span class="jc-date">@job.PostedDate</span>
+                                </div>
+                                <div class="jc-tags">
+                                    <span class="jc-tag tag-type">@job.JobType</span>
+                                    <span class="jc-tag tag-setup">@job.WorkSetup</span>
+                                    <span class="jc-tag tag-location">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" stroke="currentColor" stroke-width="2" />
+                                            <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2" />
+                                        </svg>
+                                        @job.Location
+                                    </span>
+                                </div>
+                                <p class="jc-preview">@GetPreviewText(job)</p>
+                                <div class="jc-footer">
+                                    <div class="jc-match">
+                                        <div class="jc-match-bar-bg">
+                                            <div class="jc-match-bar @job.MatchCss" style="width:@(job.MatchScore)%"></div>
+                                        </div>
+                                        <span class="jc-match-pct @job.MatchCss">@(job.MatchScore)%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="pagination">
+                        <button class="page-btn page-btn--prev" disabled>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                            </svg>
+                        </button>
+                        <button class="page-btn page-btn--active">1</button>
+                        <button class="page-btn">2</button>
+                        <button class="page-btn">3</button>
+                        <span class="page-ellipsis">...</span>
+                        <button class="page-btn">8</button>
+                        <button class="page-btn page-btn--next">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                            </svg>
+                        </button>
+                    </div>
+                }
+
+            </section>
+
+            <!-- RIGHT JOB DETAIL -->
+            <aside class="job-detail-panel">
+
+                @if (SelectedJob is null)
+                {
+                    <div class="jd-empty">
+                        <svg width="52" height="52" viewBox="0 0 24 24" fill="none">
+                            <rect x="2" y="7" width="20" height="14" rx="2" stroke="#CBD5E1" stroke-width="1.5" />
+                            <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" stroke="#CBD5E1" stroke-width="1.5" stroke-linecap="round" />
+                        </svg>
+                        <p class="jd-empty-title">Select a job</p>
+                        <p class="jd-empty-sub">Click any listing to view full details here.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="jd-header">
+                        <div class="jd-header-meta">
+                            <h2 class="jd-title">@SelectedJob.Title</h2>
+                            <span class="jd-company-name">@SelectedJob.Company</span>
+                        </div>
+                    </div>
+
+                    <div class="jd-info-grid">
+                        <div class="jd-info-item jd-info-item--match">
+                            <span class="jd-info-label">Resume Match</span>
+                            <div class="jd-match-inline">
+                                <span class="jd-match-score-inline @GetMatchColorClass(SelectedJob.MatchScore)">@(SelectedJob.MatchScore)%</span>
+                                <div class="jd-match-ring-small">
+                                    @{
+                                        double circ = 75.4;
+                                        double off = circ - (circ * SelectedJob.MatchScore / 100.0);
+                                        var ringColor = GetMatchRingColor(SelectedJob.MatchScore);
+                                    }
+                                    <svg width="28" height="28" viewBox="0 0 28 28">
+                                        <circle cx="14" cy="14" r="12" fill="none" stroke="#E2E8F0" stroke-width="2.5" />
+                                        <circle cx="14" cy="14" r="12" fill="none" stroke="@ringColor" stroke-width="2.5"
+                                                stroke-dasharray="@circ.ToString("F1")"
+                                                stroke-dashoffset="@off.ToString("F1")"
+                                                stroke-linecap="round"
+                                                transform="rotate(-90 14 14)" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="jd-info-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                                <polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                            </svg>
+                            <span class="jd-info-label">Setup</span>
+                            <span class="jd-info-value">@SelectedJob.WorkSetup</span>
+                        </div>
+                        <div class="jd-info-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <rect x="2" y="7" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2" />
+                                <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                            </svg>
+                            <span class="jd-info-label">Type</span>
+                            <span class="jd-info-value">@SelectedJob.JobType</span>
+                        </div>
+                        <div class="jd-info-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" stroke="currentColor" stroke-width="2" />
+                                <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <span class="jd-info-label">Location</span>
+                            <span class="jd-info-value">@SelectedJob.Location</span>
+                        </div>
+                        <div class="jd-info-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2" />
+                                <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                            </svg>
+                            <span class="jd-info-label">Posted</span>
+                            <span class="jd-info-value">@SelectedJob.PostedDate</span>
+                        </div>
+                        <div class="jd-info-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z"
+                                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <span class="jd-info-label">Applicants</span>
+                            <span class="jd-info-value">@SelectedJob.Applicants applied</span>
+                        </div>
+                        <div class="jd-info-item jd-info-item--full">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <line x1="12" y1="1" x2="12" y2="23" stroke="currentColor" stroke-width="2" />
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <span class="jd-info-label">Salary</span>
+                            <span class="jd-info-value">@SelectedJob.Salary</span>
+                        </div>
+                    </div>
+
+                    <div class="jd-section">
+                        <p class="jd-section-label">Required Skills</p>
+                        <div class="jd-skills">
+                            @foreach (var s in SelectedJob.MatchedSkills)
+                            {
+                                <span class="jd-skill matched">@s</span>
+                            }
+                            @foreach (var s in SelectedJob.MissingSkills)
+                            {
+                                <span class="jd-skill unmatched">@s</span>
+                            }
+                        </div>
+                        <div class="jd-skills-legend">
+                            <span class="legend-dot matched-dot"></span>
+                            <span class="legend-text">Matched</span>
+                            <span class="legend-dot unmatched-dot" style="margin-left:12px;"></span>
+                            <span class="legend-text">Missing</span>
+                        </div>
+                    </div>
+
+                    <div class="jd-divider"></div>
+
+                    <div class="jd-section">
+                        <p class="jd-section-label">About this role</p>
+                        @foreach (var para in SelectedJob.Description)
+                        {
+                            <p class="jd-description">@para</p>
+                        }
+                    </div>
+
+                    <div class="jd-divider"></div>
+
+                    <div class="jd-section">
+                        <p class="jd-section-label">Responsibilities</p>
+                        <ul class="jd-list">
+                            @foreach (var r in SelectedJob.Responsibilities)
+                            {
+                                <li>@r</li>
+                            }
+                        </ul>
+                    </div>
+
+                    <div class="jd-divider"></div>
+
+                    <div class="jd-section">
+                        <p class="jd-section-label">Requirements</p>
+                        <ul class="jd-list">
+                            @foreach (var req in SelectedJob.Requirements)
+                            {
+                                <li>@req</li>
+                            }
+                        </ul>
+                    </div>
+
+                    <div class="jd-cta">
+                        <button class="btn-apply @(SelectedJob.HasApplied ? "btn-apply--applied" : "")"
+                                @onclick="() => SelectedJob.HasApplied = !SelectedJob.HasApplied">
+                            @if (SelectedJob.HasApplied)
+                            {
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                                    <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <span>Applied!</span>
+                            }
+                            else
+                            {
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"
+                                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <span>Apply Now</span>
+                            }
+                        </button>
+                        <button class="btn-save-job @(SelectedJob.IsSaved ? "btn-save-job--saved" : "")"
+                                @onclick="() => ToggleSave(SelectedJob)">
+                            @if (SelectedJob.IsSaved)
+                            {
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+                                </svg>
+                                <span>Saved</span>
+                            }
+                            else
+                            {
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"
+                                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <span>Save Job</span>
+                            }
+                        </button>
+                    </div>
+                }
+
+            </aside>
+
+        </div>
+
+    </main>
+
+</div>
+
+@code {
+
+    // ─────────────────────────────────────────
+    //  MODEL
+    // ─────────────────────────────────────────
+
+    private class JobListing
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = "";
+        public string Company { get; set; } = "";
+        public string JobType { get; set; } = "";
+        public string WorkSetup { get; set; } = "";
+        public string Location { get; set; } = "";
+        public int MatchScore { get; set; }
+        public string PostedDate { get; set; } = "";
+        public int Applicants { get; set; }
+        public string Salary { get; set; } = "";
+        public string LogoText { get; set; } = "";
+        public string LogoCss { get; set; } = "";
+        public bool IsSaved { get; set; }
+        public bool HasApplied { get; set; }
+        public List<string> MatchedSkills { get; set; } = new();
+        public List<string> MissingSkills { get; set; } = new();
+        public List<string> Description { get; set; } = new();
+        public List<string> Responsibilities { get; set; } = new();
+        public List<string> Requirements { get; set; } = new();
+        public string MatchCss => MatchScore >= 90 ? "excellent" : MatchScore >= 80 ? "good" : "fair";
+    }
+
+    private record FilterOption(string Label, int Count);
+
+    // ─────────────────────────────────────────
+    //  RESUME SOURCE
+    // ─────────────────────────────────────────
+
+    private string ResumeMode { get; set; } = "built"; // "built" | "uploaded"
+
+    // Skills from the built resume (from Resume & Profile page)
+    private readonly List<string> BuiltResumeSkills = new()
+    {
+        "C#", ".NET / Blazor", "PostgreSQL", "HTML / CSS", "JavaScript", "Git"
+    };
+
+    // Skills auto-extracted via OCR from uploaded PDF/image
+    private readonly List<string> UploadedResumeSkills = new()
+    {
+        "C#", ".NET", "Blazor", "PostgreSQL", "HTML", "CSS"
+    };
+
+    private List<string> ActiveResumeSkills =>
+        ResumeMode == "built" ? BuiltResumeSkills : UploadedResumeSkills;
+
+    // ─────────────────────────────────────────
+    //  JOB DATA
+    // ─────────────────────────────────────────
+
+    private readonly List<JobListing> AllJobs = new()
+    {
+        new() { Id=1, Title="Full-Stack Developer Intern",  Company="CodeBridge Co.",
+                JobType="Internship", WorkSetup="Remote",  Location="Makati City",
+                MatchScore=91, PostedDate="Apr 7", Applicants=14, Salary="₱8,000 / mo",
+                LogoText="CB", LogoCss="logo-cb", IsSaved=true,
+                MatchedSkills=new(){"C#",".NET Core","Blazor","PostgreSQL","REST API"},
+                MissingSkills=new(){"Docker","Azure"},
+                Description=new(){
+                    "CodeBridge Co. is looking for a motivated Full-Stack Developer Intern to join our product team. You will work alongside senior engineers building scalable web applications using Blazor Server and .NET Core Web API with PostgreSQL as the primary database.",
+                    "This is a hands-on internship — you will participate in sprint planning, code reviews, and daily standups. A strong foundation in C# and basic SQL is required."
+                },
+                Responsibilities=new(){
+                    "Build and maintain Blazor Server components and pages",
+                    "Design and consume RESTful API endpoints with .NET Core",
+                    "Write and optimize PostgreSQL queries using Dapper",
+                    "Participate in code reviews and agile sprints",
+                    "Collaborate with UI/UX on frontend implementation"
+                },
+                Requirements=new(){
+                    "Strong foundation in C# and object-oriented programming",
+                    "Basic understanding of SQL and relational databases",
+                    "Familiarity with Git version control",
+                    "Currently enrolled in a CS, IT, or related degree program",
+                    "Able to commit to at least 4 months"
+                }
+        },
+        new() { Id=2, Title="C# Backend Intern",           Company="SkyNet Systems",
+                JobType="Internship", WorkSetup="Hybrid",  Location="BGC, Taguig",
+                MatchScore=84, PostedDate="Apr 6", Applicants=9, Salary="₱10,000 / mo",
+                LogoText="SN", LogoCss="logo-sn",
+                MatchedSkills=new(){".NET","SQL Server","C#","REST API"},
+                MissingSkills=new(){"Redis","RabbitMQ"},
+                Description=new(){
+                    "SkyNet Systems is hiring a C# Backend Intern to support our platform engineering team.",
+                    "Hybrid role in BGC, Taguig. Clean C# code and relational database experience required."
+                },
+                Responsibilities=new(){
+                    "Develop and maintain backend services in C# and .NET",
+                    "Write SQL queries and stored procedures for SQL Server",
+                    "Help design and document RESTful API contracts",
+                    "Debug issues and support production deployments",
+                    "Write unit and integration tests for new features"
+                },
+                Requirements=new(){
+                    "1-2 years experience with C# and .NET",
+                    "Strong SQL Server knowledge",
+                    "Understanding of REST API principles",
+                    "Good communication skills",
+                    "Willing to work hybrid in BGC, Taguig"
+                }
+        },
+        new() { Id=3, Title="Junior Software Engineer",     Company="Luminary Labs",
+                JobType="Full-time", WorkSetup="Remote",   Location="Anywhere",
+                MatchScore=77, PostedDate="Apr 5", Applicants=22, Salary="₱35,000 / mo",
+                LogoText="LL", LogoCss="logo-ll",
+                MatchedSkills=new(){"Blazor","PostgreSQL","Git"},
+                MissingSkills=new(){"Kubernetes","Terraform","Go"},
+                Description=new(){
+                    "Luminary Labs is a fully remote product company. You will own features end-to-end.",
+                    "We value clean code, strong communication, and a growth mindset."
+                },
+                Responsibilities=new(){
+                    "Own features from design through deployment",
+                    "Participate in sprint planning and retrospectives",
+                    "Write clean, tested, and documented code",
+                    "Review pull requests from peers",
+                    "Monitor and troubleshoot production systems"
+                },
+                Requirements=new(){
+                    "2+ years of software development experience",
+                    "Proficiency in Blazor or similar frontend framework",
+                    "Experience with PostgreSQL or similar database",
+                    "Strong problem-solving skills",
+                    "Excellent written and verbal communication"
+                }
+        },
+        new() { Id=4, Title=".NET Core Developer",          Company="TechSpark PH",
+                JobType="Full-time", WorkSetup="On-site",  Location="Ortigas Center",
+                MatchScore=71, PostedDate="Apr 4", Applicants=17, Salary="₱40,000 - ₱55,000 / mo",
+                LogoText="TS", LogoCss="logo-ts",
+                MatchedSkills=new(){".NET Core","C#","EF Core"},
+                MissingSkills=new(){"Angular","Docker","Azure DevOps"},
+                Description=new(){
+                    "TechSpark PH needs a .NET Core Developer for enterprise web applications in finance and logistics.",
+                    "Strong .NET ecosystem knowledge required."
+                },
+                Responsibilities=new(){
+                    "Develop web applications using ASP.NET Core and EF Core",
+                    "Collaborate with business analysts",
+                    "Conduct code reviews and ensure quality",
+                    "Maintain and extend existing .NET applications",
+                    "Document technical designs"
+                },
+                Requirements=new(){
+                    "1-3 years experience in .NET Core development",
+                    "Strong understanding of MVC architecture",
+                    "Experience with SQL Server and stored procedures",
+                    "Ability to read and interpret technical requirements",
+                    "Willing to work on-site in Ortigas"
+                }
+        },
+        new() { Id=5, Title="React Frontend Developer",     Company="NovaByte Inc.",
+                JobType="Internship", WorkSetup="Remote",  Location="Quezon City",
+                MatchScore=65, PostedDate="Apr 3", Applicants=31, Salary="₱6,500 / mo",
+                LogoText="NV", LogoCss="logo-nv",
+                MatchedSkills=new(){"JavaScript","HTML/CSS"},
+                MissingSkills=new(){"React","TypeScript","Tailwind","GraphQL"},
+                Description=new(){
+                    "NovaByte Inc. is hiring a React Frontend Developer Intern to build modern, responsive UIs.",
+                    "Passion for UI/UX and vanilla JS required."
+                },
+                Responsibilities=new(){
+                    "Build React components using TypeScript",
+                    "Implement pixel-perfect Figma designs",
+                    "Integrate frontend with REST and GraphQL APIs",
+                    "Optimize for performance and accessibility",
+                    "Write unit tests using Jest"
+                },
+                Requirements=new(){
+                    "Solid understanding of React hooks and component lifecycle",
+                    "Proficiency in TypeScript",
+                    "Experience consuming REST APIs",
+                    "Familiarity with version control using Git",
+                    "Portfolio or GitHub showcasing personal or academic projects"
+                }
+        },
+        new() { Id=6, Title="API Developer (.NET)",         Company="ApexCore Solutions",
+                JobType="Full-time", WorkSetup="Hybrid",   Location="Makati City",
+                MatchScore=62, PostedDate="Apr 2", Applicants=11, Salary="₱35,000 - ₱50,000 / mo",
+                LogoText="AP", LogoCss="logo-ap",
+                MatchedSkills=new(){".NET","REST API","SQL"},
+                MissingSkills=new(){"gRPC","Kafka","OpenAPI"},
+                Description=new(){
+                    "ApexCore Solutions needs an API Developer for our internal and external API ecosystem.",
+                    "Strong .NET Web API knowledge required. Hybrid — 2 days on-site in Makati City."
+                },
+                Responsibilities=new(){
+                    "Design and build RESTful APIs using .NET",
+                    "Maintain Swagger/OpenAPI documentation",
+                    "Implement versioning, rate limiting, and security",
+                    "Collaborate with frontend teams",
+                    "Optimize API performance"
+                },
+                Requirements=new(){
+                    "2+ years experience with .NET Web API development",
+                    "Strong knowledge of SQL Server and Entity Framework Core",
+                    "Experience with Docker and containerized deployments",
+                    "Understanding of OAuth2 / JWT authentication",
+                    "Excellent written and verbal communication skills"
+                }
+        }
+    };
+
+    // ─────────────────────────────────────────
+    //  FILTER OPTIONS
+    // ─────────────────────────────────────────
+
+    private readonly List<FilterOption> JobTypeOptions = new()
+    {
+        new("Full-time", 3), new("Internship", 3),
+        new("Part-time", 0), new("Contract",   0), new("Freelance", 0)
+    };
+
+    private readonly List<FilterOption> WorkSetupOptions = new()
+    {
+        new("Remote", 3), new("On-site", 1), new("Hybrid", 2)
+    };
+
+    private readonly List<FilterOption> LocationOptions = new()
+    {
+        new("Makati City", 2), new("BGC, Taguig", 1),
+        new("Ortigas Center", 1), new("Quezon City", 1), new("Anywhere", 1)
+    };
+
+    // ── Default visible skill chips (pre-seeded from resume) ──────────────────
+    private List<string> DisplayedSkills = new()
+    {
+        "C#", ".NET", "Blazor", "React", "PostgreSQL",
+        "Python", "TypeScript", "Vue.js", "Docker", "Azure"
+    };
+
+    // ── Master tech stack catalogue (hardcoded, categorised) ─────────────────
+    private readonly Dictionary<string, List<string>> TechStackCatalogue = new()
+    {
+        ["Frontend"] = new() {
+            "HTML / CSS", "JavaScript", "TypeScript", "React", "Vue.js", "Angular",
+            "Svelte", "Next.js", "Nuxt.js", "Astro", "Tailwind CSS", "Bootstrap",
+            "Sass / SCSS", "jQuery", "Alpine.js"
+        },
+        ["Backend"] = new() {
+            "C#", ".NET / ASP.NET Core", "Blazor", "Java", "Spring Boot", "Python",
+            "Django", "Flask", "FastAPI", "Node.js", "Express.js", "PHP", "Laravel",
+            "Ruby on Rails", "Go", "Rust", "Kotlin", "Elixir"
+        },
+        ["Database"] = new() {
+            "PostgreSQL", "MySQL", "SQL Server", "SQLite", "MongoDB", "Redis",
+            "Supabase", "Firebase", "DynamoDB", "Cassandra", "Elasticsearch",
+            "MariaDB", "CockroachDB"
+        },
+        ["DevOps & Cloud"] = new() {
+            "Docker", "Kubernetes", "Azure", "AWS", "GCP", "GitHub Actions",
+            "CI/CD", "Terraform", "Ansible", "Nginx", "Linux / Bash", "Helm",
+            "Azure DevOps", "Jenkins", "ArgoCD"
+        },
+        ["Mobile"] = new() {
+            "React Native", "Flutter", "Swift", "Kotlin (Android)",
+            "Xamarin", "Ionic", "Expo"
+        },
+        ["APIs & Messaging"] = new() {
+            "REST API", "GraphQL", "gRPC", "WebSockets", "RabbitMQ",
+            "Kafka", "SignalR", "OpenAPI / Swagger", "OAuth 2.0", "JWT"
+        },
+        ["Tools & Other"] = new() {
+            "Git", "GitHub", "Jira", "Figma", "Postman", "VS Code",
+            "Vim", "Bash / Shell", "PowerShell", "Agile / Scrum",
+            "Unit Testing", "EF Core", "Dapper", "MediatR"
+        }
+    };
+
+    // ─────────────────────────────────────────
+    //  STATE
+    // ─────────────────────────────────────────
+
+    private string SearchQuery { get; set; } = "";
+    private string LocationSearch { get; set; } = "";
+    private string SortBy { get; set; } = "recent";
+    private int MinMatchScore { get; set; } = 0;
+    private bool OnlyShowMatched { get; set; } = false;
+    private bool ShowSkillPicker { get; set; } = false;
+    private string SkillPickerSearch { get; set; } = "";
+
+    private HashSet<string> SelectedJobTypes = new();
+    private HashSet<string> SelectedSetups = new();
+    private HashSet<string> SelectedLocations = new();
+    private HashSet<string> SelectedSkills = new();
+
+    private JobListing? SelectedJob;
+
+    // ─────────────────────────────────────────
+    //  COMPUTED
+    // ─────────────────────────────────────────
+
+    private List<FilterOption> FilteredLocationOptions =>
+        string.IsNullOrWhiteSpace(LocationSearch)
+            ? LocationOptions
+            : LocationOptions.Where(l => l.Label.Contains(LocationSearch, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    /// Skill picker: filter catalogue by search, hide empty categories
+    private Dictionary<string, List<string>> FilteredSkillCategories
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(SkillPickerSearch))
+                return TechStackCatalogue;
+
+            return TechStackCatalogue
+                .ToDictionary(
+                    cat => cat.Key,
+                    cat => cat.Value
+                        .Where(s => s.Contains(SkillPickerSearch, StringComparison.OrdinalIgnoreCase))
+                        .ToList())
+                .Where(cat => cat.Value.Any())
+                .ToDictionary(c => c.Key, c => c.Value);
+        }
+    }
+
+    private List<string> ActiveFilterChips
+    {
+        get
+        {
+            var chips = new List<string>();
+            chips.AddRange(SelectedJobTypes);
+            chips.AddRange(SelectedSetups);
+            chips.AddRange(SelectedLocations);
+            chips.AddRange(SelectedSkills);
+            if (MinMatchScore > 0) chips.Add($"Match >= {MinMatchScore}%");
+            return chips;
+        }
+    }
+
+    private List<JobListing> FilteredJobs
+    {
+        get
+        {
+            var q = AllJobs.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(SearchQuery))
+                q = q.Where(j =>
+                    j.Title.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) ||
+                    j.Company.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) ||
+                    j.MatchedSkills.Any(s => s.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase)));
+
+            if (SelectedJobTypes.Any()) q = q.Where(j => SelectedJobTypes.Contains(j.JobType));
+            if (SelectedSetups.Any()) q = q.Where(j => SelectedSetups.Contains(j.WorkSetup));
+            if (SelectedLocations.Any()) q = q.Where(j => SelectedLocations.Contains(j.Location));
+
+            if (SelectedSkills.Any())
+                q = q.Where(j => SelectedSkills.Any(s =>
+                    j.MatchedSkills.Contains(s, StringComparer.OrdinalIgnoreCase) ||
+                    j.MissingSkills.Contains(s, StringComparer.OrdinalIgnoreCase)));
+
+            if (MinMatchScore > 0) q = q.Where(j => j.MatchScore >= MinMatchScore);
+            if (OnlyShowMatched) q = q.Where(j => j.MatchScore > 0);
+
+            return q.ToList();
+        }
+    }
+
+    private IEnumerable<JobListing> SortedFilteredJobs => SortBy switch
+    {
+        "match" => FilteredJobs.OrderByDescending(j => j.MatchScore),
+        "company" => FilteredJobs.OrderBy(j => j.Company),
+        _ => FilteredJobs.OrderByDescending(j => j.Id)
+    };
+
+    // ─────────────────────────────────────────
+    //  LIFECYCLE
+    // ─────────────────────────────────────────
+
+    protected override void OnInitialized() => SelectedJob = AllJobs.First();
+
+    // ─────────────────────────────────────────
+    //  HANDLERS
+    // ─────────────────────────────────────────
+
+    private void SelectJob(JobListing job) => SelectedJob = job;
+
+    private void ToggleSave(JobListing job) => job.IsSaved = !job.IsSaved;
+
+    private void ToggleSkillPicker()
+    {
+        ShowSkillPicker = !ShowSkillPicker;
+        if (!ShowSkillPicker) SkillPickerSearch = "";
+    }
+
+    private void AddSkillFromPicker(string skill)
+    {
+        if (!DisplayedSkills.Contains(skill, StringComparer.OrdinalIgnoreCase))
+            DisplayedSkills.Add(skill);
+
+        // Auto-activate the newly added skill as a filter
+        SelectedSkills.Add(skill);
+        EnsureSelectedJobVisible();
+    }
+
+    private void ToggleJobType(string label)
+    {
+        if (!SelectedJobTypes.Remove(label)) SelectedJobTypes.Add(label);
+        EnsureSelectedJobVisible();
+    }
+
+    private void ToggleSetup(string label)
+    {
+        if (!SelectedSetups.Remove(label)) SelectedSetups.Add(label);
+        EnsureSelectedJobVisible();
+    }
+
+    private void ToggleLocation(string label)
+    {
+        if (!SelectedLocations.Remove(label)) SelectedLocations.Add(label);
+        EnsureSelectedJobVisible();
+    }
+
+    private void ToggleSkill(string skill)
+    {
+        if (!SelectedSkills.Remove(skill)) SelectedSkills.Add(skill);
+        EnsureSelectedJobVisible();
+    }
+
+    private void RemoveFilter(string chip)
+    {
+        SelectedJobTypes.Remove(chip);
+        SelectedSetups.Remove(chip);
+        SelectedLocations.Remove(chip);
+        SelectedSkills.Remove(chip);
+        if (chip.StartsWith("Match")) MinMatchScore = 0;
+        EnsureSelectedJobVisible();
+    }
+
+    private void ClearAllFilters()
+    {
+        SelectedJobTypes.Clear();
+        SelectedSetups.Clear();
+        SelectedLocations.Clear();
+        SelectedSkills.Clear();
+        SearchQuery = "";
+        LocationSearch = "";
+        MinMatchScore = 0;
+        OnlyShowMatched = false;
+        ShowSkillPicker = false;
+        EnsureSelectedJobVisible();
+    }
+
+    private void OnMatchScoreChange(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var val))
+            MinMatchScore = val;
+        EnsureSelectedJobVisible();
+    }
+
+    private void EnsureSelectedJobVisible()
+    {
+        if (SelectedJob is not null && !FilteredJobs.Any(j => j.Id == SelectedJob.Id))
+            SelectedJob = FilteredJobs.FirstOrDefault();
+    }
+
+    private static string GetPreviewText(JobListing job)
+    {
+        var fullText = string.Join(" ", job.Description);
+        var sentences = fullText.Split(new[] { ". " }, StringSplitOptions.RemoveEmptyEntries);
+        if (sentences.Length >= 2)
+            return sentences[0] + ". " + sentences[1] + ".";
+        return fullText.Length > 120 ? fullText.Substring(0, 120) + "..." : fullText;
+    }
+
+    private static string GetMatchRingColor(int score) => score >= 90 ? "#059669" : score >= 80 ? "#F59E0B" : "#1D4ED8";
+
+    private static string GetMatchColorClass(int score) => score >= 90 ? "match-green" : score >= 80 ? "match-orange" : "match-blue";
+}

@@ -1,0 +1,219 @@
+/* =========================================
+   NexApply — Pipeline.css (Global)
+   Shared pipeline/progress track styles
+   ========================================= */
+
+/* ── Progress Track Base ── */
+.progress-track,
+.pipeline-track {
+    display: flex;
+    align-items: center;
+}
+
+/* ── Step Base ── */
+.progress-step,
+.pipeline-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+/* ── Step Node/Dot ── */
+.step-node,
+.pipeline-step-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--color-slate-200);
+    border: 2px solid var(--color-slate-200);
+    transition: all var(--transition-base);
+}
+
+/* ── Step Label ── */
+.step-label,
+.pipeline-step-label {
+    font-size: var(--text-xs);
+    color: var(--color-slate-400);
+    white-space: nowrap;
+    font-weight: 500;
+    text-align: center;
+}
+
+/* =========================================
+   STATE RULES
+   ========================================= */
+
+/* Done → Blue (default for all completed steps) */
+.step--done .step-node,
+.pipeline-step.done .pipeline-step-dot {
+    background-color: #1D4ED8;
+    border-color: #1D4ED8;
+}
+
+.step--done .step-label,
+.pipeline-step.done .pipeline-step-label {
+    color: #1D4ED8;
+}
+
+/* Active → Orange (default for active steps) */
+.step--active .step-node,
+.pipeline-step.active .pipeline-step-dot {
+    background-color: #FFFFFF;
+    border-color: #F59E0B;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+    width: 12px;
+    height: 12px;
+}
+
+.step--active .step-label,
+.pipeline-step.active .pipeline-step-label {
+    color: #D97706;
+    font-weight: 600;
+}
+
+/* Inactive → Gray */
+.pipeline-step.inactive .pipeline-step-dot {
+    background: #F1F5F9;
+    border-color: #E2E8F0;
+}
+
+.pipeline-step.inactive .pipeline-step-label {
+    color: #94A3B8;
+}
+
+/* =========================================
+   SPECIFIC STEP OVERRIDES
+   ========================================= */
+
+/* Under Review (done) → Filled orange circle */
+.step--review.step--done .step-node {
+    background-color: #F59E0B;
+    border-color: #F59E0B;
+}
+
+.step--review.step--done .step-label {
+    color: #D97706;
+}
+
+/* Under Review (active) → White center with orange border + glow */
+.step--review.step--active .step-node,
+.pipeline-step.active.pipeline-step--review .pipeline-step-dot {
+    background-color: #FFFFFF;
+    border-color: #F59E0B;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+    width: 12px;
+    height: 12px;
+}
+
+.step--review.step--active .step-label,
+.pipeline-step.active.pipeline-step--review .pipeline-step-label {
+    color: #D97706;
+    font-weight: 600;
+}
+
+/* Shortlisted (done or active) → Green */
+.step--shortlisted.step--done .step-node,
+.pipeline-step.done.pipeline-step--shortlisted .pipeline-step-dot {
+    background-color: #059669;
+    border-color: #059669;
+}
+
+.step--shortlisted.step--done .step-label,
+.pipeline-step.done.pipeline-step--shortlisted .pipeline-step-label {
+    color: #059669;
+}
+
+.step--shortlisted.step--active .step-node,
+.pipeline-step.active.pipeline-step--shortlisted .pipeline-step-dot {
+    background-color: #FFFFFF;
+    border-color: #059669;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.2);
+    width: 12px;
+    height: 12px;
+}
+
+.step--shortlisted.step--active .step-label,
+.pipeline-step.active.pipeline-step--shortlisted .pipeline-step-label {
+    color: #059669;
+    font-weight: 600;
+}
+
+/* For Interview (active) → White center with green border + glow */
+.step--interview.step--active .step-node,
+.pipeline-step.active.pipeline-step--interview .pipeline-step-dot {
+    background-color: #FFFFFF;
+    border-color: #059669;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.2);
+    width: 12px;
+    height: 12px;
+}
+
+.step--interview.step--active .step-label,
+.pipeline-step.active.pipeline-step--interview .pipeline-step-label {
+    color: #059669;
+    font-weight: 600;
+}
+
+/* Declined (done) → Filled red circle */
+.step--declined.step--done .step-node,
+.pipeline-step.done.pipeline-step--declined .pipeline-step-dot {
+    background-color: #DC2626;
+    border-color: #DC2626;
+}
+
+.step--declined.step--done .step-label,
+.pipeline-step.done.pipeline-step--declined .pipeline-step-label {
+    color: #DC2626;
+}
+
+/* Declined (active) → White center with red border + glow */
+.step--declined.step--active .step-node,
+.pipeline-step.active.pipeline-step--declined .pipeline-step-dot {
+    background-color: #FFFFFF;
+    border-color: #DC2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+    width: 12px;
+    height: 12px;
+}
+
+.step--declined.step--active .step-label,
+.pipeline-step.active.pipeline-step--declined .pipeline-step-label {
+    color: #DC2626;
+    font-weight: 600;
+}
+
+/* =========================================
+   CONNECTOR LINES
+   ========================================= */
+
+.step-line,
+.pipeline-connector {
+    flex: 1;
+    height: 2px;
+    background-color: var(--color-slate-200);
+    margin-bottom: 14px;
+    min-width: 20px;
+}
+
+.step-line.line--done,
+.pipeline-connector.done {
+    background-color: #BFDBFE;
+}
+
+/* ── Pipeline-specific spacing ── */
+.pipeline-connector {
+    margin-bottom: 28px;
+}
+
+/* ── Pipeline step count ── */
+.pipeline-step-count {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0F172A;
+}
+
+.pipeline-step.inactive .pipeline-step-count {
+    color: #CBD5E1;
+}

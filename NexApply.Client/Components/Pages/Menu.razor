@@ -2,140 +2,7 @@
 
 <div class="app-shell">
 
-    <!-- ── Sidebar ── -->
-    <aside class="sidebar">
-
-        <!-- Brand -->
-        <div class="brand-wrap">
-            <div class="brand-icon">
-                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <!-- Outer hexagon -->
-                    <path d="M14 2L24 8V20L14 26L4 20V8L14 2Z" fill="#1D4ED8"/>
-                    <!-- Inner N shape -->
-                    <path d="M10 10V18M10 10L18 18M18 18V10" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-            <span class="brand-name">NexApply</span>
-        </div>
-
-        <!-- Profile Card -->
-        <div class="profile-card">
-            <div class="avatar-ring">
-                <img src="/images/clint_2.jpeg" alt="Clint Villanueva" class="avatar-image" />
-            </div>
-            <div class="profile-meta">
-                <span class="profile-name">Clint Villanueva</span>
-                <span class="profile-badge">
-                    <span class="badge-dot"></span>Student
-                </span>
-            </div>
-            <button class="profile-chevron" title="Edit profile">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                </svg>
-            </button>
-        </div>
-
-        <!-- Navigation -->
-        <nav class="nav-section">
-            <p class="nav-group-label">Overview</p>
-
-            <a href="#" class="nav-item active">
-                <span class="nav-icon">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                        <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2" />
-                        <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2" />
-                        <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2" />
-                        <rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2" />
-                    </svg>
-                </span>
-                Dashboard
-            </a>
-
-            <a href="#" class="nav-item">
-                <span class="nav-icon">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                        <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
-                        <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                    </svg>
-                </span>
-                Browse Jobs
-                <span class="nav-badge">24</span>
-            </a>
-
-            <a href="#" class="nav-item">
-                <span class="nav-icon">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                              stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                    </svg>
-                </span>
-                My Applications
-                <span class="nav-badge-neutral">3</span>
-            </a>
-
-            <a href="#" class="nav-item">
-                <span class="nav-icon">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                        <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9l-7-7z"
-                              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                        <polyline points="13,2 13,9 20,9" stroke="currentColor" stroke-width="2"
-                                  stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                </span>
-                Resume & Profile
-            </a>
-
-            <p class="nav-group-label" style="margin-top:1.25rem;">Discover</p>
-
-            <a href="#" class="nav-item">
-                <span class="nav-icon">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                        <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26 12,2"
-                                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                </span>
-                Job Matches
-                <span class="nav-badge-green">New</span>
-            </a>
-
-            <a href="#" class="nav-item">
-                <span class="nav-icon">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                        <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"
-                              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                </span>
-                Notifications
-                <span class="nav-dot"></span>
-            </a>
-        </nav>
-
-        <!-- Bottom -->
-        <div class="sidebar-footer">
-            <a href="#" class="nav-item">
-                <span class="nav-icon">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" />
-                        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"
-                              stroke="currentColor" stroke-width="2" />
-                    </svg>
-                </span>
-                Settings
-            </a>
-
-            <a href="#" class="nav-item logout-item">
-                <span class="nav-icon">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"
-                              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                </span>
-                Log Out
-            </a>
-        </div>
-
-    </aside>
+    <Sidebar />
 
     <!-- ── Main Content ── -->
     <main class="main-content">
@@ -313,7 +180,6 @@
                 <div class="app-list">
 
                     <div class="app-row">
-                        <div class="company-logo logo-sf">SF</div>
                         <div class="app-info">
                             <span class="app-job-title">Frontend Developer Intern</span>
                             <span class="app-company">SoftForge Inc. · Remote</span>
@@ -325,7 +191,6 @@
                     </div>
 
                     <div class="app-row">
-                        <div class="company-logo logo-ts">TS</div>
                         <div class="app-info">
                             <span class="app-job-title">Junior .NET Developer</span>
                             <span class="app-company">TechSpark PH · On-site</span>
@@ -337,7 +202,6 @@
                     </div>
 
                     <div class="app-row app-row--featured">
-                        <div class="company-logo logo-nx">NX</div>
                         <div class="app-info">
                             <span class="app-job-title">Backend Intern</span>
                             <span class="app-company">NexaTech Solutions · Hybrid</span>
@@ -364,7 +228,6 @@
                 <div class="match-list">
 
                     <div class="match-row">
-                        <div class="match-logo logo-cb">CB</div>
                         <div class="match-body">
                             <div class="match-top">
                                 <div class="match-info">
@@ -387,7 +250,6 @@
                     </div>
 
                     <div class="match-row">
-                        <div class="match-logo logo-sn">SN</div>
                         <div class="match-body">
                             <div class="match-top">
                                 <div class="match-info">
@@ -410,7 +272,6 @@
                     </div>
 
                     <div class="match-row">
-                        <div class="match-logo logo-ll">LL</div>
                         <div class="match-body">
                             <div class="match-top">
                                 <div class="match-info">

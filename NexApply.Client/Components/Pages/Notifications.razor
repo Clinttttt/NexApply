@@ -1,0 +1,565 @@
+﻿@page "/notifications"
+@rendermode InteractiveServer
+
+<div class="app-shell">
+
+    <Sidebar />
+
+    <main class="main-content">
+
+        <PageHeader Title="Notifications" Subtitle="@($"{UnreadCount} unread — stay on top of your job hunt")">
+            @if (UnreadCount > 0)
+            {
+                <button class="mark-all-btn" @onclick="MarkAllRead">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    Mark all as read
+                </button>
+            }
+            <button class="notif-settings-btn" title="Notification settings">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" />
+                    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"
+                          stroke="currentColor" stroke-width="2" />
+                </svg>
+            </button>
+        </PageHeader>
+
+        <!-- ── Body ── -->
+        <div class="notif-body">
+
+            <!-- ══════════════════════════════════
+                 LEFT — FILTER SIDEBAR
+            ══════════════════════════════════ -->
+            <aside class="notif-sidebar">
+
+                <!-- Category filter -->
+                <div class="nsb-section">
+                    <p class="nsb-label">Category</p>
+                    <div class="nsb-options">
+                        @foreach (var cat in Categories)
+                        {
+                            <button class="nsb-item @(ActiveCategory == cat.Key ? "nsb-item--active" : "")"
+                                    @onclick="() => ActiveCategory = cat.Key">
+                                <span class="nsb-item-icon @cat.IconCss">
+                                    @((MarkupString)cat.IconSvg)
+                                </span>
+                                <span class="nsb-item-label">@cat.Label</span>
+                                @if (cat.Count > 0)
+                                {
+                                    <span class="nsb-item-count @(cat.HasUnread ? "nsb-count--unread" : "")">
+                                        @cat.Count
+                                    </span>
+                                }
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <div class="nsb-divider"></div>
+
+                <!-- Read/Unread filter -->
+                <div class="nsb-section">
+                    <p class="nsb-label">Status</p>
+                    <div class="nsb-options">
+                        @foreach (var s in new[] { ("All", "all"), ("Unread", "unread"), ("Read", "read") })
+                        {
+                            <button class="nsb-item @(ReadFilter == s.Item2 ? "nsb-item--active" : "")"
+                                    @onclick="() => ReadFilter = s.Item2">
+                                <span class="nsb-item-label">@s.Item1</span>
+                                @if (s.Item2 == "unread" && UnreadCount > 0)
+                                {
+                                    <span class="nsb-item-count nsb-count--unread">@UnreadCount</span>
+                                }
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <div class="nsb-divider"></div>
+
+                <!-- Quick actions -->
+                <div class="nsb-section">
+                    <p class="nsb-label">Quick Actions</p>
+                    <button class="nsb-action" @onclick="MarkAllRead">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                            <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+                        </svg>
+                        Mark all read
+                    </button>
+                    <button class="nsb-action nsb-action--danger" @onclick="ClearAll">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                            <polyline points="3,6 5,6 21,6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                            <path d="M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"
+                                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        Clear all read
+                    </button>
+                </div>
+
+            </aside>
+
+            <!-- ══════════════════════════════════
+                 CENTER — NOTIFICATION LIST
+            ══════════════════════════════════ -->
+            <section class="notif-list-section">
+
+                @if (!DisplayedNotifications.Any())
+                {
+                    <div class="notif-empty">
+                        <div class="notif-empty-icon">
+                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+                                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"
+                                      stroke="#CBD5E1" stroke-width="1.5" stroke-linecap="round" />
+                            </svg>
+                        </div>
+                        <p class="notif-empty-title">All caught up!</p>
+                        <p class="notif-empty-sub">No notifications in this category.</p>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var group in GroupedNotifications)
+                    {
+                        <div class="notif-date-group">
+                            <div class="notif-date-label">
+                                <span>@group.Key</span>
+                            </div>
+
+                            <div class="notif-items">
+                                @foreach (var n in group.Value)
+                                {
+                                    <div class="notif-item @(!n.IsRead ? "notif-item--unread" : "") @(SelectedNotif?.Id == n.Id ? "notif-item--selected" : "")"
+                                         @onclick="() => SelectNotif(n)">
+
+                                        <!-- Unread indicator dot -->
+                                        <div class="notif-unread-dot @(n.IsRead ? "notif-unread-dot--hidden" : "")"></div>
+
+                                        <!-- Icon -->
+                                        <div class="notif-icon-wrap @n.IconBg">
+                                            @((MarkupString)n.IconSvg)
+                                        </div>
+
+                                        <!-- Content -->
+                                        <div class="notif-content">
+                                            <div class="notif-row-top">
+                                                <span class="notif-title @(!n.IsRead ? "notif-title--bold" : "")">
+                                                    @n.Title
+                                                </span>
+                                                <span class="notif-time">@n.TimeAgo</span>
+                                            </div>
+                                            <p class="notif-body-text">@n.Body</p>
+                                            @if (!string.IsNullOrEmpty(n.ActionLabel))
+                                            {
+                                                <span class="notif-action-tag @n.ActionTagCss">@n.ActionLabel</span>
+                                            }
+                                        </div>
+
+                                        <!-- Kebab menu -->
+                                        <div class="notif-item-actions">
+                                            @if (!n.IsRead)
+                                            {
+                                                <button class="notif-action-btn" title="Mark as read"
+                                                        @onclick:stopPropagation="true"
+                                                        @onclick="() => MarkRead(n)">
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                                                        <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+                                                    </svg>
+                                                </button>
+                                            }
+                                            <button class="notif-action-btn notif-action-btn--delete" title="Dismiss"
+                                                    @onclick:stopPropagation="true"
+                                                    @onclick="() => DismissNotif(n)">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+                                                </svg>
+                                            </button>
+                                        </div>
+
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+
+            </section>
+
+            <!-- ══════════════════════════════════
+                 RIGHT — NOTIFICATION DETAIL
+            ══════════════════════════════════ -->
+            <aside class="notif-detail-panel">
+
+                @if (SelectedNotif is null)
+                {
+                    <div class="nd-empty">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"
+                                  stroke="#CBD5E1" stroke-width="1.5" stroke-linecap="round" />
+                        </svg>
+                        <p class="nd-empty-title">Select a notification</p>
+                        <p class="nd-empty-sub">Click any notification to view details here.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="nd-content">
+
+                        <div class="nd-header">
+                            <div class="nd-icon-wrap @SelectedNotif.IconBg">
+                                @((MarkupString)SelectedNotif.IconSvg)
+                            </div>
+                            <div class="nd-header-meta">
+                                <span class="nd-category-badge @SelectedNotif.BadgeCss">@SelectedNotif.Category</span>
+                                <span class="nd-time">@SelectedNotif.TimeAgo</span>
+                            </div>
+                        </div>
+
+                        <h2 class="nd-title">@SelectedNotif.Title</h2>
+                        <p class="nd-body">@SelectedNotif.Body</p>
+
+                        @if (!string.IsNullOrEmpty(SelectedNotif.DetailBody))
+                        {
+                            <p class="nd-detail-body">@SelectedNotif.DetailBody</p>
+                        }
+
+                        @if (SelectedNotif.MetaItems.Any())
+                        {
+                            <div class="nd-meta-grid">
+                                @foreach (var m in SelectedNotif.MetaItems)
+                                {
+                                    <div class="nd-meta-item">
+                                        <span class="nd-meta-label">@m.Key</span>
+                                        <span class="nd-meta-value">@m.Value</span>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(SelectedNotif.PrimaryAction))
+                        {
+                            <div class="nd-actions">
+                                <button class="nd-btn-primary">
+                                    @SelectedNotif.PrimaryAction
+                                </button>
+                                @if (!string.IsNullOrEmpty(SelectedNotif.SecondaryAction))
+                                {
+                                    <button class="nd-btn-secondary">
+                                        @SelectedNotif.SecondaryAction
+                                    </button>
+                                }
+                            </div>
+                        }
+
+                        <div class="nd-footer">
+                            @if (!SelectedNotif.IsRead)
+                            {
+                                <button class="nd-footer-btn" @onclick="() => MarkRead(SelectedNotif)">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                                        <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+                                    </svg>
+                                    Mark as read
+                                </button>
+                            }
+                            <button class="nd-footer-btn nd-footer-btn--danger"
+                                    @onclick="() => DismissNotif(SelectedNotif)">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                                    <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+                                </svg>
+                                Dismiss
+                            </button>
+                        </div>
+
+                    </div>
+                }
+
+            </aside>
+
+        </div><!-- end notif-body -->
+
+    </main>
+
+</div>
+
+@code {
+
+    // ─────────────────────────────────────────
+    //  MODELS
+    // ─────────────────────────────────────────
+
+    private class Notification
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = "";
+        public string Body { get; set; } = "";
+        public string DetailBody { get; set; } = "";
+        public string Category { get; set; } = "";  // "Application" | "Match" | "System" | "Saved"
+        public string TimeAgo { get; set; } = "";
+        public string DateGroup { get; set; } = "";  // "Today" | "Yesterday" | "This Week"
+        public bool IsRead { get; set; }
+        public string IconSvg { get; set; } = "";
+        public string IconBg { get; set; } = "";  // CSS class
+        public string BadgeCss { get; set; } = "";  // CSS class for category badge
+        public string ActionLabel { get; set; } = "";  // e.g. "Shortlisted" chip
+        public string ActionTagCss { get; set; } = "";
+        public string PrimaryAction { get; set; } = "";
+        public string SecondaryAction { get; set; } = "";
+        public Dictionary<string, string> MetaItems { get; set; } = new();
+    }
+
+    private class CategoryItem
+    {
+        public string Key { get; set; } = "";
+        public string Label { get; set; } = "";
+        public string IconSvg { get; set; } = "";
+        public string IconCss { get; set; } = "";
+        public int Count { get; set; }
+        public bool HasUnread { get; set; }
+    }
+
+    // ─────────────────────────────────────────
+    //  ICON SVG HELPERS (inline for Blazor)
+    // ─────────────────────────────────────────
+
+    private const string IconApplication = """<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>""";
+    private const string IconMatch = """<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26 12,2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>""";
+    private const string IconSystem = """<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>""";
+    private const string IconSaved = """<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>""";
+    private const string IconInterview = """<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>""";
+    private const string IconCheck = """<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>""";
+    private const string IconResume = """<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9l-7-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><polyline points="13,2 13,9 20,9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>""";
+    private const string IconCatAll = """<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/></svg>""";
+
+    // ─────────────────────────────────────────
+    //  NOTIFICATION DATA
+    // ─────────────────────────────────────────
+
+    private List<Notification> AllNotifications = new()
+    {
+        // TODAY
+        new() {
+            Id=1, Title="You've been shortlisted!",
+            Body="NexaTech Solutions has shortlisted you for the Backend Intern position.",
+            DetailBody="Congratulations! NexaTech Solutions reviewed your application and moved you to the Shortlisted stage. This means they are interested in your profile and may reach out soon to schedule an interview. Keep your profile updated and prepare for a potential interview.",
+            Category="Application", DateGroup="Today", TimeAgo="2h ago", IsRead=false,
+            IconSvg=IconCheck, IconBg="notif-icon--green", BadgeCss="badge--green",
+            ActionLabel="Shortlisted", ActionTagCss="tag--shortlisted",
+            PrimaryAction="View Application", SecondaryAction="Browse More Jobs",
+            MetaItems=new() {
+                ["Company"] = "NexaTech Solutions",
+                ["Position"] = "Backend Intern",
+                ["Status"] = "Shortlisted",
+                ["Applied"] = "Mar 28, 2025"
+            }
+        },
+        new() {
+            Id=2, Title="New job matches found",
+            Body="12 new jobs match your resume — Full-Stack Developer roles are trending this week.",
+            DetailBody="Based on your resume skills (C#, .NET, Blazor, PostgreSQL), we found 12 new job listings that closely match your profile. The top match is 91% — Full-Stack Developer Intern at CodeBridge Co. Don't miss out!",
+            Category="Match", DateGroup="Today", TimeAgo="4h ago", IsRead=false,
+            IconSvg=IconMatch, IconBg="notif-icon--blue", BadgeCss="badge--blue",
+            ActionLabel="12 matches", ActionTagCss="tag--match",
+            PrimaryAction="View Matches",
+            MetaItems=new() {
+                ["Top Match"] = "91% — CodeBridge Co.",
+                ["Total Matches"] = "12 new listings",
+                ["Skills Matched"] = "C#, .NET, Blazor"
+            }
+        },
+        new() {
+            Id=3, Title="Application under review",
+            Body="SoftForge Inc. has moved your Frontend Developer Intern application to Under Review.",
+            DetailBody="Your application to SoftForge Inc. for the Frontend Developer Intern position is now Under Review. This means the hiring team is actively evaluating your profile. You'll be notified when there's an update.",
+            Category="Application", DateGroup="Today", TimeAgo="6h ago", IsRead=false,
+            IconSvg=IconApplication, IconBg="notif-icon--amber", BadgeCss="badge--amber",
+            ActionLabel="Under Review", ActionTagCss="tag--review",
+            PrimaryAction="View Application",
+            MetaItems=new() {
+                ["Company"] = "SoftForge Inc.",
+                ["Position"] = "Frontend Developer Intern",
+                ["Status"] = "Under Review",
+                ["Applied"] = "Apr 5, 2025"
+            }
+        },
+
+        // YESTERDAY
+        new() {
+            Id=4, Title="Resume parsed successfully",
+            Body="Your uploaded resume has been parsed. 6 skills detected and matched against job listings.",
+            DetailBody="We successfully extracted text from your uploaded PDF resume using our parsing engine. 6 skills were detected: C#, .NET, Blazor, PostgreSQL, HTML/CSS, Git. These skills are now being used in your job match score calculations. You can review and edit them in Resume & Profile.",
+            Category="System", DateGroup="Yesterday", TimeAgo="Yesterday, 3:14 PM", IsRead=true,
+            IconSvg=IconResume, IconBg="notif-icon--slate", BadgeCss="badge--slate",
+            ActionLabel="", ActionTagCss="",
+            PrimaryAction="View Resume & Profile",
+            MetaItems=new() {
+                ["Skills Detected"] = "6 skills",
+                ["File"] = "resume_clint.pdf",
+                ["Parser"] = "iTextSharp (PDF)"
+            }
+        },
+        new() {
+            Id=5, Title="Saved job expiring soon",
+            Body="API Developer (.NET) at ApexCore Solutions closes in 3 days. Apply before it's gone!",
+            DetailBody="You saved the API Developer (.NET) listing at ApexCore Solutions. This listing is set to expire in 3 days. If you're interested, now is a good time to apply. The role offers a 62% match with your resume.",
+            Category="Saved", DateGroup="Yesterday", TimeAgo="Yesterday, 11:00 AM", IsRead=false,
+            IconSvg=IconSaved, IconBg="notif-icon--red", BadgeCss="badge--red",
+            ActionLabel="Closing soon", ActionTagCss="tag--danger",
+            PrimaryAction="Apply Now", SecondaryAction="View Listing",
+            MetaItems=new() {
+                ["Company"] = "ApexCore Solutions",
+                ["Position"] = "API Developer (.NET)",
+                ["Closes"] = "Apr 13, 2025",
+                ["Match Score"] = "62%"
+            }
+        },
+        new() {
+            Id=6, Title="Interview scheduled",
+            Body="CodeBridge Co. has scheduled an interview for Full-Stack Developer Intern on Apr 15.",
+            DetailBody="Congratulations! CodeBridge Co. has confirmed an interview for you for the Full-Stack Developer Intern position. The interview is scheduled for April 15, 2025 at 10:00 AM. Make sure to prepare your portfolio, review the job description, and be ready to discuss your C# and Blazor experience.",
+            Category="Application", DateGroup="Yesterday", TimeAgo="Yesterday, 9:30 AM", IsRead=true,
+            IconSvg=IconInterview, IconBg="notif-icon--green", BadgeCss="badge--green",
+            ActionLabel="For Interview", ActionTagCss="tag--interview",
+            PrimaryAction="View Interview Details", SecondaryAction="Add to Calendar",
+            MetaItems=new() {
+                ["Company"] = "CodeBridge Co.",
+                ["Position"] = "Full-Stack Developer Intern",
+                ["Interview Date"] = "Apr 15, 2025",
+                ["Time"] = "10:00 AM"
+            }
+        },
+
+        // THIS WEEK
+        new() {
+            Id=7, Title="Profile strength increased",
+            Body="You added your education and skills — profile strength is now at 100%. Great job!",
+            DetailBody="Your profile is now complete. Adding your education, skills, and about section has boosted your profile strength to 100%. A complete profile increases your chances of being shortlisted by companies browsing applicants.",
+            Category="System", DateGroup="This Week", TimeAgo="Apr 7", IsRead=true,
+            IconSvg=IconSystem, IconBg="notif-icon--blue", BadgeCss="badge--blue",
+            ActionLabel="100% complete", ActionTagCss="tag--match",
+            PrimaryAction="View Profile",
+            MetaItems=new() {
+                ["Profile Strength"] = "100%",
+                ["Last Updated"] = "Apr 7, 2025"
+            }
+        },
+        new() {
+            Id=8, Title="Application submitted",
+            Body="Your application to TechSpark PH for .NET Core Developer has been submitted successfully.",
+            DetailBody="Your application has been successfully submitted to TechSpark PH for the .NET Core Developer position. The company will review your profile and update your application status. You can track this in My Applications.",
+            Category="Application", DateGroup="This Week", TimeAgo="Apr 4", IsRead=true,
+            IconSvg=IconApplication, IconBg="notif-icon--slate", BadgeCss="badge--slate",
+            ActionLabel="Submitted", ActionTagCss="tag--submitted",
+            PrimaryAction="View Application",
+            MetaItems=new() {
+                ["Company"] = "TechSpark PH",
+                ["Position"] = ".NET Core Developer",
+                ["Status"] = "Submitted",
+                ["Date"] = "Apr 4, 2025"
+            }
+        },
+        new() {
+            Id=9, Title="New listings in your area",
+            Body="5 new Full-time positions opened in Makati City and BGC this week.",
+            DetailBody="Based on your location preferences and job type filters, 5 new full-time listings have been posted this week in Makati City and BGC. These include roles in .NET development, backend engineering, and API development.",
+            Category="Match", DateGroup="This Week", TimeAgo="Apr 3", IsRead=true,
+            IconSvg=IconMatch, IconBg="notif-icon--blue", BadgeCss="badge--blue",
+            ActionLabel="5 new jobs", ActionTagCss="tag--match",
+            PrimaryAction="Browse Jobs",
+            MetaItems=new() {
+                ["Locations"] = "Makati City, BGC",
+                ["Job Types"] = "Full-time",
+                ["New Listings"] = "5 this week"
+            }
+        }
+    };
+
+    // ─────────────────────────────────────────
+    //  SIDEBAR CATEGORIES
+    // ─────────────────────────────────────────
+
+    private List<CategoryItem> Categories => new()
+    {
+        new() { Key="All",         Label="All Notifications", IconSvg=IconCatAll,      IconCss="cat-icon--slate", Count=AllNotifications.Count, HasUnread=AllNotifications.Any(n=>!n.IsRead) },
+        new() { Key="Application", Label="Applications",      IconSvg=IconApplication, IconCss="cat-icon--blue",  Count=AllNotifications.Count(n=>n.Category=="Application"), HasUnread=AllNotifications.Any(n=>n.Category=="Application"&&!n.IsRead) },
+        new() { Key="Match",       Label="Job Matches",       IconSvg=IconMatch,       IconCss="cat-icon--green", Count=AllNotifications.Count(n=>n.Category=="Match"), HasUnread=AllNotifications.Any(n=>n.Category=="Match"&&!n.IsRead) },
+        new() { Key="Saved",       Label="Saved Jobs",        IconSvg=IconSaved,       IconCss="cat-icon--red",   Count=AllNotifications.Count(n=>n.Category=="Saved"), HasUnread=AllNotifications.Any(n=>n.Category=="Saved"&&!n.IsRead) },
+        new() { Key="System",      Label="System",            IconSvg=IconSystem,      IconCss="cat-icon--slate", Count=AllNotifications.Count(n=>n.Category=="System"), HasUnread=false }
+    };
+
+    // ─────────────────────────────────────────
+    //  STATE
+    // ─────────────────────────────────────────
+
+    private string ActiveCategory { get; set; } = "All";
+    private string ReadFilter { get; set; } = "all";
+    private Notification? SelectedNotif;
+
+    private int UnreadCount => AllNotifications.Count(n => !n.IsRead);
+
+    // ─────────────────────────────────────────
+    //  COMPUTED
+    // ─────────────────────────────────────────
+
+    private List<Notification> DisplayedNotifications
+    {
+        get
+        {
+            var q = AllNotifications.AsEnumerable();
+
+            if (ActiveCategory != "All")
+                q = q.Where(n => n.Category == ActiveCategory);
+
+            q = ReadFilter switch
+            {
+                "unread" => q.Where(n => !n.IsRead),
+                "read" => q.Where(n => n.IsRead),
+                _ => q
+            };
+
+            return q.ToList();
+        }
+    }
+
+    private Dictionary<string, List<Notification>> GroupedNotifications =>
+        DisplayedNotifications
+            .GroupBy(n => n.DateGroup)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+    // ─────────────────────────────────────────
+    //  LIFECYCLE
+    // ─────────────────────────────────────────
+
+    protected override void OnInitialized() => SelectedNotif = AllNotifications.First();
+
+    // ─────────────────────────────────────────
+    //  HANDLERS
+    // ─────────────────────────────────────────
+
+    private void SelectNotif(Notification n)
+    {
+        SelectedNotif = n;
+        n.IsRead = true;   // auto-mark as read on open
+    }
+
+    private void MarkRead(Notification n) => n.IsRead = true;
+
+    private void MarkAllRead()
+    {
+        foreach (var n in AllNotifications) n.IsRead = true;
+    }
+
+    private void DismissNotif(Notification n)
+    {
+        AllNotifications.Remove(n);
+        if (SelectedNotif?.Id == n.Id)
+            SelectedNotif = DisplayedNotifications.FirstOrDefault();
+    }
+
+    private void ClearAll()
+    {
+        AllNotifications.RemoveAll(n => n.IsRead);
+        if (SelectedNotif is not null && !AllNotifications.Contains(SelectedNotif))
+            SelectedNotif = DisplayedNotifications.FirstOrDefault();
+    }
+}

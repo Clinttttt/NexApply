@@ -1,0 +1,592 @@
+@page "/job-board"
+@rendermode InteractiveServer
+<PageTitle>Job Board — NexApply</PageTitle>
+
+<div class="app-shell">
+
+    <Sidebar />
+
+    <main class="main-content">
+
+        <PageHeader Title="Job Board" Subtitle="@($"{FilteredJobs.Count()} listings — updated today")">
+            <div class="header-actions">
+                <a href="/browse-jobs" class="btn-browse-for-you">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    Browse For You
+                </a>
+            </div>
+        </PageHeader>
+
+        <div class="job-board-body">
+
+            <!-- ── Left Panel: Search + Job List ── -->
+            <div class="job-panel-left">
+
+                <!-- ── Toolbar ── -->
+                <div class="jb-toolbar">
+                    <div class="search-wrap">
+                        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                        <input class="search-input" type="text"
+                               placeholder="Search role, company, or skill…"
+                               @bind="searchQuery"
+                               @bind:event="oninput" />
+                    </div>
+
+                    <div class="jb-filters">
+                        <select class="filter-select" @bind="typeFilter">
+                            <option value="">All Types</option>
+                            <option value="Full-time">Full-time</option>
+                            <option value="Internship">Internship</option>
+                            <option value="Part-time">Part-time</option>
+                            <option value="Contract">Contract</option>
+                            <option value="Freelance">Freelance</option>
+                        </select>
+                        <select class="filter-select" @bind="setupFilter">
+                            <option value="">All Setups</option>
+                            <option value="Remote">Remote</option>
+                            <option value="On-site">On-site</option>
+                            <option value="Hybrid">Hybrid</option>
+                        </select>
+                        <select class="filter-select" @bind="sortOrder">
+                            <option value="Recent">Most Recent</option>
+                            <option value="Match">Best Match</option>
+                        </select>
+
+                        @if (!string.IsNullOrWhiteSpace(searchQuery) || !string.IsNullOrWhiteSpace(typeFilter) || !string.IsNullOrWhiteSpace(setupFilter))
+                        {
+                            <button class="btn-clear-filters" @onclick="ClearFilters">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                                Clear
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <!-- ── Job List ── -->
+                <div class="job-list">
+                    @{
+                        var jobs = FilteredJobs.ToList();
+                    }
+
+                    @if (!jobs.Any())
+                    {
+                        <div class="empty-state">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8" />
+                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                            </svg>
+                            <p class="empty-state__title">No jobs found</p>
+                            <p class="empty-state__sub">Try adjusting your search or filters.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var job in jobs)
+                        {
+                            var isActive = selectedJob?.Id == job.Id;
+                            <div class="job-card @(isActive ? "job-card--active" : "")" @onclick="() => SelectJob(job)">
+
+                                <div class="job-card__top">
+                                    <div class="job-card__info">
+                                        <p class="job-card__company">@job.Company</p>
+                                        <h3 class="job-card__role">@job.Role</h3>
+                                    </div>
+                                    <span class="job-card__date">@job.PostedDate</span>
+                                </div>
+
+                                <div class="job-card__tags">
+                                    <span class="jb-tag jb-tag--type">@job.Type</span>
+                                    <span class="jb-tag jb-tag--setup">@job.Setup</span>
+                                    <span class="jb-tag jb-tag--location">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" />
+                                            <circle cx="12" cy="10" r="3" />
+                                        </svg>
+                                        @job.Location
+                                    </span>
+                                </div>
+
+                                <p class="job-card__preview">@GetPreviewText(job.About)</p>
+
+                            </div>
+                        }
+                    }
+                </div>
+
+            </div>
+
+            <!-- ── Right Panel: Job Detail ── -->
+            <div class="job-panel-right">
+
+                @if (selectedJob == null)
+                {
+                    <div class="detail-empty">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="7" width="20" height="14" rx="2" />
+                            <path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z" />
+                        </svg>
+                        <p class="detail-empty__title">Select a job to view details</p>
+                        <p class="detail-empty__sub">Click any listing from the left to see the full description.</p>
+                    </div>
+                }
+                else
+                {
+                    <!-- ── Detail Header ── -->
+                    <div class="detail-header">
+                        <div class="detail-header__left">
+                            <div>
+                                <p class="detail-company">@selectedJob.Company</p>
+                                <h2 class="detail-role">@selectedJob.Role</h2>
+                            </div>
+                        </div>
+                        <div class="detail-header__actions">
+                            <button class="btn-save @(selectedJob.IsSaved ? "btn-save--saved" : "")" @onclick="() => ToggleSave(selectedJob)">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="@(selectedJob.IsSaved ? "currentColor" : "none")" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                                </svg>
+                                @(selectedJob.IsSaved ? "Saved" : "Save")
+                            </button>
+                            <button class="btn-apply">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 5v14M5 12l7 7 7-7" />
+                                </svg>
+                                Apply Now
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ── Meta Grid ── -->
+                    <div class="detail-meta">
+                        <div class="detail-meta__item">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="7" width="20" height="14" rx="2" />
+                                <path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z" />
+                            </svg>
+                            <div>
+                                <span class="detail-meta__key">TYPE</span>
+                                <span class="detail-meta__val">@selectedJob.Type</span>
+                            </div>
+                        </div>
+                        <div class="detail-meta__item">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" />
+                                <circle cx="12" cy="10" r="3" />
+                            </svg>
+                            <div>
+                                <span class="detail-meta__key">LOCATION</span>
+                                <span class="detail-meta__val">@selectedJob.Location</span>
+                            </div>
+                        </div>
+                        <div class="detail-meta__item">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" />
+                                <line x1="16" y1="2" x2="16" y2="6" />
+                                <line x1="8" y1="2" x2="8" y2="6" />
+                                <line x1="3" y1="10" x2="21" y2="10" />
+                            </svg>
+                            <div>
+                                <span class="detail-meta__key">POSTED</span>
+                                <span class="detail-meta__val">@selectedJob.PostedDate</span>
+                            </div>
+                        </div>
+                        <div class="detail-meta__item">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                <circle cx="9" cy="7" r="4" />
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                            </svg>
+                            <div>
+                                <span class="detail-meta__key">APPLICANTS</span>
+                                <span class="detail-meta__val">@selectedJob.Applicants applied</span>
+                            </div>
+                        </div>
+                        <div class="detail-meta__item">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="1" x2="12" y2="23" />
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                            </svg>
+                            <div>
+                                <span class="detail-meta__key">SALARY</span>
+                                <span class="detail-meta__val">@selectedJob.Salary</span>
+                            </div>
+                        </div>
+                        <div class="detail-meta__item">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
+                            </svg>
+                            <div>
+                                <span class="detail-meta__key">SETUP</span>
+                                <span class="detail-meta__val">@selectedJob.Setup</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Skills ── -->
+                    <div class="detail-section">
+                        <h4 class="detail-section__title">Required Skills</h4>
+                        <div class="detail-skills">
+                            @foreach (var skill in selectedJob.Skills)
+                            {
+                                <span class="skill-chip">@skill</span>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- ── About ── -->
+                    <div class="detail-section">
+                        <h4 class="detail-section__title">About this role</h4>
+                        <p class="detail-body">@selectedJob.About</p>
+                    </div>
+
+                    <!-- ── Responsibilities ── -->
+                    <div class="detail-section">
+                        <h4 class="detail-section__title">Responsibilities</h4>
+                        <ul class="detail-list">
+                            @foreach (var item in selectedJob.Responsibilities)
+                            {
+                                <li>@item</li>
+                            }
+                        </ul>
+                    </div>
+
+                    <!-- ── Requirements ── -->
+                    <div class="detail-section">
+                        <h4 class="detail-section__title">Requirements</h4>
+                        <ul class="detail-list">
+                            @foreach (var item in selectedJob.Requirements)
+                            {
+                                <li>@item</li>
+                            }
+                        </ul>
+                    </div>
+
+                    <!-- ── Bottom Apply ── -->
+                    <div class="detail-cta">
+                        <button class="btn-apply btn-apply--full">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 5v14M5 12l7 7 7-7" />
+                            </svg>
+                            Apply Now
+                        </button>
+                        <button class="btn-save @(selectedJob.IsSaved ? "btn-save--saved" : "") btn-save--full" @onclick="() => ToggleSave(selectedJob)">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="@(selectedJob.IsSaved ? "currentColor" : "none")" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                            </svg>
+                            @(selectedJob.IsSaved ? "Saved" : "Save Job")
+                        </button>
+                    </div>
+                }
+
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+@code {
+
+    // ── State ──
+    private string searchQuery = "";
+    private string typeFilter = "";
+    private string setupFilter = "";
+    private string sortOrder = "Recent";
+    private JobItem? selectedJob;
+
+    private void ClearFilters()
+    {
+        searchQuery = "";
+        typeFilter = "";
+        setupFilter = "";
+    }
+
+    private void SelectJob(JobItem job)
+    {
+        selectedJob = job;
+    }
+
+    private void ToggleSave(JobItem job)
+    {
+        job.IsSaved = !job.IsSaved;
+    }
+
+    private static string GetMatchColor(int pct) => pct >= 80 ? "green" : pct >= 55 ? "amber" : "red";
+
+    private static string GetMatchRingColor(int pct) => pct >= 80 ? "#059669" : pct >= 55 ? "#D97706" : "#DC2626";
+
+    private static string GetPreviewText(string text)
+    {
+        var sentences = text.Split(new[] { ". " }, StringSplitOptions.RemoveEmptyEntries);
+        if (sentences.Length >= 2)
+            return sentences[0] + ". " + sentences[1] + ".";
+        return text.Length > 120 ? text.Substring(0, 120) + "..." : text;
+    }
+
+    // ── Data Model ──
+    private class JobItem
+    {
+        public int Id { get; init; }
+        public string Company { get; init; } = "";
+        public string Role { get; init; } = "";
+        public string Type { get; init; } = "";
+        public string Setup { get; init; } = "";
+        public string Location { get; init; } = "";
+        public string PostedDate { get; init; } = "";
+        public string Salary { get; init; } = "";
+        public int Applicants { get; init; }
+        public int MatchPct { get; init; }
+        public string LogoColor { get; init; } = "";
+        public string LogoText { get; init; } = "";
+        public List<string> Skills { get; init; } = new();
+        public string About { get; init; } = "";
+        public List<string> Responsibilities { get; init; } = new();
+        public List<string> Requirements { get; init; } = new();
+        public bool IsSaved { get; set; }
+    }
+
+    // ── Hardcoded Listings ──
+    private List<JobItem> AllJobs = new()
+    {
+        new JobItem
+        {
+            Id = 1,
+            Company = "CodeBridge Co.",
+            Role = "Full-Stack Developer Intern",
+            Type = "Internship",
+            Setup = "Hybrid",
+            Location = "Makati City",
+            PostedDate = "Apr 7",
+            Salary = "₱8,000 / mo",
+            Applicants = 14,
+            MatchPct = 91,
+            LogoColor = "purple",
+            LogoText = "CB",
+            Skills = new() { "C#", ".NET Core", "Blazor", "PostgreSQL", "REST API", "Docker", "Azure" },
+            About = "CodeBridge Co. is looking for a motivated Full-Stack Developer Intern to join our product team. You will work alongside senior engineers building scalable web applications using Blazor Server and .NET Core Web API with PostgreSQL as the primary database. This is a hands-on internship — you will participate in sprint planning, code reviews, and daily standups.",
+            Responsibilities = new()
+            {
+                "Build and maintain Blazor Server components and pages",
+                "Design and consume RESTful API endpoints with .NET Core",
+                "Write and optimize PostgreSQL queries using Dapper",
+                "Participate in code reviews and agile sprints",
+                "Collaborate with UI/UX on frontend implementation"
+            },
+            Requirements = new()
+            {
+                "Strong foundation in C# and object-oriented programming",
+                "Basic understanding of SQL and relational databases",
+                "Familiarity with Git version control",
+                "Currently enrolled in a CS, IT, or related degree program",
+                "Able to commit to at least 4 months"
+            }
+        },
+        new JobItem
+        {
+            Id = 2,
+            Company = "ApexCore Solutions",
+            Role = "API Developer (.NET)",
+            Type = "Full-time",
+            Setup = "Hybrid",
+            Location = "Makati City",
+            PostedDate = "Apr 2",
+            Salary = "₱35,000 – ₱50,000 / mo",
+            Applicants = 27,
+            MatchPct = 62,
+            LogoColor = "blue",
+            LogoText = "AP",
+            Skills = new() { "C#", ".NET 8", "Web API", "Entity Framework", "SQL Server", "Redis", "Docker" },
+            About = "ApexCore Solutions is hiring a mid-level API Developer to build and maintain enterprise-grade REST APIs powering fintech products used across Southeast Asia. You will own the design and delivery of microservices in a cloud-first environment.",
+            Responsibilities = new()
+            {
+                "Design, build, and maintain scalable .NET Web API services",
+                "Integrate with third-party payment and banking APIs",
+                "Implement caching strategies using Redis",
+                "Write unit and integration tests with xUnit",
+                "Collaborate with frontend and mobile teams on API contracts"
+            },
+            Requirements = new()
+            {
+                "2+ years experience with .NET Web API development",
+                "Strong knowledge of SQL Server and Entity Framework Core",
+                "Experience with Docker and containerized deployments",
+                "Understanding of OAuth2 / JWT authentication",
+                "Excellent written and verbal communication skills"
+            }
+        },
+        new JobItem
+        {
+            Id = 3,
+            Company = "NovaByte Inc.",
+            Role = "React Frontend Developer",
+            Type = "Internship",
+            Setup = "Remote",
+            Location = "Quezon City",
+            PostedDate = "Apr 3",
+            Salary = "₱6,500 / mo",
+            Applicants = 41,
+            MatchPct = 65,
+            LogoColor = "green",
+            LogoText = "NV",
+            Skills = new() { "React", "TypeScript", "Tailwind CSS", "REST API", "Git", "Figma" },
+            About = "NovaByte Inc. is seeking a React Frontend Developer Intern to help ship polished, accessible UI components for our SaaS dashboard products. You will work directly with the product designer and backend team in a fully remote setup.",
+            Responsibilities = new()
+            {
+                "Build reusable React components following design specs",
+                "Integrate REST APIs using Axios or React Query",
+                "Write clean, maintainable TypeScript code",
+                "Implement responsive layouts with Tailwind CSS",
+                "Participate in weekly design and engineering syncs"
+            },
+            Requirements = new()
+            {
+                "Solid understanding of React hooks and component lifecycle",
+                "Proficiency in TypeScript",
+                "Experience consuming REST APIs",
+                "Familiarity with version control using Git",
+                "Portfolio or GitHub showcasing personal or academic projects"
+            }
+        },
+        new JobItem
+        {
+            Id = 4,
+            Company = "TechSpark PH",
+            Role = ".NET Core Developer",
+            Type = "Full-time",
+            Setup = "On-site",
+            Location = "Ortigas Center",
+            PostedDate = "Apr 4",
+            Salary = "₱40,000 – ₱55,000 / mo",
+            Applicants = 19,
+            MatchPct = 71,
+            LogoColor = "amber",
+            LogoText = "TS",
+            Skills = new() { "C#", ".NET Core", "MVC", "EF Core", "SQL Server", "Azure DevOps" },
+            About = "TechSpark PH is a growing software firm specializing in government and enterprise solutions. We are hiring a .NET Core Developer to join our backend team delivering robust, secure web applications for public sector clients.",
+            Responsibilities = new()
+            {
+                "Develop and maintain ASP.NET Core MVC applications",
+                "Design database schemas and write efficient EF Core queries",
+                "Implement authentication and role-based access control",
+                "Collaborate with project managers and business analysts",
+                "Deploy applications through Azure DevOps pipelines"
+            },
+            Requirements = new()
+            {
+                "1–3 years experience in .NET Core development",
+                "Strong understanding of MVC architecture",
+                "Experience with SQL Server and stored procedures",
+                "Ability to read and interpret technical requirements",
+                "Willing to work on-site in Ortigas"
+            }
+        },
+        new JobItem
+        {
+            Id = 5,
+            Company = "SkyLink Digital",
+            Role = "DevOps Engineer",
+            Type = "Full-time",
+            Setup = "Remote",
+            Location = "Remote — PH",
+            PostedDate = "Apr 5",
+            Salary = "₱55,000 – ₱75,000 / mo",
+            Applicants = 33,
+            MatchPct = 48,
+            LogoColor = "cyan",
+            LogoText = "SK",
+            Skills = new() { "Docker", "Kubernetes", "CI/CD", "Terraform", "AWS", "Linux", "Bash" },
+            About = "SkyLink Digital is looking for an experienced DevOps Engineer to automate, scale, and secure our cloud infrastructure on AWS. You will work across engineering teams to streamline delivery pipelines and maintain production reliability at scale.",
+            Responsibilities = new()
+            {
+                "Build and maintain CI/CD pipelines using GitHub Actions",
+                "Manage containerized workloads with Kubernetes (EKS)",
+                "Write infrastructure-as-code using Terraform",
+                "Monitor system health with CloudWatch and Grafana",
+                "Lead incident response and post-mortem reviews"
+            },
+            Requirements = new()
+            {
+                "3+ years in a DevOps or SRE role",
+                "Hands-on experience with AWS services (EC2, RDS, S3, EKS)",
+                "Strong proficiency with Docker and Kubernetes",
+                "Experience writing Terraform or Pulumi modules",
+                "Comfortable with Linux systems administration and Bash scripting"
+            }
+        },
+        new JobItem
+        {
+            Id = 6,
+            Company = "DataForge PH",
+            Role = "Data Engineer",
+            Type = "Contract",
+            Setup = "Hybrid",
+            Location = "BGC, Taguig",
+            PostedDate = "Apr 6",
+            Salary = "₱60,000 / mo",
+            Applicants = 11,
+            MatchPct = 55,
+            LogoColor = "red",
+            LogoText = "DF",
+            Skills = new() { "Python", "SQL", "Apache Spark", "Airflow", "GCP", "BigQuery", "dbt" },
+            About = "DataForge PH is a data consultancy building modern data stacks for retail and logistics clients. We are looking for a contract Data Engineer to design and maintain ETL pipelines and data warehouse models for a 6-month engagement.",
+            Responsibilities = new()
+            {
+                "Design and build ETL pipelines with Apache Airflow",
+                "Model data transformations using dbt on BigQuery",
+                "Collaborate with data analysts on schema design",
+                "Monitor pipeline health and resolve data quality issues",
+                "Document data lineage and transformation logic"
+            },
+            Requirements = new()
+            {
+                "Strong Python skills for data pipeline development",
+                "Experience with BigQuery or another cloud data warehouse",
+                "Familiarity with dbt for data transformation",
+                "Understanding of dimensional modeling (star schema)",
+                "Available to start within 2 weeks"
+            }
+        }
+    };
+
+    // ── Filtered List ──
+    private IEnumerable<JobItem> FilteredJobs
+    {
+        get
+        {
+            var result = AllJobs.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(searchQuery))
+                result = result.Where(j =>
+                    j.Role.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                    j.Company.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                    j.Skills.Any(s => s.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)));
+
+            if (!string.IsNullOrWhiteSpace(typeFilter))
+                result = result.Where(j => j.Type == typeFilter);
+
+            if (!string.IsNullOrWhiteSpace(setupFilter))
+                result = result.Where(j => j.Setup == setupFilter);
+
+            result = sortOrder switch
+            {
+                "Match" => result.OrderByDescending(j => j.MatchPct),
+                _ => result
+            };
+
+            return result;
+        }
+    }
+}

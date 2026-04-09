@@ -1,0 +1,297 @@
+@page "/saved-jobs"
+@rendermode InteractiveServer
+
+<PageTitle>Saved Jobs — NexApply</PageTitle>
+
+<div class="app-shell">
+
+    <Sidebar />
+
+    <main class="main-content">
+
+        <PageHeader Title="Saved Jobs" Subtitle="@($"{savedJobs.Count} saved jobs")">
+            <a href="/job-board" class="sj-browse-btn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                Browse More Jobs
+            </a>
+        </PageHeader>
+
+        <div class="sj-body">
+
+            <!-- ── Summary Bar ── -->
+            <div class="sj-summary-bar">
+                <div class="sj-stat">
+                    <div class="sj-stat-value">@savedJobs.Count</div>
+                    <div class="sj-stat-label">Total Saved</div>
+                </div>
+                <div class="sj-stat-divider"></div>
+                <div class="sj-stat">
+                    <div class="sj-stat-value">@savedJobs.Count(j => j.Type == "Internship")</div>
+                    <div class="sj-stat-label">Internships</div>
+                </div>
+                <div class="sj-stat-divider"></div>
+                <div class="sj-stat">
+                    <div class="sj-stat-value">@savedJobs.Count(j => j.Type == "Full-time")</div>
+                    <div class="sj-stat-label">Full-time</div>
+                </div>
+                <div class="sj-stat-divider"></div>
+                <div class="sj-stat">
+                    <div class="sj-stat-value">@savedJobs.Count(j => j.Setup == "Remote")</div>
+                    <div class="sj-stat-label">Remote</div>
+                </div>
+                <div class="sj-stat-divider"></div>
+                <div class="sj-stat">
+                    <div class="sj-stat-value">@savedJobs.Count(j => j.Applied)</div>
+                    <div class="sj-stat-label">Applied</div>
+                </div>
+            </div>
+
+            <!-- ── Filter + Sort Toolbar ── -->
+            <div class="sj-toolbar">
+                <div class="sj-filter-tabs">
+                    @foreach (var tab in FilterTabs)
+                    {
+                        <button class="sj-filter-tab @(ActiveFilter == tab ? "active" : "")"
+                                @onclick="() => SetFilter(tab)">
+                            @tab
+                            <span class="sj-tab-count">@GetTabCount(tab)</span>
+                        </button>
+                    }
+                </div>
+                <div class="sj-toolbar-right">
+                    <div class="sj-search-mini">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <input class="sj-search-input" type="text" placeholder="Search saved jobs..."
+                               @bind:event="oninput" @oninput="OnSearch" />
+                    </div>
+                    <select class="sj-sort-select" @bind="SortBy" @bind:after="SortJobs">
+                        <option value="recent">Most Recent</option>
+                        <option value="company">Company A–Z</option>
+                        <option value="type">Job Type</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- ── Job List ── -->
+            @if (!FilteredJobs.Any())
+            {
+                <div class="sj-empty">
+                    <div class="sj-empty-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+                    </div>
+                    @if (!string.IsNullOrEmpty(SearchQuery) || ActiveFilter != "All")
+                    {
+                        <p class="sj-empty-title">No results found</p>
+                        <p class="sj-empty-sub">Try adjusting your search or filters.</p>
+                        <button class="sj-empty-reset" @onclick="ResetFilters">Clear Filters</button>
+                    }
+                    else
+                    {
+                        <p class="sj-empty-title">No saved jobs yet</p>
+                        <p class="sj-empty-sub">Browse listings and hit the bookmark icon to save jobs you're interested in.</p>
+                        <a href="/job-board" class="sj-empty-cta">Browse Job Board</a>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="sj-list">
+                    @foreach (var job in FilteredJobs)
+                    {
+                        <div class="sj-card @(job.Applied ? "applied" : "")">
+
+                            <!-- Top Row -->
+                            <div class="sj-card-top">
+                                <div class="sj-card-main">
+                                    <div class="sj-card-company-row">
+                                        <span class="sj-card-company">@job.Company</span>
+                                        <span class="sj-card-date">Saved @job.SavedDate</span>
+                                    </div>
+                                    <div class="sj-card-title">@job.Title</div>
+                                    <div class="sj-card-meta">
+                                        <span class="sj-type-badge sj-type-@job.Type.ToLower().Replace("-","").Replace(" ","")">@job.Type</span>
+                                        <span class="sj-setup-pill">@job.Setup</span>
+                                        <span class="sj-loc-row">
+                                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                            @job.Location
+                                        </span>
+                                        @if (!string.IsNullOrEmpty(job.Salary))
+                                        {
+                                            <span class="sj-salary-row">
+                                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                                                @job.Salary
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="sj-card-actions">
+                                    @if (job.Applied)
+                                    {
+                                        <span class="sj-applied-badge">
+                                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                            Applied
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <button class="sj-apply-btn" @onclick="() => MarkApplied(job)">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                                            Apply Now
+                                        </button>
+                                    }
+                                    <button class="sj-unsave-btn" @onclick="() => UnsaveJob(job)" title="Remove from saved">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <p class="sj-card-desc">@job.Description</p>
+
+                            <!-- Skills Row -->
+                            <div class="sj-card-footer">
+                                <a href="/job-board/@job.Id" class="sj-view-btn">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    View
+                                </a>
+                                <div class="sj-card-skills">
+                                    @foreach (var s in job.Skills.Take(6))
+                                    {
+                                        <span class="sj-skill">@s</span>
+                                    }
+                                    @if (job.Skills.Count > 6)
+                                    {
+                                        <span class="sj-skill muted">+@(job.Skills.Count - 6) more</span>
+                                    }
+                                </div>
+                            </div>
+
+                        </div>
+                    }
+                </div>
+            }
+
+        </div>
+
+    </main>
+</div>
+
+@code {
+
+    private string SearchQuery  = "";
+    private string ActiveFilter = "All";
+    private string SortBy       = "recent";
+
+    private List<string> FilterTabs = new() { "All", "Full-time", "Internship", "Remote", "Applied" };
+
+    private class SavedJob
+    {
+        public int    Id           { get; set; }
+        public string Title        { get; set; } = "";
+        public string Company      { get; set; } = "";
+        public string Location     { get; set; } = "";
+        public string Type         { get; set; } = "";
+        public string Setup        { get; set; } = "";
+        public string Salary       { get; set; } = "";
+        public string PostedDate   { get; set; } = "";
+        public string SavedDate    { get; set; } = "";
+        public string Description  { get; set; } = "";
+        public bool   Applied      { get; set; } = false;
+        public List<string> Skills { get; set; } = new();
+    }
+
+    private List<SavedJob> savedJobs = new()
+    {
+        new SavedJob { Id=1, Title="Full-Stack Developer Intern", Company="CodeBridge Co.", Location="Makati City", Type="Internship", Setup="Hybrid", Salary="₱8,000 / mo", PostedDate="Apr 7", SavedDate="Apr 8",
+            Skills=new(){"C#",".NET","Blazor","PostgreSQL","REST API","Docker","Azure"},
+            Description="CodeBridge Co. is looking for a motivated Full-Stack Developer Intern to join our product team, working across backend APIs and Blazor frontends." },
+
+        new SavedJob { Id=2, Title="React Frontend Developer", Company="NovaByte Inc.", Location="Quezon City", Type="Internship", Setup="Remote", Salary="₱6,000 / mo", PostedDate="Apr 6", SavedDate="Apr 7", Applied=true,
+            Skills=new(){"React","TypeScript","Tailwind CSS","REST API","Git"},
+            Description="NovaByte Inc. is hiring a React Frontend Developer Intern to build modern, responsive UIs for their SaaS platform." },
+
+        new SavedJob { Id=3, Title=".NET Core Developer", Company="TechSpark PH", Location="Ortigas Center", Type="Full-time", Setup="On-site", Salary="₱45,000 / mo", PostedDate="Apr 5", SavedDate="Apr 6",
+            Skills=new(){"C#",".NET 8","EF Core","SQL Server","Azure"},
+            Description="TechSpark PH needs a .NET Core Developer to build and maintain scalable enterprise systems for financial services clients." },
+
+        new SavedJob { Id=4, Title="DevOps / Cloud Engineer", Company="Stackify Labs", Location="Remote", Type="Full-time", Setup="Remote", Salary="₱60,000 / mo", PostedDate="Apr 4", SavedDate="Apr 5",
+            Skills=new(){"Docker","Kubernetes","AWS","Terraform","CI/CD","Linux"},
+            Description="Stackify Labs is hiring a DevOps engineer to own their cloud infrastructure, improve deployment pipelines, and reduce downtime across microservices." },
+
+        new SavedJob { Id=5, Title="UI/UX Designer (Tech Focus)", Company="PixelCraft Studio", Location="Cebu City", Type="Full-time", Setup="Remote", Salary="₱40,000 / mo", PostedDate="Apr 3", SavedDate="Apr 4",
+            Skills=new(){"Figma","Design Systems","Prototyping","User Research","Accessibility"},
+            Description="PixelCraft Studio is growing its design team. You'll own end-to-end product design for multiple SaaS clients, from wireframes to polished design systems." },
+    };
+
+    private List<SavedJob> FilteredJobs = new();
+
+    protected override void OnInitialized() => ApplyFilters();
+
+    private void OnSearch(ChangeEventArgs e)
+    {
+        SearchQuery = e.Value?.ToString() ?? "";
+        ApplyFilters();
+    }
+
+    private void SetFilter(string f) { ActiveFilter = f; ApplyFilters(); }
+
+    private void ApplyFilters()
+    {
+        var q = SearchQuery.Trim();
+
+        FilteredJobs = savedJobs.Where(j =>
+        {
+            bool matchSearch = string.IsNullOrEmpty(q) ||
+                j.Title.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                j.Company.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                j.Skills.Any(s => s.Contains(q, StringComparison.OrdinalIgnoreCase));
+
+            bool matchFilter = ActiveFilter switch
+            {
+                "Full-time"  => j.Type  == "Full-time",
+                "Internship" => j.Type  == "Internship",
+                "Remote"     => j.Setup == "Remote",
+                "Applied"    => j.Applied,
+                _            => true
+            };
+
+            return matchSearch && matchFilter;
+        }).ToList();
+
+        SortJobs();
+    }
+
+    private void SortJobs()
+    {
+        FilteredJobs = SortBy switch
+        {
+            "company" => FilteredJobs.OrderBy(j => j.Company).ToList(),
+            "type"    => FilteredJobs.OrderBy(j => j.Type).ToList(),
+            _         => FilteredJobs.OrderByDescending(j => j.SavedDate).ToList()
+        };
+    }
+
+    private int GetTabCount(string tab) => tab switch
+    {
+        "Full-time"  => savedJobs.Count(j => j.Type  == "Full-time"),
+        "Internship" => savedJobs.Count(j => j.Type  == "Internship"),
+        "Remote"     => savedJobs.Count(j => j.Setup == "Remote"),
+        "Applied"    => savedJobs.Count(j => j.Applied),
+        _            => savedJobs.Count
+    };
+
+    private void UnsaveJob(SavedJob job)
+    {
+        savedJobs.Remove(job);
+        ApplyFilters();
+    }
+
+    private void MarkApplied(SavedJob job)
+    {
+        job.Applied = true;
+        ApplyFilters();
+    }
+
+    private void ResetFilters() { SearchQuery = ""; ActiveFilter = "All"; ApplyFilters(); }
+}

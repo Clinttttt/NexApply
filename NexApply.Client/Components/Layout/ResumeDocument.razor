@@ -1,0 +1,227 @@
+﻿@* ══════════════════════════════════════════════════════
+   ResumeDocument.razor
+   Owns all resume state internally. Profile.razor accesses
+   it via @ref to read computed properties for ProfileStrength.
+   IsEditing is the only [Parameter] — toggled from outside.
+   ══════════════════════════════════════════════════════ *@
+
+<div class="resume-doc @(IsEditing ? "resume-editable" : "resume-locked")">
+
+    <!-- ── Header ── -->
+    <div class="rdoc-header">
+        <input class="rdoc-name" type="text" @bind="_name" @bind:event="oninput"
+               placeholder="YOUR FULL NAME" disabled="@(!IsEditing)" />
+        <input class="rdoc-headline" type="text" @bind="_headline" @bind:event="oninput"
+               placeholder="Professional Title or Headline" disabled="@(!IsEditing)" />
+        <div class="rdoc-contacts">
+            <div class="rdoc-contact-item">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
+                </svg>
+                <input class="rdoc-contact-input" type="text" @bind="_phone" @bind:event="oninput"
+                       placeholder="+63 912 345 6789" disabled="@(!IsEditing)" />
+            </div>
+            <span class="rdoc-sep">·</span>
+            <div class="rdoc-contact-item">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                    <polyline points="22,6 12,13 2,6" />
+                </svg>
+                <input class="rdoc-contact-input" type="text" @bind="_email" @bind:event="oninput"
+                       placeholder="email@example.com" disabled="@(!IsEditing)" />
+            </div>
+            <span class="rdoc-sep">·</span>
+            <div class="rdoc-contact-item">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                </svg>
+                <input class="rdoc-contact-input" type="text" @bind="_location" @bind:event="oninput"
+                       placeholder="City, Country" disabled="@(!IsEditing)" />
+            </div>
+        </div>
+    </div>
+
+    <div class="rdoc-divider"></div>
+
+    <!-- ── About Me ── -->
+    <div class="rdoc-section">
+        <div class="rdoc-section-title">ABOUT ME</div>
+        <textarea class="rdoc-textarea" rows="3" @bind="_about" @bind:event="oninput"
+                  placeholder="Write a short professional summary..." disabled="@(!IsEditing)"></textarea>
+    </div>
+
+    <div class="rdoc-divider"></div>
+
+    <!-- ── Education ── -->
+    <div class="rdoc-section">
+        <div class="rdoc-section-header">
+            <div class="rdoc-section-title">EDUCATION</div>
+            @if (IsEditing)
+            {
+                <button class="rdoc-add-btn" @onclick="() => _education.Add(new ResumeEntry())">+ Add</button>
+            }
+        </div>
+        @foreach (var edu in _education)
+        {
+            <div class="rdoc-entry">
+                <div class="rdoc-entry-top">
+                    <div class="rdoc-entry-left">
+                        <input class="rdoc-entry-org" type="text" @bind="edu.Organization" @bind:event="oninput"
+                               placeholder="University or School" disabled="@(!IsEditing)" />
+                        <span class="rdoc-entry-sep"> | </span>
+                        <input class="rdoc-entry-period" type="text" @bind="edu.Period" @bind:event="oninput"
+                               placeholder="2021-2025" disabled="@(!IsEditing)" />
+                    </div>
+                    @if (IsEditing)
+                    {
+                        <button class="rdoc-remove-btn" @onclick="() => _education.Remove(edu)">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                    }
+                </div>
+                <input class="rdoc-entry-title" type="text" @bind="edu.Title" @bind:event="oninput"
+                       placeholder="Degree or Program" disabled="@(!IsEditing)" />
+                <textarea class="rdoc-entry-desc" rows="2" @bind="edu.Description" @bind:event="oninput"
+                          placeholder="Relevant coursework, honors, or achievements..." disabled="@(!IsEditing)"></textarea>
+            </div>
+        }
+    </div>
+
+    <div class="rdoc-divider"></div>
+
+    <!-- ── Work Experience ── -->
+    <div class="rdoc-section">
+        <div class="rdoc-section-header">
+            <div class="rdoc-section-title">WORK EXPERIENCE</div>
+            @if (IsEditing)
+            {
+                <button class="rdoc-add-btn" @onclick="() => _experience.Add(new ResumeEntry())">+ Add</button>
+            }
+        </div>
+        @if (!_experience.Any())
+        {
+            <p class="rdoc-empty">@(IsEditing ? "No experience added yet. Click + Add to get started." : "No experience added yet.")</p>
+        }
+        @foreach (var exp in _experience)
+        {
+            <div class="rdoc-entry">
+                <div class="rdoc-entry-top">
+                    <div class="rdoc-entry-left">
+                        <input class="rdoc-entry-org" type="text" @bind="exp.Organization" @bind:event="oninput"
+                               placeholder="Company or Organization" disabled="@(!IsEditing)" />
+                        <span class="rdoc-entry-sep"> | </span>
+                        <input class="rdoc-entry-period" type="text" @bind="exp.Period" @bind:event="oninput"
+                               placeholder="2023-2024" disabled="@(!IsEditing)" />
+                    </div>
+                    @if (IsEditing)
+                    {
+                        <button class="rdoc-remove-btn" @onclick="() => _experience.Remove(exp)">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                    }
+                </div>
+                <input class="rdoc-entry-title" type="text" @bind="exp.Title" @bind:event="oninput"
+                       placeholder="Job Title" disabled="@(!IsEditing)" />
+                <textarea class="rdoc-entry-desc" rows="2" @bind="exp.Description" @bind:event="oninput"
+                          placeholder="Key responsibilities and achievements..." disabled="@(!IsEditing)"></textarea>
+            </div>
+        }
+    </div>
+
+    <div class="rdoc-divider"></div>
+
+    <!-- ── Skills ── -->
+    <div class="rdoc-section">
+        <div class="rdoc-section-header">
+            <div class="rdoc-section-title">SKILLS</div>
+            @if (IsEditing)
+            {
+                <button class="rdoc-add-btn" @onclick="() => _skills.Add(new SkillItem())">+ Add</button>
+            }
+        </div>
+        <div class="rdoc-skills-grid">
+            @foreach (var skill in _skills)
+            {
+                <div class="rdoc-skill-item">
+                    <span class="rdoc-bullet">•</span>
+                    <input class="rdoc-skill-input" type="text" @bind="skill.Name" @bind:event="oninput"
+                           placeholder="Skill" disabled="@(!IsEditing)" />
+                    @if (IsEditing)
+                    {
+                        <button class="rdoc-skill-remove" @onclick="() => _skills.Remove(skill)">
+                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+</div>
+
+@code {
+
+    // ── Models ──
+    public class ResumeEntry
+    {
+        public string Organization { get; set; } = "";
+        public string Period { get; set; } = "";
+        public string Title { get; set; } = "";
+        public string Description { get; set; } = "";
+    }
+
+    public class SkillItem
+    {
+        public string Name { get; set; } = "";
+    }
+
+    // ── Only parameter — toggled by Profile.razor ──
+    [Parameter] public bool IsEditing { get; set; }
+
+    // ── Internal state — component owns this, no broken param binding ──
+    private string _name = "CLINT VILLANUEVA";
+    private string _headline = "Aspiring Full-Stack Developer";
+    private string _phone = "+63 912 345 6789";
+    private string _email = "clint@example.com";
+    private string _location = "Cebu City, Philippines";
+    private string _about = "Passionate computer science student seeking internship opportunities in web development. Experienced with .NET, Blazor, and modern web technologies. Eager to contribute to real-world projects and grow as a professional developer.";
+
+    private List<ResumeEntry> _education = new()
+    {
+        new ResumeEntry
+        {
+            Organization = "University of Cebu",
+            Period       = "2022-2026",
+            Title        = "Bachelor of Science in Computer Science",
+            Description  = "Relevant coursework: Data Structures, Web Development, Database Systems, Software Engineering."
+        }
+    };
+
+    private List<ResumeEntry> _experience = new();
+
+    private List<SkillItem> _skills = new()
+    {
+        new SkillItem { Name = "C#" },
+        new SkillItem { Name = ".NET / Blazor" },
+        new SkillItem { Name = "PostgreSQL" },
+        new SkillItem { Name = "HTML / CSS" },
+        new SkillItem { Name = "JavaScript" },
+        new SkillItem { Name = "Git" },
+    };
+
+    // ── Read-only props for Profile.razor to read via @ref ──
+    public bool HasName => !string.IsNullOrWhiteSpace(_name);
+    public bool HasEducation => _education.Any(e => !string.IsNullOrWhiteSpace(e.Organization) && !string.IsNullOrWhiteSpace(e.Title));
+    public bool HasEnoughSkills => _skills.Count(s => !string.IsNullOrWhiteSpace(s.Name)) >= 3;
+    public bool HasAbout => !string.IsNullOrWhiteSpace(_about);
+}

@@ -1,0 +1,274 @@
+﻿@page "/my-applications"
+@rendermode InteractiveServer
+<PageTitle>My Applications — NexApply</PageTitle>
+
+<div class="app-shell">
+
+    <Sidebar />
+
+    <main class="main-content">
+
+        <PageHeader Title="My Applications" Subtitle="@($"{AllApplications.Count} applications — last updated today")">
+            <a href="/browse-jobs" class="btn-browse">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
+                    <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                Browse More Jobs
+            </a>
+        </PageHeader>
+
+        <div class="applications-body">
+
+            <!-- ── Stat Strip ── -->
+            <div class="stat-strip">
+                <div class="stat-item">
+                    <span class="stat-item__value">@AllApplications.Count</span>
+                    <span class="stat-item__label">Total Applied</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-item__value stat-item__value--review">@AllApplications.Count(a => a.Status == "Under Review")</span>
+                    <span class="stat-item__label">Under Review</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-item__value stat-item__value--shortlisted">@AllApplications.Count(a => a.Status == "Shortlisted")</span>
+                    <span class="stat-item__label">Shortlisted</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-item__value stat-item__value--interview">@AllApplications.Count(a => a.Status == "For Interview")</span>
+                    <span class="stat-item__label">For Interview</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-item__value stat-item__value--declined">@AllApplications.Count(a => a.Status == "Declined")</span>
+                    <span class="stat-item__label">Declined</span>
+                </div>
+            </div>
+
+            <!-- ── Toolbar ── -->
+            <div class="toolbar">
+                <div class="search-wrap">
+                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <input class="search-input" type="text"
+                           placeholder="Search by company or role…"
+                           @bind="searchQuery"
+                           @bind:event="oninput" />
+                </div>
+
+                <div class="filter-wrap">
+                    <select class="filter-select" @bind="statusFilter">
+                        <option value="">All Statuses</option>
+                        <option value="Submitted">Submitted</option>
+                        <option value="Under Review">Under Review</option>
+                        <option value="Shortlisted">Shortlisted</option>
+                        <option value="For Interview">For Interview</option>
+                        <option value="Declined">Declined</option>
+                    </select>
+                    <select class="filter-select" @bind="jobTypeFilter">
+                        <option value="">All Job Types</option>
+                        <option value="Full-time">Full-time</option>
+                        <option value="Part-time">Part-time</option>
+                        <option value="Internship">Internship</option>
+                        <option value="Contract">Contract</option>
+                    </select>
+                </div>
+
+                <div class="sort-wrap">
+                    <span class="sort-label">Sort by</span>
+                    <select class="filter-select" @bind="sortOrder">
+                        <option value="Most Recent">Most Recent</option>
+                        <option value="Oldest">Oldest</option>
+                        <option value="Status">Status</option>
+                    </select>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(searchQuery) || !string.IsNullOrWhiteSpace(statusFilter) || !string.IsNullOrWhiteSpace(jobTypeFilter))
+                {
+                    <button class="btn-clear-filters" @onclick="ClearFilters">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                        Clear
+                    </button>
+                }
+            </div>
+
+            <!-- ── Result count ── -->
+            @{
+                var filtered = FilteredApplications.ToList();
+            }
+            @if (filtered.Count != AllApplications.Count)
+            {
+                <p class="result-count">Showing <strong>@filtered.Count</strong> of @AllApplications.Count applications</p>
+            }
+
+            <!-- ── Application Cards ── -->
+            <div class="app-list">
+
+                @if (!filtered.Any())
+                {
+                    <div class="empty-state">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                        <p class="empty-state__title">No applications found</p>
+                        <p class="empty-state__sub">Try adjusting your search or filters.</p>
+                        <button class="btn-clear-filters" @onclick="ClearFilters">Clear filters</button>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var app in filtered)
+                    {
+                        var badgeClass = GetStatusBadgeClass(app.Status);
+                        var steps = new[] { "Submitted", "Under Review", "Shortlisted", "For Interview", "Decided" };
+
+                        <div class="app-card">
+                            <div class="app-card__main">
+                                <div class="app-card__left">
+                                    <div class="app-card__title-group">
+                                        <h3 class="app-card__role">@app.Role</h3>
+                                        <p class="app-card__company">@app.Company</p>
+                                    </div>
+                                    <div class="app-card__meta">
+                                        <span class="meta-item">@app.JobType</span>
+                                        <span class="meta-divider">•</span>
+                                        <span class="meta-item">@app.Location</span>
+                                        <span class="meta-divider">•</span>
+                                        <span class="meta-item">Applied @app.AppliedDate</span>
+                                    </div>
+                                </div>
+
+                                <div class="app-card__right">
+                                    <span class="status-badge @badgeClass">@app.Status</span>
+                                    <button class="btn-view">View Listing</button>
+                                </div>
+                            </div>
+
+                            <!-- ── Progress Pipeline ── -->
+                            <div class="progress-track">
+                                @for (int i = 0; i < steps.Length; i++)
+                                {
+                                    var stepIdx = i;
+                                    var stepName = steps[stepIdx];
+                                    var isDone = stepIdx < app.PipelineStage;
+                                    var isActive = stepIdx == app.PipelineStage;
+
+                                    var stepMod = stepName switch
+                                    {
+                                        "Under Review" when isDone || isActive => "step--review",
+                                        "Shortlisted" when isDone || isActive => "step--shortlisted",
+                                        "For Interview" when isActive => "step--interview",
+                                        "Declined" when isActive || isDone => "step--declined",
+                                        _ => ""
+                                    };
+                                    var stepState = isDone ? "step--done" : isActive ? "step--active" : "";
+
+                                    <div class="progress-step @stepState @stepMod">
+                                        <div class="step-node"></div>
+                                        <span class="step-label">@stepName</span>
+                                    </div>
+
+                                    if (stepIdx < steps.Length - 1)
+                                    {
+                                        var lineClass = isDone ? "line--done" : "";
+                                        <div class="step-line @lineClass"></div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+@code {
+
+    // ── Filter State ──
+    private string searchQuery = "";
+    private string statusFilter = "";
+    private string jobTypeFilter = "";
+    private string sortOrder = "Most Recent";
+
+    private void ClearFilters()
+    {
+        searchQuery = "";
+        statusFilter = "";
+        jobTypeFilter = "";
+        sortOrder = "Most Recent";
+    }
+
+    // ── Hardcoded Data ──
+    private record AppItem(
+        string Company,
+        string Role,
+        string Status,
+        string JobType,
+        string Location,
+        string AppliedDate,
+        int PipelineStage  // 0=Submitted, 1=Under Review, 2=Shortlisted, 3=For Interview, 4=Decided
+    );
+
+    private List<AppItem> AllApplications = new()
+    {
+        new("Acme Corp",        "Frontend Engineer Intern",    "For Interview", "Internship", "Cebu City",   "Apr 2", 3),
+        new("TechNova PH",      "Junior .NET Developer",       "Shortlisted",   "Full-time",  "Makati City", "Apr 3", 2),
+        new("CodeBridge Co.",   "Full-Stack Developer Intern", "Under Review",  "Internship", "Makati City", "Apr 7", 1),
+    };
+
+    // ── Computed Filtered List ──
+    private IEnumerable<AppItem> FilteredApplications
+    {
+        get
+        {
+            var result = AllApplications.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(searchQuery))
+                result = result.Where(a =>
+                    a.Company.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                    a.Role.Contains(searchQuery, StringComparison.OrdinalIgnoreCase));
+
+            if (!string.IsNullOrWhiteSpace(statusFilter))
+                result = result.Where(a => a.Status == statusFilter);
+
+            if (!string.IsNullOrWhiteSpace(jobTypeFilter))
+                result = result.Where(a => a.JobType == jobTypeFilter);
+
+            result = sortOrder switch
+            {
+                "Oldest" => result.Reverse(),
+                "Status" => result.OrderBy(a => a.PipelineStage),
+                _ => result  // Most Recent = insertion order
+            };
+
+            return result;
+        }
+    }
+
+    // ── Status → Badge Class ──
+    private static string GetStatusBadgeClass(string status) => status switch
+    {
+        "Submitted" => "status-badge--submitted",
+        "Under Review" => "status-badge--review",
+        "Shortlisted" => "status-badge--shortlisted",
+        "For Interview" => "status-badge--interview",
+        "Declined" => "status-badge--declined",
+        _ => ""
+    };
+}
