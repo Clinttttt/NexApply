@@ -70,11 +70,6 @@ namespace NexApply.Api.Data
                 e.Property(j => j.RequiredSkills).IsRequired().HasColumnType("text");
                 e.Property(j => j.Location).IsRequired().HasMaxLength(200);
 
-             
-                e.Property(j => j.Status)
-                 .HasConversion<string>()
-                 .HasMaxLength(20);
-
                 e.Property(j => j.JobType)
                  .HasConversion<string>()
                  .HasMaxLength(20);
@@ -84,8 +79,6 @@ namespace NexApply.Api.Data
                  .HasForeignKey(j => j.CompanyId)
                  .OnDelete(DeleteBehavior.Cascade);
 
-              
-                e.HasIndex(j => j.Status);
                 e.HasIndex(j => j.CreatedAt);
             });
 

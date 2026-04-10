@@ -18,34 +18,6 @@
 
         <div class="sj-body">
 
-            <!-- ── Summary Bar ── -->
-            <div class="sj-summary-bar">
-                <div class="sj-stat">
-                    <div class="sj-stat-value">@savedJobs.Count</div>
-                    <div class="sj-stat-label">Total Saved</div>
-                </div>
-                <div class="sj-stat-divider"></div>
-                <div class="sj-stat">
-                    <div class="sj-stat-value">@savedJobs.Count(j => j.Type == "Internship")</div>
-                    <div class="sj-stat-label">Internships</div>
-                </div>
-                <div class="sj-stat-divider"></div>
-                <div class="sj-stat">
-                    <div class="sj-stat-value">@savedJobs.Count(j => j.Type == "Full-time")</div>
-                    <div class="sj-stat-label">Full-time</div>
-                </div>
-                <div class="sj-stat-divider"></div>
-                <div class="sj-stat">
-                    <div class="sj-stat-value">@savedJobs.Count(j => j.Setup == "Remote")</div>
-                    <div class="sj-stat-label">Remote</div>
-                </div>
-                <div class="sj-stat-divider"></div>
-                <div class="sj-stat">
-                    <div class="sj-stat-value">@savedJobs.Count(j => j.Applied)</div>
-                    <div class="sj-stat-label">Applied</div>
-                </div>
-            </div>
-
             <!-- ── Filter + Sort Toolbar ── -->
             <div class="sj-toolbar">
                 <div class="sj-filter-tabs">

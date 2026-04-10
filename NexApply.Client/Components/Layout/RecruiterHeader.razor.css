@@ -1,0 +1,156 @@
+/* =========================================
+   RecruiterHeader.razor.css
+   Scoped styles for recruiter header
+   ========================================= */
+
+.rec-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 32px;
+    background-color: var(--color-white);
+    border-bottom: 1px solid var(--color-slate-200);
+    box-shadow: var(--shadow-sm);
+}
+
+.rec-header-left {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.rec-page-title {
+    font-family: var(--font-display);
+    font-size: var(--text-6xl);
+    font-weight: 700;
+    color: var(--color-slate-900);
+    line-height: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.rec-page-subtitle {
+    font-family: var(--font-primary);
+    font-size: var(--text-md);
+    font-weight: 400;
+    color: var(--color-slate-500);
+}
+
+.rec-header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Header search */
+.rec-search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.rec-search-icon {
+    position: absolute;
+    left: 11px;
+    color: var(--color-slate-400);
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+}
+
+.rec-search-input {
+    width: 280px;
+    height: 36px;
+    padding: 0 14px 0 34px;
+    font-family: var(--font-primary);
+    font-size: var(--text-md);
+    color: var(--color-slate-900);
+    background-color: var(--color-slate-50);
+    border: 1px solid var(--color-slate-200);
+    border-radius: var(--radius-lg);
+    outline: none;
+    transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+    .rec-search-input::placeholder {
+        color: var(--color-slate-400);
+    }
+
+    .rec-search-input:focus {
+        border-color: var(--color-primary-light);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+        background-color: var(--color-white);
+    }
+
+/* Icon button (bell) */
+.rec-icon-btn {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: 1px solid var(--color-slate-200);
+    border-radius: var(--radius-md);
+    color: var(--color-slate-500);
+    cursor: pointer;
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+    .rec-icon-btn:hover {
+        background-color: var(--color-slate-100);
+        color: var(--color-slate-900);
+    }
+
+    .rec-icon-btn:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+    }
+
+.rec-notif-dot {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    width: 7px;
+    height: 7px;
+    background-color: var(--color-primary);
+    border: 2px solid var(--color-white);
+    border-radius: 50%;
+}
+
+/* Header avatar */
+.rec-header-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: var(--color-white);
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .rec-header {
+        padding: 0 16px;
+    }
+
+    .rec-search-input {
+        width: 180px;
+    }
+
+    .rec-page-subtitle {
+        display: none;
+    }
+}

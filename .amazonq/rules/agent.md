@@ -48,7 +48,6 @@ Available: `Success`, `Failure`, `NotFound`, `Unauthorized`, `Forbidden`, `Confl
 ## Roles
 | Role | Value |
 |------|-------|
-| Admin | `"Admin"` |
 | Company | `"Company"` |
 | Student | `"Student"` |
 
@@ -60,14 +59,13 @@ Role is stored as a string column on the `User` entity.
 - `User` — Id, Email, Username, PasswordHash, RefreshToken, RefreshTokenExpiry, Role, IsActive, CreatedAt
 - `CompanyProfile` — Id, UserId FK, CompanyName, Description, Website, LogoUrl, Industry, Location
 - `StudentProfile` — Id, UserId FK, FullName, University, Course, GraduationYear, ResumeFilePath, ParsedResumeText
-- `JobListing` — Id, CompanyId FK, Title, Description, RequiredSkills, Location, JobType, Status, Deadline, CreatedAt
+- `JobListing` — Id, CompanyId FK, Title, Description, RequiredSkills, Location, JobType, Deadline, CreatedAt
 - `Application` — Id, StudentId FK, JobListingId FK, CoverLetter, ResumeUrl, Status, AppliedAt
 
 ---
 
 ## Enums (stored as strings)
 - `JobType` — FullTime, PartTime, Internship, Freelance, Remote
-- `JobListingStatus` — Pending, Approved, Rejected
 - `ApplicationStatus` — Submitted, UnderReview, Shortlisted, ForInterview, Declined
 
 ---

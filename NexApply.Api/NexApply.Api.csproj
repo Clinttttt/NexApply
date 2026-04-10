@@ -23,13 +23,6 @@
   </ItemGroup>
 
   <ItemGroup>
-	  
-	  
-	  
-	  
-    <Folder Include="Features\Admin\ModerateListing\" />
-    <Folder Include="Features\Admin\ManageUsers\" />
-    <Folder Include="Features\Admin\Dashboard\" />
     <Folder Include="Features\Applications\ViewAll\" />
     <Folder Include="Features\Applications\UpdateStatus\" />
     <Folder Include="Features\Auth\Logout\" />

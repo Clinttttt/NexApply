@@ -12,7 +12,7 @@
         public DateTime RefreshTokenExpiry { get; set; }
 
         /// <summary>
-        /// Values: "Admin", "Company", "Student"
+        /// Values: "Company", "Student"
         /// </summary>
         public string Role { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;

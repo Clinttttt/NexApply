@@ -1,0 +1,603 @@
+﻿@page "/recruiter/post-job"
+@using Microsoft.AspNetCore.Components.Forms
+@rendermode InteractiveServer
+<div class="app-shell">
+    <RecruiterSidebar />
+
+    <div class="main-content">
+        <RecruiterHeader Title="Post a Job" Subtitle="Create a new listing for candidates to discover" />
+
+        <div class="page-body">
+
+            <!-- Page Title Row -->
+            <div class="page-title-row">
+                <div class="page-title-block">
+                    <h1 class="page-title">Post a New Job</h1>
+                    <p class="page-subtitle">Fill in the details below to create a new listing.</p>
+                </div>
+                <div class="page-title-actions">
+                    <button class="btn-secondary" type="button" @onclick="SaveDraft">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                            <polyline points="17 21 17 13 7 13 7 21" />
+                            <polyline points="7 3 7 8 15 8" />
+                        </svg>
+                        Save Draft
+                    </button>
+                    <button class="btn-primary" type="button" @onclick="PublishJob">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13" />
+                            <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                        </svg>
+                        Publish Listing
+                    </button>
+                </div>
+            </div>
+
+            <!-- Progress Stepper -->
+            <div class="stepper">
+                <div class="stepper-step @(CurrentStep >= 1 ? "active" : "") @(CurrentStep > 1 ? "done" : "")">
+                    <div class="step-indicator">
+                        @if (CurrentStep > 1)
+                        {
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        }
+                        else
+                        {
+                            <span>1</span>
+                        }
+                    </div>
+                    <span class="step-label">Basic Info</span>
+                </div>
+                <div class="stepper-connector @(CurrentStep > 1 ? "done" : "")"></div>
+
+                <div class="stepper-step @(CurrentStep >= 2 ? "active" : "") @(CurrentStep > 2 ? "done" : "")">
+                    <div class="step-indicator">
+                        @if (CurrentStep > 2)
+                        {
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        }
+                        else
+                        {
+                            <span>2</span>
+                        }
+                    </div>
+                    <span class="step-label">Description</span>
+                </div>
+                <div class="stepper-connector @(CurrentStep > 2 ? "done" : "")"></div>
+
+                <div class="stepper-step @(CurrentStep >= 3 ? "active" : "")">
+                    <div class="step-indicator"><span>3</span></div>
+                    <span class="step-label">Requirements</span>
+                </div>
+                <div class="stepper-connector @(CurrentStep > 3 ? "done" : "")"></div>
+
+                <div class="stepper-step @(CurrentStep >= 4 ? "active" : "")">
+                    <div class="step-indicator"><span>4</span></div>
+                    <span class="step-label">Review & Publish</span>
+                </div>
+            </div>
+
+            <!-- Form Area -->
+            <div class="form-layout">
+
+                <!-- LEFT: Main Form -->
+                <div class="form-main">
+
+                    <!-- Step 1: Basic Info -->
+                    @if (CurrentStep == 1)
+                    {
+                        <div class="form-card">
+                            <div class="form-card-header">
+                                <div class="form-card-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h2 class="form-card-title">Basic Information</h2>
+                                    <p class="form-card-subtitle">Core details about the position</p>
+                                </div>
+                            </div>
+
+                            <div class="form-body">
+                                <div class="field-group">
+                                    <label class="field-label" for="job-title">
+                                        Job Title <span class="required">*</span>
+                                    </label>
+                                    <input id="job-title" class="field-input" type="text"
+                                           placeholder="e.g. Full-Stack Developer Intern"
+                                           @bind="JobTitle" />
+                                    <span class="field-hint">Be specific — candidates search by job title.</span>
+                                </div>
+
+                                <div class="field-row">
+                                    <div class="field-group">
+                                        <label class="field-label" for="job-type">
+                                            Job Type <span class="required">*</span>
+                                        </label>
+                                        <select id="job-type" class="field-select" @bind="JobType">
+                                            <option value="">Select type</option>
+                                            <option value="FullTime">Full-Time</option>
+                                            <option value="PartTime">Part-Time</option>
+                                            <option value="Internship">Internship</option>
+                                            <option value="Freelance">Freelance</option>
+                                            <option value="Remote">Remote</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="field-group">
+                                        <label class="field-label" for="location">
+                                            Location <span class="required">*</span>
+                                        </label>
+                                        <input id="location" class="field-input" type="text"
+                                               placeholder="e.g. Manila, Philippines or Remote"
+                                               @bind="Location" />
+                                    </div>
+                                </div>
+
+                                <div class="field-row">
+                                    <div class="field-group">
+                                        <label class="field-label" for="salary-min">Salary Range (optional)</label>
+                                        <div class="salary-range">
+                                            <div class="salary-input-wrap">
+                                                <span class="salary-currency">₱</span>
+                                                <input id="salary-min" class="field-input salary-input" type="number"
+                                                       placeholder="Min" @bind="SalaryMin" />
+                                            </div>
+                                            <span class="salary-divider">–</span>
+                                            <div class="salary-input-wrap">
+                                                <span class="salary-currency">₱</span>
+                                                <input id="salary-max" class="field-input salary-input" type="number"
+                                                       placeholder="Max" @bind="SalaryMax" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="field-group">
+                                        <label class="field-label" for="deadline">Application Deadline</label>
+                                        <input id="deadline" class="field-input" type="date"
+                                               @bind="Deadline" />
+                                    </div>
+                                </div>
+
+                                <div class="field-group">
+                                    <label class="field-label">Work Setup</label>
+                                    <div class="toggle-group">
+                                        @foreach (var setup in WorkSetupOptions)
+                                        {
+                                            <button type="button"
+                                                    class="toggle-btn @(SelectedWorkSetup == setup ? "selected" : "")"
+                                                    @onclick="() => SelectedWorkSetup = setup">
+                                                @setup
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Step 2: Description -->
+                    @if (CurrentStep == 2)
+                    {
+                        <div class="form-card">
+                            <div class="form-card-header">
+                                <div class="form-card-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                        <polyline points="14 2 14 8 20 8" />
+                                        <line x1="16" y1="13" x2="8" y2="13" />
+                                        <line x1="16" y1="17" x2="8" y2="17" />
+                                        <polyline points="10 9 9 9 8 9" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h2 class="form-card-title">Job Description</h2>
+                                    <p class="form-card-subtitle">Tell candidates what this role is about</p>
+                                </div>
+                            </div>
+
+                            <div class="form-body">
+                                <div class="field-group">
+                                    <label class="field-label" for="summary">
+                                        Role Summary <span class="required">*</span>
+                                    </label>
+                                    <textarea id="summary" class="field-textarea" rows="4"
+                                              placeholder="A brief overview of the role and what the candidate will be doing..."
+                                              @bind="RoleSummary"></textarea>
+                                    <span class="field-hint">Aim for 2–4 sentences. This appears in search results.</span>
+                                </div>
+
+                                <div class="field-group">
+                                    <label class="field-label" for="responsibilities">
+                                        Key Responsibilities <span class="required">*</span>
+                                    </label>
+                                    <textarea id="responsibilities" class="field-textarea" rows="7"
+                                              placeholder="• Lead development of backend APIs&#10;• Collaborate with the design team&#10;• Participate in code reviews..."
+                                              @bind="Responsibilities"></textarea>
+                                    <span class="field-hint">Use bullet points for readability.</span>
+                                </div>
+
+                                <div class="field-group">
+                                    <label class="field-label" for="benefits">Perks &amp; Benefits</label>
+                                    <textarea id="benefits" class="field-textarea" rows="4"
+                                              placeholder="• Flexible working hours&#10;• Health insurance&#10;• Learning stipend..."
+                                              @bind="Benefits"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Step 3: Requirements -->
+                    @if (CurrentStep == 3)
+                    {
+                        <div class="form-card">
+                            <div class="form-card-header">
+                                <div class="form-card-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="9 11 12 14 22 4" />
+                                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h2 class="form-card-title">Requirements</h2>
+                                    <p class="form-card-subtitle">What qualifications are you looking for?</p>
+                                </div>
+                            </div>
+
+                            <div class="form-body">
+                                <div class="field-group">
+                                    <label class="field-label" for="qualifications">
+                                        Qualifications <span class="required">*</span>
+                                    </label>
+                                    <textarea id="qualifications" class="field-textarea" rows="5"
+                                              placeholder="• Bachelor's degree in Computer Science or related field&#10;• 1+ year of relevant experience&#10;• Strong communication skills..."
+                                              @bind="Qualifications"></textarea>
+                                </div>
+
+                                <div class="field-group">
+                                    <label class="field-label">Required Skills</label>
+                                    <div class="skill-input-row">
+                                        <input class="field-input skill-input" type="text"
+                                               placeholder="e.g. React, Node.js, SQL..."
+                                               @bind="SkillInput"
+                                               @onkeydown="HandleSkillKeydown" />
+                                        <button class="btn-add-skill" type="button" @onclick="AddSkill">Add</button>
+                                    </div>
+                                    @if (Skills.Count > 0)
+                                    {
+                                        <div class="skill-tags">
+                                            @foreach (var skill in Skills)
+                                            {
+                                                <div class="skill-tag">
+                                                    <span>@skill</span>
+                                                    <button type="button" class="skill-remove" @onclick="() => RemoveSkill(skill)" aria-label="Remove @skill">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                                                             fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                            <line x1="18" y1="6" x2="6" y2="18" />
+                                                            <line x1="6" y1="6" x2="18" y2="18" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    <span class="field-hint">Press Enter or click Add to add a skill. These are used for resume matching.</span>
+                                </div>
+
+                                <div class="field-row">
+                                    <div class="field-group">
+                                        <label class="field-label" for="experience-level">Experience Level</label>
+                                        <select id="experience-level" class="field-select" @bind="ExperienceLevel">
+                                            <option value="">Any level</option>
+                                            <option value="Entry">Entry Level</option>
+                                            <option value="Mid">Mid Level</option>
+                                            <option value="Senior">Senior Level</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="field-group">
+                                        <label class="field-label" for="openings">Number of Openings</label>
+                                        <input id="openings" class="field-input" type="number" min="1"
+                                               placeholder="1" @bind="Openings" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Step 4: Review -->
+                    @if (CurrentStep == 4)
+                    {
+                        <div class="form-card review-card">
+                            <div class="form-card-header">
+                                <div class="form-card-icon success-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10" />
+                                        <polyline points="12 8 12 12 14 14" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h2 class="form-card-title">Review Listing</h2>
+                                    <p class="form-card-subtitle">Double-check everything before publishing</p>
+                                </div>
+                            </div>
+
+                            <div class="review-section">
+                                <div class="review-group">
+                                    <span class="review-label">Job Title</span>
+                                    <span class="review-value">@(string.IsNullOrWhiteSpace(JobTitle) ? "—" : JobTitle)</span>
+                                </div>
+                                <div class="review-group">
+                                    <span class="review-label">Type</span>
+                                    <span class="review-value">@(string.IsNullOrWhiteSpace(JobType) ? "—" : JobType)</span>
+                                </div>
+                                <div class="review-group">
+                                    <span class="review-label">Location</span>
+                                    <span class="review-value">@(string.IsNullOrWhiteSpace(Location) ? "—" : Location)</span>
+                                </div>
+                                <div class="review-group">
+                                    <span class="review-label">Work Setup</span>
+                                    <span class="review-value">@(string.IsNullOrWhiteSpace(SelectedWorkSetup) ? "—" : SelectedWorkSetup)</span>
+                                </div>
+                                <div class="review-group">
+                                    <span class="review-label">Experience Level</span>
+                                    <span class="review-value">@(string.IsNullOrWhiteSpace(ExperienceLevel) ? "Any" : ExperienceLevel)</span>
+                                </div>
+                                <div class="review-group">
+                                    <span class="review-label">Openings</span>
+                                    <span class="review-value">@(Openings > 0 ? Openings.ToString() : "1")</span>
+                                </div>
+                                @if (SalaryMin.HasValue || SalaryMax.HasValue)
+                                {
+                                    <div class="review-group">
+                                        <span class="review-label">Salary Range</span>
+                                        <span class="review-value">
+                                            ₱@(SalaryMin?.ToString("N0") ?? "—") – ₱@(SalaryMax?.ToString("N0") ?? "—")
+                                        </span>
+                                    </div>
+                                }
+                                @if (Skills.Count > 0)
+                                {
+                                    <div class="review-group review-group--skills">
+                                        <span class="review-label">Required Skills</span>
+                                        <div class="review-skill-tags">
+                                            @foreach (var s in Skills)
+                                            {
+                                                <span class="review-skill-tag">@s</span>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="review-notice">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <line x1="12" y1="8" x2="12" y2="12" />
+                                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                                </svg>
+                                <span>Your listing will go live immediately after publishing. You can edit or close it anytime from Manage Jobs.</span>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Step Navigation -->
+                    <div class="step-nav">
+                        @if (CurrentStep > 1)
+                        {
+                            <button class="btn-secondary" type="button" @onclick="PrevStep">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="15 18 9 12 15 6" />
+                                </svg>
+                                Back
+                            </button>
+                        }
+                        else
+                        {
+                            <span></span>
+                        }
+
+                        @if (CurrentStep < 4)
+                        {
+                            <button class="btn-primary" type="button" @onclick="NextStep">
+                                Continue
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="9 18 15 12 9 6" />
+                                </svg>
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="btn-publish" type="button" @onclick="PublishJob">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="22" y1="2" x2="11" y2="13" />
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                                </svg>
+                                Publish Listing
+                            </button>
+                        }
+                    </div>
+
+                </div>
+
+                <!-- RIGHT: Sidebar Tips -->
+                <aside class="form-aside">
+                    <div class="tips-card">
+                        <div class="tips-header">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="8" x2="12" y2="12" />
+                                <line x1="12" y1="16" x2="12.01" y2="16" />
+                            </svg>
+                            <span>Writing Tips</span>
+                        </div>
+                        <ul class="tips-list">
+                            <li>Use a clear, specific job title that candidates would actually search for.</li>
+                            <li>Keep your summary under 100 words — concise listings get more applications.</li>
+                            <li>List 5–8 key responsibilities, not an exhaustive task list.</li>
+                            <li>Add relevant skills to improve resume match ranking.</li>
+                            <li>Mention salary range — listings with salary get 40% more applicants.</li>
+                        </ul>
+                    </div>
+
+                    <div class="completeness-card">
+                        <div class="completeness-header">
+                            <span class="completeness-title">Listing Completeness</span>
+                            <span class="completeness-pct">@CompletenessPercent%</span>
+                        </div>
+                        <div class="completeness-bar-track">
+                            <div class="completeness-bar-fill" style="width: @(CompletenessPercent)%"></div>
+                        </div>
+                        <ul class="completeness-checklist">
+                            <li class="@(!string.IsNullOrWhiteSpace(JobTitle) ? "done" : "")">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                Job Title
+                            </li>
+                            <li class="@(!string.IsNullOrWhiteSpace(JobType) ? "done" : "")">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                Job Type
+                            </li>
+                            <li class="@(!string.IsNullOrWhiteSpace(Location) ? "done" : "")">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                Location
+                            </li>
+                            <li class="@(!string.IsNullOrWhiteSpace(RoleSummary) ? "done" : "")">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                Role Summary
+                            </li>
+                            <li class="@(!string.IsNullOrWhiteSpace(Responsibilities) ? "done" : "")">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                Responsibilities
+                            </li>
+                            <li class="@(Skills.Count > 0 ? "done" : "")">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                Required Skills
+                            </li>
+                        </ul>
+                    </div>
+                </aside>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private int CurrentStep = 1;
+
+    // Step 1
+    private string JobTitle = "";
+    private string JobType = "";
+    private string Location = "";
+    private decimal? SalaryMin;
+    private decimal? SalaryMax;
+    private DateTime? Deadline;
+    private string SelectedWorkSetup = "";
+    private List<string> WorkSetupOptions = new() { "On-site", "Remote", "Hybrid" };
+
+    // Step 2
+    private string RoleSummary = "";
+    private string Responsibilities = "";
+    private string Benefits = "";
+
+    // Step 3
+    private string Qualifications = "";
+    private List<string> Skills = new();
+    private string SkillInput = "";
+    private string ExperienceLevel = "";
+    private int Openings = 1;
+
+    private int CompletenessPercent
+    {
+        get
+        {
+            int filled = 0;
+            int total = 6;
+            if (!string.IsNullOrWhiteSpace(JobTitle)) filled++;
+            if (!string.IsNullOrWhiteSpace(JobType)) filled++;
+            if (!string.IsNullOrWhiteSpace(Location)) filled++;
+            if (!string.IsNullOrWhiteSpace(RoleSummary)) filled++;
+            if (!string.IsNullOrWhiteSpace(Responsibilities)) filled++;
+            if (Skills.Count > 0) filled++;
+            return (int)Math.Round((double)filled / total * 100);
+        }
+    }
+
+    private void NextStep()
+    {
+        if (CurrentStep < 4) CurrentStep++;
+    }
+
+    private void PrevStep()
+    {
+        if (CurrentStep > 1) CurrentStep--;
+    }
+
+    private void AddSkill()
+    {
+        var trimmed = SkillInput?.Trim();
+        if (!string.IsNullOrWhiteSpace(trimmed) && !Skills.Contains(trimmed))
+        {
+            Skills.Add(trimmed);
+            SkillInput = "";
+        }
+    }
+
+    private void RemoveSkill(string skill)
+    {
+        Skills.Remove(skill);
+    }
+
+    private void HandleSkillKeydown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") AddSkill();
+    }
+
+    private void SaveDraft()
+    {
+        // TODO: save draft logic
+    }
+
+    private void PublishJob()
+    {
+        // TODO: submit/publish logic
+    }
+}

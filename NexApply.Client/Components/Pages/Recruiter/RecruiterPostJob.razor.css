@@ -1,0 +1,744 @@
+﻿/* =========================================
+   RecruiterPostJob — Scoped Page Styles
+   ========================================= */
+
+/* ---- Page Body ---- */
+.page-body {
+    padding: 24px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-height: 0;
+}
+
+/* ---- Page Title Row ---- */
+.page-title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.page-title-block {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.page-title {
+    font-family: var(--font-display);
+    font-size: var(--text-6xl);
+    font-weight: 600;
+    color: var(--color-slate-900);
+    line-height: 1.2;
+}
+
+.page-subtitle {
+    font-size: var(--text-md);
+    color: var(--color-slate-500);
+    font-weight: 400;
+}
+
+.page-title-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+/* ---- Buttons ---- */
+.btn-primary,
+.btn-secondary,
+.btn-publish {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-primary);
+    font-size: var(--text-md);
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: background var(--transition-base), box-shadow var(--transition-base), color var(--transition-base);
+    white-space: nowrap;
+    outline: none;
+}
+
+.btn-primary {
+    padding: 9px 18px;
+    background: var(--color-primary);
+    color: var(--color-white);
+}
+
+    .btn-primary:hover {
+        background: var(--color-primary-light);
+        box-shadow: var(--shadow-primary);
+    }
+
+    .btn-primary:focus-visible {
+        box-shadow: 0 0 0 3px var(--color-primary-border);
+    }
+
+.btn-secondary {
+    padding: 9px 16px;
+    background: var(--color-white);
+    color: var(--color-slate-700);
+    border: 1px solid var(--color-slate-200);
+}
+
+    .btn-secondary:hover {
+        background: var(--color-slate-50);
+        border-color: var(--color-slate-300);
+    }
+
+    .btn-secondary:focus-visible {
+        box-shadow: 0 0 0 3px var(--color-slate-200);
+    }
+
+.btn-publish {
+    padding: 10px 22px;
+    background: var(--color-primary);
+    color: var(--color-white);
+    font-size: var(--text-xl);
+    border-radius: var(--radius-md);
+}
+
+    .btn-publish:hover {
+        background: var(--color-primary-light);
+        box-shadow: var(--shadow-primary);
+    }
+
+    .btn-publish:focus-visible {
+        box-shadow: 0 0 0 3px var(--color-primary-border);
+    }
+
+/* ---- Stepper ---- */
+.stepper {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--color-white);
+    border: 1px solid var(--color-slate-200);
+    border-radius: var(--radius-xl);
+    padding: 16px 24px;
+    overflow-x: auto;
+}
+
+.stepper-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.step-indicator {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    background: var(--color-slate-100);
+    color: var(--color-slate-400);
+    border: 2px solid var(--color-slate-200);
+    transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base);
+    flex-shrink: 0;
+}
+
+.stepper-step.active .step-indicator {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+.stepper-step.done .step-indicator {
+    background: var(--color-green-100);
+    border-color: var(--color-green-500);
+    color: var(--color-green-700);
+}
+
+.step-label {
+    font-size: var(--text-md);
+    font-weight: 500;
+    color: var(--color-slate-400);
+    transition: color var(--transition-base);
+    white-space: nowrap;
+}
+
+.stepper-step.active .step-label,
+.stepper-step.done .step-label {
+    color: var(--color-slate-900);
+}
+
+.stepper-connector {
+    flex: 1;
+    height: 2px;
+    background: var(--color-slate-200);
+    margin: 0 12px;
+    min-width: 24px;
+    border-radius: 2px;
+    transition: background var(--transition-slow);
+}
+
+    .stepper-connector.done {
+        background: var(--color-primary-light);
+    }
+
+/* ---- Form Layout ---- */
+.form-layout {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+/* ---- Form Card ---- */
+.form-card {
+    background: var(--color-white);
+    border: 1px solid var(--color-slate-200);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+}
+
+.form-card-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--color-slate-100);
+}
+
+.form-card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    background: var(--color-primary-bg);
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+    .form-card-icon.success-icon {
+        background: var(--color-green-100);
+        color: var(--color-green-700);
+    }
+
+.form-card-title {
+    font-size: var(--text-3xl);
+    font-weight: 600;
+    color: var(--color-slate-900);
+    line-height: 1.3;
+}
+
+.form-card-subtitle {
+    font-size: var(--text-base);
+    color: var(--color-slate-500);
+    margin-top: 2px;
+}
+
+.form-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ---- Fields ---- */
+.field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.field-label {
+    font-size: var(--text-md);
+    font-weight: 500;
+    color: var(--color-slate-700);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.required {
+    color: var(--color-red-600);
+    font-weight: 600;
+}
+
+.field-hint {
+    font-size: var(--text-sm);
+    color: var(--color-slate-400);
+    font-style: italic;
+}
+
+.field-input,
+.field-select,
+.field-textarea {
+    font-family: var(--font-primary);
+    font-size: var(--text-md);
+    color: var(--color-slate-900);
+    background: var(--color-white);
+    border: 1px solid var(--color-slate-200);
+    border-radius: var(--radius-md);
+    padding: 9px 12px;
+    width: 100%;
+    outline: none;
+    transition: border-color var(--transition-base), box-shadow var(--transition-base);
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+    .field-input::placeholder,
+    .field-textarea::placeholder {
+        color: var(--color-slate-400);
+    }
+
+    .field-input:focus,
+    .field-select:focus,
+    .field-textarea:focus {
+        border-color: var(--color-primary-light);
+        box-shadow: 0 0 0 3px var(--color-primary-bg-light);
+    }
+
+.field-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+    cursor: pointer;
+}
+
+.field-textarea {
+    resize: vertical;
+    min-height: 80px;
+    line-height: 1.6;
+}
+
+/* ---- Salary Range ---- */
+.salary-range {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.salary-input-wrap {
+    position: relative;
+    flex: 1;
+}
+
+.salary-currency {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: var(--text-md);
+    color: var(--color-slate-500);
+    pointer-events: none;
+}
+
+.salary-input {
+    padding-left: 24px;
+}
+
+.salary-divider {
+    font-size: var(--text-lg);
+    color: var(--color-slate-400);
+    flex-shrink: 0;
+}
+
+/* ---- Toggle Group (Work Setup) ---- */
+.toggle-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.toggle-btn {
+    font-family: var(--font-primary);
+    font-size: var(--text-md);
+    font-weight: 500;
+    padding: 7px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-slate-200);
+    background: var(--color-white);
+    color: var(--color-slate-600);
+    cursor: pointer;
+    transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base);
+    outline: none;
+}
+
+    .toggle-btn:hover {
+        border-color: var(--color-primary-border);
+        color: var(--color-primary);
+        background: var(--color-primary-bg);
+    }
+
+    .toggle-btn:focus-visible {
+        box-shadow: 0 0 0 3px var(--color-primary-bg-light);
+    }
+
+    .toggle-btn.selected {
+        background: var(--color-primary-bg);
+        border-color: var(--color-primary-light);
+        color: var(--color-primary);
+        font-weight: 600;
+    }
+
+/* ---- Skill Input ---- */
+.skill-input-row {
+    display: flex;
+    gap: 8px;
+}
+
+.skill-input {
+    flex: 1;
+}
+
+.btn-add-skill {
+    padding: 9px 16px;
+    font-family: var(--font-primary);
+    font-size: var(--text-md);
+    font-weight: 500;
+    background: var(--color-primary-bg);
+    color: var(--color-primary);
+    border: 1px solid var(--color-primary-border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background var(--transition-base);
+    white-space: nowrap;
+    outline: none;
+    flex-shrink: 0;
+}
+
+    .btn-add-skill:hover {
+        background: var(--color-primary-bg-light);
+    }
+
+    .btn-add-skill:focus-visible {
+        box-shadow: 0 0 0 3px var(--color-primary-bg-light);
+    }
+
+.skill-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.skill-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--color-primary-bg);
+    border: 1px solid var(--color-primary-border);
+    color: var(--color-primary);
+    font-size: var(--text-base);
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+}
+
+.skill-remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-primary-lighter);
+    padding: 0;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    transition: color var(--transition-fast), background var(--transition-fast);
+    outline: none;
+}
+
+    .skill-remove:hover {
+        color: var(--color-primary);
+        background: var(--color-primary-bg-light);
+    }
+
+    .skill-remove:focus-visible {
+        box-shadow: 0 0 0 2px var(--color-primary-border);
+    }
+
+/* ---- Review Card ---- */
+.review-section {
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border-bottom: 1px solid var(--color-slate-100);
+}
+
+.review-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--color-slate-100);
+    gap: 16px;
+}
+
+    .review-group:last-child {
+        border-bottom: none;
+    }
+
+.review-group--skills {
+    align-items: flex-start;
+}
+
+.review-label {
+    font-size: var(--text-md);
+    font-weight: 500;
+    color: var(--color-slate-500);
+    flex-shrink: 0;
+}
+
+.review-value {
+    font-size: var(--text-md);
+    font-weight: 500;
+    color: var(--color-slate-900);
+    text-align: right;
+}
+
+.review-skill-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-end;
+}
+
+.review-skill-tag {
+    background: var(--color-primary-bg);
+    color: var(--color-primary);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    padding: 3px 9px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-primary-border);
+}
+
+.review-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 14px 24px;
+    background: var(--color-primary-bg);
+    color: var(--color-primary);
+    font-size: var(--text-base);
+    line-height: 1.5;
+}
+
+    .review-notice svg {
+        flex-shrink: 0;
+        margin-top: 1px;
+    }
+
+/* ---- Step Navigation ---- */
+.step-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0 8px;
+}
+
+/* ---- Aside / Sidebar Tips ---- */
+.form-aside {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: sticky;
+    top: 24px;
+}
+
+/* ---- Tips Card ---- */
+.tips-card {
+    background: var(--color-white);
+    border: 1px solid var(--color-slate-200);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+}
+
+.tips-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--color-slate-100);
+    font-size: var(--text-md);
+    font-weight: 600;
+    color: var(--color-slate-700);
+}
+
+    .tips-header svg {
+        color: var(--color-primary);
+        flex-shrink: 0;
+    }
+
+.tips-list {
+    list-style: none;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+    .tips-list li {
+        font-size: var(--text-base);
+        color: var(--color-slate-600);
+        line-height: 1.55;
+        padding-left: 12px;
+        position: relative;
+    }
+
+        .tips-list li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: var(--color-primary-lighter);
+            font-size: 10px;
+            line-height: 1.8;
+        }
+
+/* ---- Completeness Card ---- */
+.completeness-card {
+    background: var(--color-white);
+    border: 1px solid var(--color-slate-200);
+    border-radius: var(--radius-xl);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.completeness-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.completeness-title {
+    font-size: var(--text-md);
+    font-weight: 600;
+    color: var(--color-slate-700);
+}
+
+.completeness-pct {
+    font-size: var(--text-md);
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.completeness-bar-track {
+    height: 6px;
+    background: var(--color-slate-100);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.completeness-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+    border-radius: var(--radius-full);
+    transition: width 0.35s ease;
+    min-width: 0;
+}
+
+.completeness-checklist {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+    .completeness-checklist li {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: var(--text-base);
+        color: var(--color-slate-400);
+        transition: color var(--transition-base);
+    }
+
+        .completeness-checklist li svg {
+            color: var(--color-slate-300);
+            flex-shrink: 0;
+            transition: color var(--transition-base);
+        }
+
+        .completeness-checklist li.done {
+            color: var(--color-slate-700);
+        }
+
+            .completeness-checklist li.done svg {
+                color: var(--color-green-600);
+            }
+
+/* ---- Responsive ---- */
+@media (max-width: 1100px) {
+    .form-layout {
+        grid-template-columns: 1fr 240px;
+    }
+}
+
+@media (max-width: 900px) {
+    .form-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .form-aside {
+        position: static;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .page-body {
+        padding: 16px;
+    }
+
+    .page-title-row {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .page-title-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .stepper {
+        padding: 12px 16px;
+        gap: 0;
+    }
+
+    .step-label {
+        display: none;
+    }
+
+    .field-row {
+        grid-template-columns: 1fr;
+    }
+
+    .form-aside {
+        grid-template-columns: 1fr;
+    }
+
+    .page-title {
+        font-size: var(--text-5xl);
+    }
+}

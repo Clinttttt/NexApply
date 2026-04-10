@@ -1,0 +1,37 @@
+<header class="rec-header" role="banner">
+    <div class="rec-header-left">
+        <h1 class="rec-page-title">
+            @Title
+            @if (!string.IsNullOrWhiteSpace(Subtitle))
+            {
+                <span class="rec-page-subtitle">@Subtitle</span>
+            }
+        </h1>
+    </div>
+    <div class="rec-header-right">
+        <div class="rec-search-wrap" role="search">
+            <span class="rec-search-icon" aria-hidden="true">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                    <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+                    <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </span>
+            <input type="search" class="rec-search-input"
+                   placeholder="Search applicants, jobs…"
+                   aria-label="Search applicants and jobs"/>
+        </div>
+        <button class="rec-icon-btn" title="Notifications" aria-label="Notifications — 2 unread">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"
+                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="rec-notif-dot" aria-hidden="true"></span>
+        </button>
+        <div class="rec-header-avatar" aria-label="Alex — Hiring Manager">AV</div>
+    </div>
+</header>
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string Subtitle { get; set; } = "";
+}

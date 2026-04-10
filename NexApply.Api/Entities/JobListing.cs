@@ -1,14 +1,5 @@
-﻿using static System.Net.Mime.MediaTypeNames;
-
-namespace NexApply.Api.Entities
+﻿namespace NexApply.Api.Entities
 {
-    public enum JobListingStatus
-    {
-        Pending,
-        Approved,
-        Rejected
-    }
-
     public enum JobType
     {
         FullTime,
@@ -37,11 +28,6 @@ namespace NexApply.Api.Entities
         public string Location { get; set; } = string.Empty;
 
         public JobType JobType { get; set; }
-
-        /// <summary>
-        /// Status flow: Pending → Approved | Rejected
-        /// </summary>
-        public JobListingStatus Status { get; set; } = JobListingStatus.Pending;
 
         public DateTime? Deadline { get; set; }
 

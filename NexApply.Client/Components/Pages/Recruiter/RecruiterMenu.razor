@@ -1,0 +1,222 @@
+﻿@page "/recruiter-menu"
+
+<div class="rec-shell">
+
+    <RecruiterSidebar />
+
+    <div class="rec-main">
+
+        <RecruiterHeader Title="Dashboard" Subtitle="Manage your job postings and applicants" />
+
+        <!-- Body -->
+        <main class="rec-body" id="main-content">
+
+            <!-- Quick Actions Grid -->
+            <div class="rec-actions-grid">
+
+                <a href="/recruiter/post-job" class="rec-action-card rec-action-card--primary" role="button">
+                    <span class="rec-action-icon" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+                            <path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                    <span class="rec-action-label">Post a New Job</span>
+                    <span class="rec-action-sub">Create a new listing</span>
+                </a>
+
+                <a href="/recruiter/applicants" class="rec-action-card" role="button">
+                    <span class="rec-action-icon" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                            <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                    <span class="rec-action-label">Review Applicants</span>
+                    <span class="rec-action-sub">12 awaiting review</span>
+                </a>
+
+                <a href="/recruiter/interviews" class="rec-action-card" role="button">
+                    <span class="rec-action-icon" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+                            <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                    <span class="rec-action-label">Schedule Interview</span>
+                    <span class="rec-action-sub">6 upcoming</span>
+                </a>
+
+                <a href="/recruiter/messages" class="rec-action-card" role="button">
+                    <span class="rec-action-icon" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
+                                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </span>
+                    <span class="rec-action-label">Messages</span>
+                    <span class="rec-action-sub">3 unread</span>
+                </a>
+
+            </div>
+
+            <!-- Lower Grid: Recent Applicants + Active Listings -->
+            <div class="rec-lower-grid">
+
+                <!-- Recent Applicants -->
+                <section class="rec-panel" aria-labelledby="recent-applicants-heading">
+                    <div class="rec-panel-header">
+                        <h2 class="rec-section-title" id="recent-applicants-heading">Recent Applicants</h2>
+                        <a href="/recruiter/applicants" class="rec-panel-link">View all</a>
+                    </div>
+
+                    <ul class="rec-applicant-list" role="list">
+
+                        <li class="rec-applicant-row">
+                            <div class="rec-applicant-avatar" aria-hidden="true">KR</div>
+                            <div class="rec-applicant-info">
+                                <span class="rec-applicant-name">Kira Reyes</span>
+                                <span class="rec-applicant-role">Full-Stack Developer Intern</span>
+                            </div>
+                            <span class="rec-status-badge rec-status-badge--review">Under Review</span>
+                            <span class="rec-applicant-date">Apr 9</span>
+                        </li>
+
+                        <li class="rec-applicant-row">
+                            <div class="rec-applicant-avatar" aria-hidden="true">MG</div>
+                            <div class="rec-applicant-info">
+                                <span class="rec-applicant-name">Marco Guerrero</span>
+                                <span class="rec-applicant-role">React Frontend Developer</span>
+                            </div>
+                            <span class="rec-status-badge rec-status-badge--shortlisted">Shortlisted</span>
+                            <span class="rec-applicant-date">Apr 8</span>
+                        </li>
+
+                        <li class="rec-applicant-row">
+                            <div class="rec-applicant-avatar" aria-hidden="true">SC</div>
+                            <div class="rec-applicant-info">
+                                <span class="rec-applicant-name">Sofia Cruz</span>
+                                <span class="rec-applicant-role">API Developer (.NET)</span>
+                            </div>
+                            <span class="rec-status-badge rec-status-badge--interview">For Interview</span>
+                            <span class="rec-applicant-date">Apr 7</span>
+                        </li>
+
+                        <li class="rec-applicant-row">
+                            <div class="rec-applicant-avatar" aria-hidden="true">JT</div>
+                            <div class="rec-applicant-info">
+                                <span class="rec-applicant-name">James Tan</span>
+                                <span class="rec-applicant-role">.NET Core Developer</span>
+                            </div>
+                            <span class="rec-status-badge rec-status-badge--submitted">Submitted</span>
+                            <span class="rec-applicant-date">Apr 7</span>
+                        </li>
+
+                    </ul>
+                </section>
+
+                <!-- Active Job Listings -->
+                <section class="rec-panel" aria-labelledby="active-listings-heading">
+                    <div class="rec-panel-header">
+                        <h2 class="rec-section-title" id="active-listings-heading">Active Listings</h2>
+                        <a href="/recruiter/manage-jobs" class="rec-panel-link">Manage all</a>
+                    </div>
+
+                    <ul class="rec-listing-list" role="list">
+
+                        <li class="rec-listing-row">
+                            <div class="rec-listing-info">
+                                <span class="rec-listing-title">Full-Stack Developer Intern</span>
+                                <div class="rec-listing-meta">
+                                    <span class="rec-tag rec-tag--blue">Internship</span>
+                                    <span class="rec-tag rec-tag--slate">Remote</span>
+                                </div>
+                            </div>
+                            <div class="rec-listing-stats">
+                                <span class="rec-listing-stat">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                        <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                                    </svg>
+                                    <span>14</span>
+                                </span>
+                                <span class="rec-listing-date">Posted Apr 7</span>
+                            </div>
+                        </li>
+
+                        <li class="rec-listing-row">
+                            <div class="rec-listing-info">
+                                <span class="rec-listing-title">React Frontend Developer</span>
+                                <div class="rec-listing-meta">
+                                    <span class="rec-tag rec-tag--blue">Internship</span>
+                                    <span class="rec-tag rec-tag--slate">Remote</span>
+                                </div>
+                            </div>
+                            <div class="rec-listing-stats">
+                                <span class="rec-listing-stat">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                        <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                                    </svg>
+                                    <span>9</span>
+                                </span>
+                                <span class="rec-listing-date">Posted Apr 3</span>
+                            </div>
+                        </li>
+
+                        <li class="rec-listing-row">
+                            <div class="rec-listing-info">
+                                <span class="rec-listing-title">API Developer (.NET)</span>
+                                <div class="rec-listing-meta">
+                                    <span class="rec-tag rec-tag--green">Full-time</span>
+                                    <span class="rec-tag rec-tag--slate">Hybrid</span>
+                                </div>
+                            </div>
+                            <div class="rec-listing-stats">
+                                <span class="rec-listing-stat">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                        <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                                    </svg>
+                                    <span>21</span>
+                                </span>
+                                <span class="rec-listing-date">Posted Apr 2</span>
+                            </div>
+                        </li>
+
+                        <li class="rec-listing-row">
+                            <div class="rec-listing-info">
+                                <span class="rec-listing-title">.NET Core Developer</span>
+                                <div class="rec-listing-meta">
+                                    <span class="rec-tag rec-tag--green">Full-time</span>
+                                    <span class="rec-tag rec-tag--slate">On-site</span>
+                                </div>
+                            </div>
+                            <div class="rec-listing-stats">
+                                <span class="rec-listing-stat">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                        <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                                    </svg>
+                                    <span>43</span>
+                                </span>
+                                <span class="rec-listing-date">Posted Apr 4</span>
+                            </div>
+                        </li>
+
+                    </ul>
+                </section>
+
+            </div>
+
+        </main>
+    </div>
+    <!-- ── END MAIN CONTENT ─────────────────────────────────── -->
+
+</div>
+
+
+@code {
+
+}
