@@ -1,6 +1,7 @@
 ﻿@page "/recruiter/post-job"
 @using Microsoft.AspNetCore.Components.Forms
 @rendermode InteractiveServer
+
 <div class="app-shell">
     <RecruiterSidebar />
 
@@ -8,33 +9,6 @@
         <RecruiterHeader Title="Post a Job" Subtitle="Create a new listing for candidates to discover" />
 
         <div class="page-body">
-
-            <!-- Page Title Row -->
-            <div class="page-title-row">
-                <div class="page-title-block">
-                    <h1 class="page-title">Post a New Job</h1>
-                    <p class="page-subtitle">Fill in the details below to create a new listing.</p>
-                </div>
-                <div class="page-title-actions">
-                    <button class="btn-secondary" type="button" @onclick="SaveDraft">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
-                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-                            <polyline points="17 21 17 13 7 13 7 21" />
-                            <polyline points="7 3 7 8 15 8" />
-                        </svg>
-                        Save Draft
-                    </button>
-                    <button class="btn-primary" type="button" @onclick="PublishJob">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
-                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="22" y1="2" x2="11" y2="13" />
-                            <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                        </svg>
-                        Publish Listing
-                    </button>
-                </div>
-            </div>
 
             <!-- Progress Stepper -->
             <div class="stepper">
@@ -74,8 +48,20 @@
                 </div>
                 <div class="stepper-connector @(CurrentStep > 2 ? "done" : "")"></div>
 
-                <div class="stepper-step @(CurrentStep >= 3 ? "active" : "")">
-                    <div class="step-indicator"><span>3</span></div>
+                <div class="stepper-step @(CurrentStep >= 3 ? "active" : "") @(CurrentStep > 3 ? "done" : "")">
+                    <div class="step-indicator">
+                        @if (CurrentStep > 3)
+                        {
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        }
+                        else
+                        {
+                            <span>3</span>
+                        }
+                    </div>
                     <span class="step-label">Requirements</span>
                 </div>
                 <div class="stepper-connector @(CurrentStep > 3 ? "done" : "")"></div>
@@ -87,6 +73,7 @@
             </div>
 
             <!-- Form Area -->
+            <EditForm Model="@this" OnValidSubmit="PublishJob">
             <div class="form-layout">
 
                 <!-- LEFT: Main Form -->
@@ -185,6 +172,18 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Step Navigation -->
+                            <div class="step-nav">
+                                <span></span>
+                                <button class="btn-primary" type="button" @onclick="NextStep">
+                                    Continue
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="9 18 15 12 9 6" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     }
 
@@ -236,6 +235,24 @@
                                               placeholder="• Flexible working hours&#10;• Health insurance&#10;• Learning stipend..."
                                               @bind="Benefits"></textarea>
                                 </div>
+                            </div>
+
+                            <!-- Step Navigation -->
+                            <div class="step-nav">
+                                <button class="btn-secondary" type="button" @onclick="PrevStep">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="15 18 9 12 15 6" />
+                                    </svg>
+                                    Back
+                                </button>
+                                <button class="btn-primary" type="button" @onclick="NextStep">
+                                    Continue
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="9 18 15 12 9 6" />
+                                    </svg>
+                                </button>
                             </div>
                         </div>
                     }
@@ -316,13 +333,31 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Step Navigation -->
+                            <div class="step-nav">
+                                <button class="btn-secondary" type="button" @onclick="PrevStep">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="15 18 9 12 15 6" />
+                                    </svg>
+                                    Back
+                                </button>
+                                <button class="btn-primary" type="button" @onclick="NextStep">
+                                    Continue
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="9 18 15 12 9 6" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     }
 
                     <!-- Step 4: Review -->
                     @if (CurrentStep == 4)
                     {
-                        <div class="form-card review-card">
+                        <div class="form-card">
                             <div class="form-card-header">
                                 <div class="form-card-icon success-icon">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
@@ -394,72 +429,45 @@
                                 </svg>
                                 <span>Your listing will go live immediately after publishing. You can edit or close it anytime from Manage Jobs.</span>
                             </div>
+
+                            <!-- Step Navigation -->
+                            <div class="step-nav">
+                                <button class="btn-secondary" type="button" @onclick="PrevStep">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="15 18 9 12 15 6" />
+                                    </svg>
+                                    Back
+                                </button>
+                                <div style="display: flex; gap: 12px;">
+                                    <button class="btn-secondary" type="button" @onclick="SaveDraft">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                                            <polyline points="17 21 17 13 7 13 7 21" />
+                                            <polyline points="7 3 7 8 15 8" />
+                                        </svg>
+                                        Save Draft
+                                    </button>
+                                    <button class="btn-publish" type="submit">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="22" y1="2" x2="11" y2="13" />
+                                            <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                                        </svg>
+                                        Publish Listing
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     }
 
-                    <!-- Step Navigation -->
-                    <div class="step-nav">
-                        @if (CurrentStep > 1)
-                        {
-                            <button class="btn-secondary" type="button" @onclick="PrevStep">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="15 18 9 12 15 6" />
-                                </svg>
-                                Back
-                            </button>
-                        }
-                        else
-                        {
-                            <span></span>
-                        }
 
-                        @if (CurrentStep < 4)
-                        {
-                            <button class="btn-primary" type="button" @onclick="NextStep">
-                                Continue
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="9 18 15 12 9 6" />
-                                </svg>
-                            </button>
-                        }
-                        else
-                        {
-                            <button class="btn-publish" type="button" @onclick="PublishJob">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
-                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="22" y1="2" x2="11" y2="13" />
-                                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                                </svg>
-                                Publish Listing
-                            </button>
-                        }
-                    </div>
 
                 </div>
 
                 <!-- RIGHT: Sidebar Tips -->
                 <aside class="form-aside">
-                    <div class="tips-card">
-                        <div class="tips-header">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
-                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="10" />
-                                <line x1="12" y1="8" x2="12" y2="12" />
-                                <line x1="12" y1="16" x2="12.01" y2="16" />
-                            </svg>
-                            <span>Writing Tips</span>
-                        </div>
-                        <ul class="tips-list">
-                            <li>Use a clear, specific job title that candidates would actually search for.</li>
-                            <li>Keep your summary under 100 words — concise listings get more applications.</li>
-                            <li>List 5–8 key responsibilities, not an exhaustive task list.</li>
-                            <li>Add relevant skills to improve resume match ranking.</li>
-                            <li>Mention salary range — listings with salary get 40% more applicants.</li>
-                        </ul>
-                    </div>
-
                     <div class="completeness-card">
                         <div class="completeness-header">
                             <span class="completeness-title">Listing Completeness</span>
@@ -513,9 +521,28 @@
                             </li>
                         </ul>
                     </div>
+
+                    <div class="tips-card">
+                        <div class="tips-header">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="8" x2="12" y2="12" />
+                                <line x1="12" y1="16" x2="12.01" y2="16" />
+                            </svg>
+                            <span>Writing Tips</span>
+                        </div>
+                        <ul class="tips-list">
+                            <li>Use clear, specific job titles.</li>
+                            <li>Keep summary under 100 words.</li>
+                            <li>List 5–8 key responsibilities.</li>
+                            <li>Add skills for better matching.</li>
+                        </ul>
+                    </div>
                 </aside>
 
             </div>
+            </EditForm>
         </div>
     </div>
 </div>

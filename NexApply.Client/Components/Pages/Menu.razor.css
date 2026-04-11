@@ -745,12 +745,12 @@
 
     .status-chip.submitted {
         background-color: #F1F5F9;
-        color: #475569;
+        color: #64748B;
     }
 
     .status-chip.shortlisted {
-        background-color: #D1FAE5;
-        color: #059669;
+        background-color: #EFF6FF;
+        color: #1D4ED8;
     }
 
 .app-date {
@@ -828,7 +828,7 @@
     }
 
     .score-label.score-good {
-        color: #F59E0B;
+        color: #D97706;
     }
 
     .score-label.score-fair {
@@ -859,7 +859,7 @@
 }
 
 .score-bar--good {
-    background: linear-gradient(90deg, #F59E0B, #FBBF24);
+    background: linear-gradient(90deg, #D97706, #F59E0B);
 }
 
 .score-bar--fair {

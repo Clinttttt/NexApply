@@ -641,13 +641,13 @@
 .rec-panel-link {
     font-size: var(--text-md);
     font-weight: 500;
-    color: var(--color-primary);
+    color: var(--color-slate-500);
     text-decoration: none;
     transition: color var(--transition-fast);
 }
 
     .rec-panel-link:hover {
-        color: var(--color-primary-light);
+        color: var(--color-primary);
     }
 
     .rec-panel-link:focus-visible {
@@ -754,8 +754,8 @@
 }
 
 .rec-status-badge--interview {
-    color: var(--color-primary);
-    background-color: var(--color-primary-bg);
+    color: var(--color-green-700);
+    background-color: var(--color-green-100);
 }
 
 .rec-status-badge--declined {
@@ -824,8 +824,8 @@
 }
 
 .rec-tag--green {
-    color: var(--color-green-700);
-    background-color: var(--color-green-100);
+    color: var(--color-primary);
+    background-color: var(--color-primary-bg);
 }
 
 .rec-tag--slate {

@@ -1,0 +1,1063 @@
+@page "/recruiter/applicants"
+@page "/recruiter/applicants/{JobId:int}"
+@rendermode InteractiveServer
+
+<div class="app-shell">
+    <RecruiterSidebar />
+
+    <div class="main-content">
+        <RecruiterHeader Title="Applicants" Subtitle="Review and manage candidates across your listings" />
+
+        <div class="page-body">
+
+            <!-- Pipeline Stage Summary with Actions -->
+            <div class="pipeline-summary">
+                <div class="pipeline-stages">
+                    <button class="pipeline-stage-btn @(ActiveStageFilter == "" ? "active" : "")"
+                            @onclick='() => SetStageFilter("")'>
+                        <span class="psb-count">@Applicants.Count(a => SelectedJobId == null || a.JobId == SelectedJobId)</span>
+                        <span class="psb-label">All</span>
+                    </button>
+
+                    @foreach (var stage in Stages)
+                    {
+                        var count = Applicants.Count(a =>
+                            a.Stage == stage.Key &&
+                            (SelectedJobId == null || a.JobId == SelectedJobId));
+
+                        <div class="pipeline-stage-divider"></div>
+
+                        <button class="pipeline-stage-btn @(ActiveStageFilter == stage.Key ? "active" : "") pipeline-stage-btn--@stage.Value.CssClass"
+                                @onclick="() => SetStageFilter(stage.Key)">
+                            <span class="psb-dot"></span>
+                            <span class="psb-count">@count</span>
+                            <span class="psb-label">@stage.Key</span>
+                        </button>
+                    }
+                </div>
+
+                <div class="pipeline-actions">
+                    <div class="listings-dropdown">
+                        <button class="btn-compact" @onclick="ToggleListingsDropdown">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="7" height="7" />
+                                <rect x="14" y="3" width="7" height="7" />
+                                <rect x="14" y="14" width="7" height="7" />
+                                <rect x="3" y="14" width="7" height="7" />
+                            </svg>
+                            <span class="listings-dropdown-text">
+                                @if (SelectedJobId.HasValue && ActiveJob != null)
+                                {
+                                    @ActiveJob.Title
+                                }
+                                else
+                                {
+                                    <span>All Listings</span>
+                                }
+                            </span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                        </button>
+                        @if (ShowListingsDropdown)
+                        {
+                            <div class="listings-dropdown-menu">
+                                <button class="listings-dropdown-item @(SelectedJobId == null ? "active" : "")"
+                                        @onclick="() => SelectJobFromDropdown(null)">
+                                    <span class="ldi-title">All Listings</span>
+                                    <span class="ldi-count">@Applicants.Count</span>
+                                </button>
+                                @foreach (var job in Jobs)
+                                {
+                                    var appCount = Applicants.Count(a => a.JobId == job.Id);
+                                    <button class="listings-dropdown-item @(SelectedJobId == job.Id ? "active" : "")"
+                                            @onclick="() => SelectJobFromDropdown(job.Id)">
+                                        <div class="ldi-inner">
+                                            <span class="ldi-title">@job.Title</span>
+                                            <div class="ldi-meta">
+                                                <span class="ldi-badge">@FormatType(job.Type)</span>
+                                                <span class="ldi-loc">@job.Location</span>
+                                            </div>
+                                        </div>
+                                        <span class="ldi-count">@appCount</span>
+                                    </button>
+                                }
+                            </div>
+                        }
+                    </div>
+                    <button class="btn-compact" @onclick="ExportApplicants">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                        Export CSV
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Applicant Area -->
+            <div class="applicants-main">
+
+                    <!-- Filter & Search Bar -->
+                    <div class="filter-bar">
+                        <div class="search-wrap">
+                            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                 stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8" />
+                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                            </svg>
+                            <input class="search-input" type="search"
+                                   placeholder="Search by name, role, or skill..."
+                                   @bind="SearchQuery" @bind:after="ApplyFilters" />
+                        </div>
+
+                        <div class="filter-controls">
+                            <select class="filter-select" @bind="SortBy" @bind:after="ApplyFilters">
+                                <option value="newest">Newest First</option>
+                                <option value="oldest">Oldest First</option>
+                                <option value="name">Name A–Z</option>
+                                <option value="match">Best Match</option>
+                            </select>
+                        </div>
+
+                        @if (SelectedApplicantIds.Count > 0)
+                        {
+                            <div class="bulk-actions">
+                                <span class="bulk-count">@SelectedApplicantIds.Count selected</span>
+                                <select class="filter-select bulk-stage-select"
+                                        @bind="BulkStageTarget" @bind:after="ApplyBulkStage">
+                                    <option value="">Move to stage…</option>
+                                    @foreach (var s in Stages.Keys)
+                                    {
+                                        <option value="@s">@s</option>
+                                    }
+                                </select>
+                                <button class="btn-danger-ghost" @onclick="ClearSelection">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="18" y1="6" x2="6" y2="18" />
+                                        <line x1="6" y1="6" x2="18" y2="18" />
+                                    </svg>
+                                    Clear
+                                </button>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Applicant Table -->
+                    @if (FilteredApplicants.Count == 0)
+                    {
+                        <div class="empty-state">
+                            <div class="empty-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                    <circle cx="9" cy="7" r="4" />
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                                </svg>
+                            </div>
+                            <p class="empty-title">No applicants found</p>
+                            <p class="empty-sub">Try adjusting your search or filters.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="applicant-table">
+
+                            <!-- Table Header -->
+                            <div class="table-head">
+                                <div class="th th--check">
+                                    <input type="checkbox" class="row-check"
+                                           checked="@(SelectedApplicantIds.Count == FilteredApplicants.Count && FilteredApplicants.Count > 0)"
+                                           @onchange="ToggleSelectAll"
+                                           aria-label="Select all applicants" />
+                                </div>
+                                <div class="th th--applicant">Applicant</div>
+                                <div class="th th--job">Position</div>
+                                <div class="th th--match">Match</div>
+                                <div class="th th--stage">Stage</div>
+                                <div class="th th--date">Applied</div>
+                                <div class="th th--actions"></div>
+                            </div>
+
+                            <!-- Table Rows -->
+                            @foreach (var app in FilteredApplicants)
+                            {
+                                var isSelected = SelectedApplicantIds.Contains(app.Id);
+                                var isExpanded = ExpandedApplicantId == app.Id;
+                                var job = Jobs.FirstOrDefault(j => j.Id == app.JobId);
+
+                                <div class="table-row-wrap @(isExpanded ? "row-expanded" : "") @(isSelected ? "row-selected" : "")">
+
+                                    <!-- Main Row -->
+                                    <div class="table-row">
+
+                                        <div class="td td--check" @onclick:stopPropagation="true">
+                                            <input type="checkbox" class="row-check"
+                                                   checked="@isSelected"
+                                                   @onchange="() => ToggleSelect(app.Id)"
+                                                   aria-label="Select @app.Name" />
+                                        </div>
+
+                                        <div class="td td--applicant">
+                                            <div class="applicant-avatar applicant-avatar--@GetAvatarColor(app.Id)">
+                                                @app.Initials
+                                            </div>
+                                            <div class="applicant-info">
+                                                <span class="applicant-name">@app.Name</span>
+                                                <span class="applicant-email">@app.Email</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="td td--job">
+                                            @if (job != null)
+                                            {
+                                                <span class="position-title">@job.Title</span>
+                                                <span class="position-type">@FormatType(job.Type)</span>
+                                            }
+                                        </div>
+
+                                        <div class="td td--match">
+                                            <div class="match-score match-score--@GetMatchClass(app.MatchScore)">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                                                     fill="none" stroke="currentColor" stroke-width="2.5"
+                                                     stroke-linecap="round" stroke-linejoin="round">
+                                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                                                </svg>
+                                                @app.MatchScore%
+                                            </div>
+                                        </div>
+
+                                        <div class="td td--stage" @onclick:stopPropagation="true">
+                                            @if (app.Stage == "For Interview")
+                                            {
+                                                <button class="stage-badge stage-badge--interview" @onclick="() => OpenScheduleModal(app)">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                                        <line x1="16" y1="2" x2="16" y2="6" />
+                                                        <line x1="8" y1="2" x2="8" y2="6" />
+                                                        <line x1="3" y1="10" x2="21" y2="10" />
+                                                    </svg>
+                                                    For Interview
+                                                </button>
+                                            }
+                                            else if (app.Stage == "Submitted")
+                                            {
+                                                <button class="stage-badge stage-badge--submitted" @onclick="() => MoveSubmittedToReview(app)">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <circle cx="12" cy="12" r="10" />
+                                                        <polyline points="12 6 12 12 16 14" />
+                                                    </svg>
+                                                    Submitted
+                                                </button>
+                                            }
+                                            else if (app.Stage == "Under Review")
+                                            {
+                                                <button class="stage-badge stage-badge--review" @onclick="() => OpenStageActionModal(app)">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                                        <circle cx="12" cy="12" r="3" />
+                                                    </svg>
+                                                    Under Review
+                                                </button>
+                                            }
+                                            else if (app.Stage == "Shortlisted")
+                                            {
+                                                <button class="stage-badge stage-badge--shortlisted" @onclick="() => MoveShortlistedToInterview(app)">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                                    </svg>
+                                                    Shortlisted
+                                                </button>
+                                            }
+                                            else if (app.Stage == "Declined")
+                                            {
+                                                <span class="stage-badge stage-badge--declined stage-badge--disabled">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <circle cx="12" cy="12" r="10" />
+                                                        <line x1="15" y1="9" x2="9" y2="15" />
+                                                        <line x1="9" y1="9" x2="15" y2="15" />
+                                                    </svg>
+                                                    Declined
+                                                </span>
+                                            }
+                                        </div>
+
+                                        <div class="td td--date">
+                                            <span class="applied-date">@app.AppliedDate.ToString("MMM d")</span>
+                                            <span class="applied-year">@app.AppliedDate.Year</span>
+                                        </div>
+
+                                        <div class="td td--actions" @onclick:stopPropagation="true">
+                                            <a href="/recruiter/applicants/@app.Id/resume" class="row-action row-action--resume"
+                                                   title="View Resume">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                    <polyline points="14 2 14 8 20 8" />
+                                                </svg>
+                                                Resume
+                                            </a>
+                                            <button class="row-action row-action--message"
+                                                    title="Message @app.Name"
+                                                    @onclick="() => MessageApplicant(app)">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                                                </svg>
+                                                Message
+                                            </button>
+                                            <button class="row-action row-action--expand"
+                                                    @onclick="() => ToggleExpand(app.Id)"
+                                                    aria-label="@(isExpanded ? "Collapse" : "Expand") applicant details">
+                                                <svg class="chevron @(isExpanded ? "rotated" : "")"
+                                                     xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polyline points="6 9 12 15 18 9" />
+                                                </svg>
+                                            </button>
+                                        </div>
+
+                                    </div>
+
+                                    <!-- Expanded Detail Panel -->
+                                    @if (isExpanded)
+                                    {
+                                        <div class="applicant-detail">
+
+                                            <div class="applicant-detail-grid">
+
+                                                <!-- Col 1: About -->
+                                                <div class="detail-col">
+                                                    <span class="detail-label">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                                                             fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                                            <circle cx="12" cy="7" r="4" />
+                                                        </svg>
+                                                        About
+                                                    </span>
+                                                    <div class="detail-about-grid">
+                                                        <span class="about-key">Email</span>
+                                                        <span class="about-val">@app.Email</span>
+                                                        <span class="about-key">Phone</span>
+                                                        <span class="about-val">
+                                                            @if (!string.IsNullOrWhiteSpace(app.Phone))
+                                                            {
+                                                                @app.Phone
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="about-val--empty">Not provided</span>
+                                                            }
+                                                        </span>
+                                                        <span class="about-key">Location</span>
+                                                        <span class="about-val">@app.Location</span>
+                                                        <span class="about-key">Portfolio</span>
+                                                        <span class="about-val">
+                                                            @if (!string.IsNullOrWhiteSpace(app.Portfolio))
+                                                            {
+                                                                <a href="@(app.Portfolio.StartsWith("http") ? app.Portfolio : "https://" + app.Portfolio)" target="_blank" class="detail-link">@app.Portfolio</a>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="about-val--empty">Not provided</span>
+                                                            }
+                                                        </span>
+                                                        <span class="about-key">LinkedIn</span>
+                                                        <span class="about-val">
+                                                            @if (!string.IsNullOrWhiteSpace(app.LinkedIn))
+                                                            {
+                                                                <a href="@app.LinkedIn" target="_blank" class="detail-link">View Profile</a>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="about-val--empty">Not provided</span>
+                                                            }
+                                                        </span>
+                                                        <span class="about-key">GitHub</span>
+                                                        <span class="about-val">
+                                                            @if (!string.IsNullOrWhiteSpace(app.GitHub))
+                                                            {
+                                                                <a href="@app.GitHub" target="_blank" class="detail-link">View Profile</a>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="about-val--empty">Not provided</span>
+                                                            }
+                                                        </span>
+                                                        <span class="about-key">Resume</span>
+                                                        <span class="about-val">
+                                                            <button class="resume-link-btn" @onclick="() => OpenResumeModal(app)">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                                    <polyline points="14 2 14 8 20 8" />
+                                                                </svg>
+                                                                View Resume
+                                                            </button>
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="detail-divider-v"></div>
+
+                                                <!-- Col 2: Skills -->
+                                                <div class="detail-col">
+                                                    <span class="detail-label">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                                                             fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                            <polyline points="9 11 12 14 22 4" />
+                                                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                                                        </svg>
+                                                        Skills
+                                                    </span>
+                                                    <div class="detail-skills">
+                                                        @foreach (var skill in app.Skills)
+                                                        {
+                                                            var matched = job?.RequiredSkills.Contains(skill, StringComparer.OrdinalIgnoreCase) ?? false;
+                                                            <span class="skill-chip @(matched ? "skill-chip--matched" : "")">
+                                                                @if (matched)
+                                                                {
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24"
+                                                                         fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                                        <polyline points="20 6 9 17 4 12" />
+                                                                    </svg>
+                                                                }
+                                                                @skill
+                                                            </span>
+                                                        }
+                                                    </div>
+                                                    @if (job != null)
+                                                    {
+                                                        var missing = job.RequiredSkills.Except(app.Skills, StringComparer.OrdinalIgnoreCase).ToList();
+                                                        @if (missing.Count > 0)
+                                                        {
+                                                            <div class="missing-skills">
+                                                                <span class="missing-label">Missing</span>
+                                                                @foreach (var m in missing)
+                                                                {
+                                                                    <span class="skill-chip skill-chip--missing">@m</span>
+                                                                }
+                                                            </div>
+                                                        }
+                                                    }
+                                                </div>
+
+                                                <div class="detail-divider-v"></div>
+
+                                                <!-- Col 3: Notes & Actions -->
+                                                <div class="detail-col detail-col--notes">
+                                                    <span class="detail-label">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                                                             fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path d="M12 20h9" />
+                                                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                                                        </svg>
+                                                        Recruiter Notes
+                                                    </span>
+                                                    <textarea class="notes-textarea"
+                                                              placeholder="Add private notes about this candidate..."
+                                                              @bind="app.Notes"
+                                                              rows="4"></textarea>
+                                                    <div class="detail-quick-actions">
+                                                        <button class="qbtn qbtn--shortlist @(app.Stage == "Shortlisted" ? "active" : "")"
+                                                                @onclick="@(() => QuickStage(app, "Shortlisted"))">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                                            </svg>
+                                                            Shortlist
+                                                        </button>
+                                                        <button class="qbtn qbtn--interview @(app.Stage == "For Interview" ? "active" : "")"
+                                                                @onclick="@(() => QuickStage(app, "For Interview"))">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                                                <line x1="16" y1="2" x2="16" y2="6" />
+                                                                <line x1="8" y1="2" x2="8" y2="6" />
+                                                                <line x1="3" y1="10" x2="21" y2="10" />
+                                                            </svg>
+                                                            Schedule Interview
+                                                        </button>
+                                                        <button class="qbtn qbtn--decline @(app.Stage == "Declined" ? "active" : "")"
+                                                                @onclick="@(() => QuickStage(app, "Declined"))">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                <circle cx="12" cy="12" r="10" />
+                                                                <line x1="15" y1="9" x2="9" y2="15" />
+                                                                <line x1="9" y1="9" x2="15" y2="15" />
+                                                            </svg>
+                                                            Decline
+                                                        </button>
+                                                        @if (app.Stage == "For Interview")
+                                                        {
+                                                            <button class="qbtn qbtn--return"
+                                                                    @onclick="@(() => ReturnToPreviousStage(app))">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                    <polyline points="15 18 9 12 15 6" />
+                                                                </svg>
+                                                                Return to Shortlisted
+                                                            </button>
+                                                        }
+                                                    </div>
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Resume Modal -->
+@if (ShowResumeModal && SelectedApplicantForResume != null)
+{
+    <div class="modal-overlay" @onclick="CloseResumeModal">
+        <div class="modal-content modal-content--resume" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <div class="modal-title-block">
+                    <h2 class="modal-title">@SelectedApplicantForResume.Name's Resume</h2>
+                    <p class="modal-subtitle">@SelectedApplicantForResume.Email</p>
+                </div>
+                <button class="modal-close" @onclick="CloseResumeModal" aria-label="Close modal">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body modal-body--resume">
+                <div class="resume-viewer">
+                    <div class="resume-section">
+                        <h3 class="resume-section-title">Education</h3>
+                        <p class="resume-text">@SelectedApplicantForResume.Education</p>
+                    </div>
+                    <div class="resume-section">
+                        <h3 class="resume-section-title">Experience</h3>
+                        <p class="resume-text">@SelectedApplicantForResume.Experience</p>
+                    </div>
+                    <div class="resume-section">
+                        <h3 class="resume-section-title">Skills</h3>
+                        <div class="resume-skills">
+                            @foreach (var skill in SelectedApplicantForResume.Skills)
+                            {
+                                <span class="skill-chip">@skill</span>
+                            }
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(SelectedApplicantForResume.Portfolio))
+                    {
+                        <div class="resume-section">
+                            <h3 class="resume-section-title">Portfolio</h3>
+                            <a href="@SelectedApplicantForResume.Portfolio" target="_blank" class="detail-link">@SelectedApplicantForResume.Portfolio</a>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" @onclick="CloseResumeModal">Close</button>
+                <button class="btn-primary" @onclick="() => DownloadResume(SelectedApplicantForResume)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    Download PDF
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Stage Action Modal -->
+@if (ShowStageActionModal && SelectedApplicantForStageAction != null)
+{
+    <div class="modal-overlay" @onclick="CloseStageActionModal">
+        <div class="modal-content modal-content--stage-action" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <div class="modal-title-block">
+                    <h2 class="modal-title">Move @SelectedApplicantForStageAction.Name</h2>
+                    <p class="modal-subtitle">Current stage: Under Review</p>
+                </div>
+                <button class="modal-close" @onclick="CloseStageActionModal" aria-label="Close modal">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body modal-body--stage-actions">
+                <button class="stage-action-btn stage-action-btn--shortlist" @onclick="MoveToShortlisted">
+                    <div class="stage-action-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                        </svg>
+                    </div>
+                    <div class="stage-action-content">
+                        <span class="stage-action-title">Shortlist</span>
+                        <span class="stage-action-desc">Mark as a strong candidate</span>
+                    </div>
+                </button>
+                <button class="stage-action-btn stage-action-btn--interview" @onclick="MoveToInterviewAndSchedule">
+                    <div class="stage-action-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                            <line x1="16" y1="2" x2="16" y2="6" />
+                            <line x1="8" y1="2" x2="8" y2="6" />
+                            <line x1="3" y1="10" x2="21" y2="10" />
+                        </svg>
+                    </div>
+                    <div class="stage-action-content">
+                        <span class="stage-action-title">Schedule Interview</span>
+                        <span class="stage-action-desc">Move to interview stage</span>
+                    </div>
+                </button>
+                <button class="stage-action-btn stage-action-btn--decline" @onclick="MoveToDeclined">
+                    <div class="stage-action-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="15" y1="9" x2="9" y2="15" />
+                            <line x1="9" y1="9" x2="15" y2="15" />
+                        </svg>
+                    </div>
+                    <div class="stage-action-content">
+                        <span class="stage-action-title">Decline</span>
+                        <span class="stage-action-desc">Not a good fit</span>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Schedule Interview Modal -->
+@if (ShowScheduleModal && SelectedApplicantForSchedule != null)
+{
+    <div class="modal-overlay" @onclick="CloseScheduleModal">
+        <div class="modal-content modal-content--schedule" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <div class="modal-title-block">
+                    <h2 class="modal-title">Schedule Interview</h2>
+                    <p class="modal-subtitle">@SelectedApplicantForSchedule.Name · @SelectedApplicantForSchedule.Email</p>
+                </div>
+                <button class="modal-close" @onclick="CloseScheduleModal" aria-label="Close modal">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Interview Date</label>
+                    <input type="date" class="form-input" @bind="InterviewDate" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Interview Time</label>
+                    <input type="time" class="form-input" @bind="InterviewTime" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Interview Type</label>
+                    <select class="form-input" @bind="InterviewType">
+                        <option value="Video Call">Video Call</option>
+                        <option value="Phone Call">Phone Call</option>
+                        <option value="In-Person">In-Person</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Meeting Link (optional)</label>
+                    <input type="url" class="form-input" placeholder="https://meet.google.com/..." @bind="MeetingLink" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes (optional)</label>
+                    <textarea class="form-input" rows="3" placeholder="Add any additional notes for the interview..." @bind="InterviewNotes"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" @onclick="CloseScheduleModal">Cancel</button>
+                <button class="btn-primary" @onclick="ConfirmSchedule">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    Schedule Interview
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int? JobId { get; set; }
+
+    private int? SelectedJobId;
+    private string SearchQuery = "";
+    private string SortBy = "newest";
+    private string ActiveStageFilter = "";
+    private string BulkStageTarget = "";
+    private int? ExpandedApplicantId = null;
+    private HashSet<int> SelectedApplicantIds = new();
+    private List<ApplicantItem> FilteredApplicants = new();
+    private bool ShowListingsDropdown = false;
+    private bool ShowResumeModal = false;
+    private ApplicantItem? SelectedApplicantForResume = null;
+    private bool ShowScheduleModal = false;
+    private ApplicantItem? SelectedApplicantForSchedule = null;
+    private bool ShowStageActionModal = false;
+    private ApplicantItem? SelectedApplicantForStageAction = null;
+    private DateTime InterviewDate = DateTime.Today.AddDays(7);
+    private TimeOnly InterviewTime = new TimeOnly(10, 0);
+    private string InterviewType = "Video Call";
+    private string MeetingLink = "";
+    private string InterviewNotes = "";
+
+    // Stage definitions with CSS class
+    private Dictionary<string, StageStyle> Stages = new()
+    {
+        { "Submitted",    new("submitted") },
+        { "Under Review", new("review") },
+        { "Shortlisted",  new("shortlisted") },
+        { "For Interview",new("interview") },
+        { "Declined",     new("declined") }
+    };
+
+    private JobItem? ActiveJob => Jobs.FirstOrDefault(j => j.Id == SelectedJobId);
+
+    private List<JobItem> Jobs = new()
+    {
+        new JobItem { Id = 1, Title = "Full-Stack Developer Intern", Type = "Internship", Location = "Remote",
+            RequiredSkills = new() { "React", "ASP.NET Core", "SQL", "Git" } },
+        new JobItem { Id = 2, Title = "React Frontend Developer", Type = "Internship", Location = "Remote",
+            RequiredSkills = new() { "React", "TypeScript", "TailwindCSS", "Figma" } },
+        new JobItem { Id = 3, Title = "API Developer (.NET)", Type = "FullTime", Location = "Hybrid",
+            RequiredSkills = new() { "ASP.NET Core", "PostgreSQL", "Docker", "Redis" } },
+        new JobItem { Id = 4, Title = ".NET Core Developer", Type = "FullTime", Location = "On-site",
+            RequiredSkills = new() { "C#", ".NET Core", "EF Core", "Azure" } },
+    };
+
+    private List<ApplicantItem> Applicants = new()
+    {
+        new ApplicantItem { Id = 1, JobId = 1, Name = "Kira Reyes",     Email = "kira.reyes@email.com",    Stage = "Under Review", MatchScore = 91, AppliedDate = new DateTime(2025,4,9),
+            Education = "B.S. Computer Science, UP Diliman", Experience = "2 years (internships)", Location = "Quezon City, PH", Portfolio = "kirareyes.dev",
+            Phone = "+63 912 345 6789", LinkedIn = "https://linkedin.com/in/kirareyes", GitHub = "https://github.com/kirareyes",
+            Skills = new() { "React", "ASP.NET Core", "SQL", "TypeScript", "Git" }, Notes = "" },
+        new ApplicantItem { Id = 2, JobId = 1, Name = "Marco Guerrero", Email = "marco.g@email.com",       Stage = "Shortlisted",  MatchScore = 85, AppliedDate = new DateTime(2025,4,8),
+            Education = "B.S. Information Technology, DLSU", Experience = "1 year", Location = "Manila, PH", Portfolio = "",
+            Phone = "+63 917 234 5678", LinkedIn = "https://linkedin.com/in/marcoguerrero", GitHub = "",
+            Skills = new() { "React", "SQL", "Git", "Node.js" }, Notes = "Strong portfolio. Good culture fit." },
+        new ApplicantItem { Id = 3, JobId = 1, Name = "Sofia Cruz",     Email = "sofia.cruz@email.com",    Stage = "For Interview",MatchScore = 78, AppliedDate = new DateTime(2025,4,7),
+            Education = "B.S. Computer Engineering, Ateneo", Experience = "3 years", Location = "Pasig, PH", Portfolio = "sofiadev.io",
+            Phone = "+63 918 345 6789", LinkedIn = "https://linkedin.com/in/sofiacruz", GitHub = "https://github.com/sofiacruz",
+            Skills = new() { "ASP.NET Core", "SQL", "Docker", "Git" }, Notes = "" },
+        new ApplicantItem { Id = 4, JobId = 1, Name = "James Tan",      Email = "james.tan@email.com",     Stage = "Submitted",    MatchScore = 62, AppliedDate = new DateTime(2025,4,7),
+            Education = "B.S. Computer Science, UST", Experience = "Fresh graduate", Location = "Mandaluyong, PH", Portfolio = "",
+            Phone = "", LinkedIn = "", GitHub = "https://github.com/jamestan",
+            Skills = new() { "React", "HTML", "CSS", "Git" }, Notes = "" },
+        new ApplicantItem { Id = 5, JobId = 2, Name = "Ana Villanueva", Email = "ana.v@email.com",         Stage = "Under Review", MatchScore = 88, AppliedDate = new DateTime(2025,4,6),
+            Education = "B.S. Computer Science, UP Manila", Experience = "2 years", Location = "Taguig, PH", Portfolio = "anadev.ph",
+            Phone = "+63 919 456 7890", LinkedIn = "https://linkedin.com/in/anavillanueva", GitHub = "https://github.com/anavillanueva",
+            Skills = new() { "React", "TypeScript", "TailwindCSS", "Figma", "CSS" }, Notes = "" },
+        new ApplicantItem { Id = 6, JobId = 2, Name = "Luis Santos",    Email = "luis.santos@email.com",   Stage = "Shortlisted",  MatchScore = 74, AppliedDate = new DateTime(2025,4,5),
+            Education = "B.S. IT, FEU", Experience = "1.5 years", Location = "Makati, PH", Portfolio = "",
+            Phone = "+63 920 567 8901", LinkedIn = "https://linkedin.com/in/luissantos", GitHub = "",
+            Skills = new() { "React", "Figma", "CSS", "JavaScript" }, Notes = "Needs TypeScript training." },
+        new ApplicantItem { Id = 7, JobId = 3, Name = "Rachel Ong",     Email = "rachel.ong@email.com",    Stage = "Submitted",    MatchScore = 95, AppliedDate = new DateTime(2025,4,4),
+            Education = "B.S. Computer Science, DLSU", Experience = "4 years", Location = "BGC, PH", Portfolio = "racheldev.com",
+            Phone = "+63 921 678 9012", LinkedIn = "https://linkedin.com/in/rachelong", GitHub = "https://github.com/rachelong",
+            Skills = new() { "ASP.NET Core", "PostgreSQL", "Docker", "Redis", "Kubernetes" }, Notes = "Exceptional profile." },
+        new ApplicantItem { Id = 8, JobId = 3, Name = "Mark David",     Email = "mark.david@email.com",    Stage = "Declined",     MatchScore = 44, AppliedDate = new DateTime(2025,4,3),
+            Education = "B.S. IT, Mapua", Experience = "6 months", Location = "Caloocan, PH", Portfolio = "",
+            Phone = "+63 922 789 0123", LinkedIn = "", GitHub = "",
+            Skills = new() { "ASP.NET Core", "SQL" }, Notes = "Insufficient experience for senior role." },
+        new ApplicantItem { Id = 9, JobId = 4, Name = "Claire Bautista",Email = "claire.b@email.com",      Stage = "For Interview",MatchScore = 89, AppliedDate = new DateTime(2025,4,2),
+            Education = "B.S. Computer Science, Ateneo", Experience = "5 years", Location = "Pasig, PH", Portfolio = "",
+            Phone = "+63 923 890 1234", LinkedIn = "https://linkedin.com/in/clairebautista", GitHub = "https://github.com/clairebautista",
+            Skills = new() { "C#", ".NET Core", "EF Core", "Azure", "Docker" }, Notes = "" },
+        new ApplicantItem { Id = 10,JobId = 4, Name = "Jeric Lim",      Email = "jeric.lim@email.com",     Stage = "Under Review", MatchScore = 71, AppliedDate = new DateTime(2025,4,1),
+            Education = "B.S. IT, PLM", Experience = "3 years", Location = "Manila, PH", Portfolio = "jericlim.dev",
+            Phone = "+63 924 901 2345", LinkedIn = "https://linkedin.com/in/jericlim", GitHub = "https://github.com/jericlim",
+            Skills = new() { "C#", ".NET Core", "SQL", "Git" }, Notes = "" },
+    };
+
+    protected override void OnInitialized()
+    {
+        if (JobId.HasValue) SelectedJobId = JobId;
+        ApplyFilters();
+    }
+
+    private void SelectJob(int? id)
+    {
+        SelectedJobId = id;
+        ExpandedApplicantId = null;
+        ApplyFilters();
+    }
+
+    private void ToggleListingsDropdown()
+    {
+        ShowListingsDropdown = !ShowListingsDropdown;
+    }
+
+    private void SelectJobFromDropdown(int? id)
+    {
+        SelectedJobId = id;
+        ExpandedApplicantId = null;
+        ShowListingsDropdown = false;
+        ApplyFilters();
+    }
+
+    private void SetStageFilter(string stage)
+    {
+        ActiveStageFilter = stage;
+        ApplyFilters();
+    }
+
+    private void ApplyFilters()
+    {
+        var query = SearchQuery?.Trim().ToLower() ?? "";
+
+        FilteredApplicants = Applicants
+            .Where(a =>
+                (SelectedJobId == null || a.JobId == SelectedJobId) &&
+                (string.IsNullOrEmpty(ActiveStageFilter) || a.Stage == ActiveStageFilter) &&
+                (string.IsNullOrEmpty(query) ||
+                    a.Name.ToLower().Contains(query) ||
+                    a.Email.ToLower().Contains(query) ||
+                    a.Skills.Any(s => s.ToLower().Contains(query)))
+            )
+            .OrderBy(a => SortBy switch
+            {
+                "name" => a.Name,
+                _ => ""
+            })
+            .ThenByDescending(a => SortBy switch
+            {
+                "newest" => a.AppliedDate.Ticks,
+                "oldest" => long.MaxValue - a.AppliedDate.Ticks,
+                "match" => (long)a.MatchScore,
+                _ => 0L
+            })
+            .ToList();
+    }
+
+    private void ToggleExpand(int id)
+    {
+        ExpandedApplicantId = ExpandedApplicantId == id ? null : id;
+    }
+
+    private void ToggleSelect(int id)
+    {
+        if (!SelectedApplicantIds.Remove(id))
+            SelectedApplicantIds.Add(id);
+    }
+
+    private void ToggleSelectAll(ChangeEventArgs e)
+    {
+        if ((bool?)e.Value == true)
+            SelectedApplicantIds = FilteredApplicants.Select(a => a.Id).ToHashSet();
+        else
+            SelectedApplicantIds.Clear();
+    }
+
+    private void ClearSelection()
+    {
+        SelectedApplicantIds.Clear();
+        BulkStageTarget = "";
+    }
+
+    private void ApplyBulkStage()
+    {
+        if (string.IsNullOrEmpty(BulkStageTarget)) return;
+        foreach (var a in Applicants.Where(a => SelectedApplicantIds.Contains(a.Id)))
+            a.Stage = BulkStageTarget;
+        ClearSelection();
+        ApplyFilters();
+    }
+
+    private void OnStageChanged(ApplicantItem app) => ApplyFilters();
+
+    private void QuickStage(ApplicantItem app, string stage)
+    {
+        app.Stage = app.Stage == stage ? "Submitted" : stage;
+        ApplyFilters();
+    }
+
+    private void MoveSubmittedToReview(ApplicantItem app)
+    {
+        QuickStage(app, "Under Review");
+    }
+
+    private void MoveShortlistedToInterview(ApplicantItem app)
+    {
+        QuickStage(app, "For Interview");
+    }
+
+    private void MoveToShortlisted()
+    {
+        if (SelectedApplicantForStageAction != null)
+        {
+            MoveToStage(SelectedApplicantForStageAction, "Shortlisted");
+        }
+    }
+
+    private void MoveToInterviewAndSchedule()
+    {
+        if (SelectedApplicantForStageAction != null)
+        {
+            MoveToStageAndSchedule(SelectedApplicantForStageAction);
+        }
+    }
+
+    private void MoveToDeclined()
+    {
+        if (SelectedApplicantForStageAction != null)
+        {
+            MoveToStage(SelectedApplicantForStageAction, "Declined");
+        }
+    }
+
+    private void ReturnToPreviousStage(ApplicantItem app)
+    {
+        app.Stage = "Shortlisted";
+        ApplyFilters();
+    }
+
+    private void MessageApplicant(ApplicantItem app) { /* TODO: open messaging */ }
+    private void ExportApplicants() { /* TODO: export CSV */ }
+
+    private void OpenResumeModal(ApplicantItem app)
+    {
+        SelectedApplicantForResume = app;
+        ShowResumeModal = true;
+    }
+
+    private void CloseResumeModal()
+    {
+        ShowResumeModal = false;
+        SelectedApplicantForResume = null;
+    }
+
+    private void DownloadResume(ApplicantItem app)
+    {
+        // TODO: implement resume download
+    }
+
+    private void OpenScheduleModal(ApplicantItem app)
+    {
+        SelectedApplicantForSchedule = app;
+        ShowScheduleModal = true;
+        // Reset form
+        InterviewDate = DateTime.Today.AddDays(7);
+        InterviewTime = new TimeOnly(10, 0);
+        InterviewType = "Video Call";
+        MeetingLink = "";
+        InterviewNotes = "";
+    }
+
+    private void CloseScheduleModal()
+    {
+        ShowScheduleModal = false;
+        SelectedApplicantForSchedule = null;
+    }
+
+    private void ConfirmSchedule()
+    {
+        if (SelectedApplicantForSchedule != null)
+        {
+            // TODO: Save interview schedule to database
+            // For now, just close the modal
+            CloseScheduleModal();
+        }
+    }
+
+    private void OpenStageActionModal(ApplicantItem app)
+    {
+        SelectedApplicantForStageAction = app;
+        ShowStageActionModal = true;
+    }
+
+    private void CloseStageActionModal()
+    {
+        ShowStageActionModal = false;
+        SelectedApplicantForStageAction = null;
+    }
+
+    private void MoveToStage(ApplicantItem app, string stage)
+    {
+        app.Stage = stage;
+        CloseStageActionModal();
+        ApplyFilters();
+    }
+
+    private void MoveToStageAndSchedule(ApplicantItem app)
+    {
+        app.Stage = "For Interview";
+        CloseStageActionModal();
+        ApplyFilters();
+        OpenScheduleModal(app);
+    }
+
+    private string GetMatchClass(int score) => score >= 80 ? "high" : score >= 60 ? "mid" : "low";
+    private string GetStageClass(string stage) => Stages.TryGetValue(stage, out var s) ? s.CssClass : "submitted";
+    private string GetAvatarColor(int id) => new[] { "blue", "green", "amber", "slate", "purple" }[id % 5];
+    private string FormatType(string type) => type switch { "FullTime" => "Full-Time", "PartTime" => "Part-Time", _ => type };
+
+    private record StageStyle(string CssClass);
+
+    private class JobItem
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = "";
+        public string Type { get; set; } = "";
+        public string Location { get; set; } = "";
+        public List<string> RequiredSkills { get; set; } = new();
+    }
+
+    private class ApplicantItem
+    {
+        public int Id { get; set; }
+        public int JobId { get; set; }
+        public string Name { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Stage { get; set; } = "";
+        public int MatchScore { get; set; }
+        public DateTime AppliedDate { get; set; }
+        public string Education { get; set; } = "";
+        public string Experience { get; set; } = "";
+        public string Location { get; set; } = "";
+        public string Portfolio { get; set; } = "";
+        public string Phone { get; set; } = "";
+        public string LinkedIn { get; set; } = "";
+        public string GitHub { get; set; } = "";
+        public string Notes { get; set; } = "";
+        public List<string> Skills { get; set; } = new();
+        public string Initials => string.Join("", Name.Split(' ').Take(2).Select(w => w[0]));
+    }
+}
