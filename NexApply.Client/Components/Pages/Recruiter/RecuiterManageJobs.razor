@@ -212,7 +212,7 @@
                                             }
                                         </button>
                                         <button class="btn-action btn-action--close" title="Close Listing"
-                                                @onclick="() => CloseJob(job)" disabled="@(job.Status == "Closed")">
+                                                @onclick="() => CloseJobListing(job)" disabled="@(job.Status == "Closed")">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
                                                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                 <circle cx="12" cy="12" r="10"/>
@@ -287,46 +287,12 @@
     </div>
 </div>
 
-<!-- Confirm Close Modal -->
-@if (ShowCloseConfirm)
-{
-    <div class="modal-backdrop" @onclick="CancelClose">
-        <div class="modal" @onclick:stopPropagation="true" role="dialog" aria-modal="true"
-             aria-labelledby="modal-title">
-            <div class="modal-header">
-                <div class="modal-icon modal-icon--warn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="12" y1="8" x2="12" y2="12"/>
-                        <line x1="12" y1="16" x2="12.01" y2="16"/>
-                    </svg>
-                </div>
-                <div>
-                    <h2 class="modal-title" id="modal-title">Close Listing?</h2>
-                    <p class="modal-subtitle">This will stop accepting new applications.</p>
-                </div>
-            </div>
-            <p class="modal-body">
-                Are you sure you want to close <strong>@PendingCloseJob?.Title</strong>?
-                Existing applicants will not be affected, but the listing will no longer appear in job search.
-            </p>
-            <div class="modal-actions">
-                <button class="btn-secondary" @onclick="CancelClose">Cancel</button>
-                <button class="btn-danger" @onclick="ConfirmClose">Close Listing</button>
-            </div>
-        </div>
-    </div>
-}
-
 @code {
     private string SearchQuery = "";
     private string StatusFilter = "";
     private string TypeFilter = "";
     private string SortBy = "newest";
     private int? ExpandedJobId = null;
-    private bool ShowCloseConfirm = false;
-    private JobItem? PendingCloseJob = null;
 
     private List<JobItem> Jobs = new()
     {
@@ -437,27 +403,10 @@
         ApplyFilters();
     }
 
-    private void CloseJob(JobItem job)
+    private void CloseJobListing(JobItem job)
     {
-        PendingCloseJob = job;
-        ShowCloseConfirm = true;
-    }
-
-    private void ConfirmClose()
-    {
-        if (PendingCloseJob != null)
-        {
-            PendingCloseJob.Status = "Closed";
-            PendingCloseJob = null;
-        }
-        ShowCloseConfirm = false;
+        job.Status = "Closed";
         ApplyFilters();
-    }
-
-    private void CancelClose()
-    {
-        PendingCloseJob = null;
-        ShowCloseConfirm = false;
     }
 
     private void EditJob(int id)

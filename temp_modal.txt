@@ -1,0 +1,218 @@
+<!-- Schedule Interview Modal (outside app-shell, scoped classes) -->
+@if (ShowScheduleModal)
+{
+    <div class="sched-backdrop" @onclick="CloseScheduleModal">
+        <div class="sched-modal" @onclick:stopPropagation="true"
+             role="dialog" aria-modal="true" aria-labelledby="sched-modal-title">
+
+            <!-- Header -->
+            <div class="sched-header">
+                <div class="sched-header-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                </div>
+                <div class="sched-header-text">
+                    <h2 class="sched-title" id="sched-modal-title">Schedule Interview</h2>
+                    <p class="sched-subtitle">Set up a new candidate interview</p>
+                </div>
+                <button class="sched-close" @onclick="CloseScheduleModal" aria-label="Close modal">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="sched-body">
+
+                <!-- Section: Candidate & Position -->
+                <div class="sched-section">
+                    <span class="sched-section-label">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        Candidate & Position
+                    </span>
+                    <div class="sched-field">
+                        <label class="sched-label" for="sched-candidate">
+                            Candidate Name <span class="sched-required">*</span>
+                        </label>
+                        <input id="sched-candidate"
+                               class="sched-input"
+                               type="text"
+                               placeholder="e.g. Kira Reyes"
+                               @bind="NewInterview.CandidateName" />
+                    </div>
+                    <div class="sched-field">
+                        <label class="sched-label" for="sched-position">
+                            Position <span class="sched-required">*</span>
+                        </label>
+                        <select id="sched-position" class="sched-select" @bind="NewInterview.JobTitle">
+                            <option value="">Select position…</option>
+                            <option>Full-Stack Developer Intern</option>
+                            <option>React Frontend Developer</option>
+                            <option>API Developer (.NET)</option>
+                            <option>.NET Core Developer</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="sched-divider"></div>
+
+                <!-- Section: Date, Time & Duration -->
+                <div class="sched-section">
+                    <span class="sched-section-label">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        Date & Time
+                    </span>
+                    <div class="sched-field-row">
+                        <div class="sched-field">
+                            <label class="sched-label" for="sched-date">
+                                Date <span class="sched-required">*</span>
+                            </label>
+                            <input id="sched-date"
+                                   class="sched-input"
+                                   type="date"
+                                   @bind="NewInterview.ScheduledAt" />
+                        </div>
+                        <div class="sched-field">
+                            <label class="sched-label" for="sched-time">
+                                Time <span class="sched-required">*</span>
+                            </label>
+                            <input id="sched-time"
+                                   class="sched-input"
+                                   type="time"
+                                   @bind-value="NewInterviewTime"
+                                   @bind-value:format="HH:mm" />
+                        </div>
+                        <div class="sched-field">
+                            <label class="sched-label" for="sched-duration">Duration</label>
+                            <select id="sched-duration" class="sched-select" @bind="NewInterview.DurationMins">
+                                <option value="30">30 min</option>
+                                <option value="45">45 min</option>
+                                <option value="60">1 hour</option>
+                                <option value="90">1.5 hours</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sched-divider"></div>
+
+                <!-- Section: Format & Location -->
+                <div class="sched-section">
+                    <span class="sched-section-label">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        Format & Location
+                    </span>
+                    <div class="sched-field">
+                        <label class="sched-label">
+                            Interview Format <span class="sched-required">*</span>
+                        </label>
+                        <div class="sched-format-toggle">
+                            @foreach (var fmt in new[] {
+                                ("Video Call", "📹"),
+                                ("On-site",    "🏢"),
+                                ("Phone",      "📞")
+                            })
+                            {
+                                <button type="button"
+                                        class="sched-fmt-btn @(NewInterview.Format == fmt.Item1 ? "active" : "")"
+                                        @onclick="() => NewInterview.Format = fmt.Item1">
+                                    <span class="sched-fmt-icon">@fmt.Item2</span>
+                                    @fmt.Item1
+                                </button>
+                            }
+                        </div>
+                    </div>
+                    <div class="sched-field">
+                        <label class="sched-label" for="sched-location">
+                            Location / Meeting Link
+                            <span class="sched-label-hint">
+                                @(NewInterview.Format == "Video Call" ? "— paste your Zoom or Meet URL" :
+                                  NewInterview.Format == "On-site"    ? "— include room or floor" : "")
+                            </span>
+                        </label>
+                        <input id="sched-location"
+                               class="sched-input"
+                               type="text"
+                               placeholder="@(NewInterview.Format == "Video Call" ? "https://zoom.us/j/..." :
+                                             NewInterview.Format == "On-site"    ? "e.g. HQ Conference Room A" :
+                                                                                   "e.g. +63 2 1234 5678")"
+                               @bind="NewInterview.Location" />
+                    </div>
+                </div>
+
+                <div class="sched-divider"></div>
+
+                <!-- Section: Panel Notes -->
+                <div class="sched-section">
+                    <span class="sched-section-label">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                        Panel Notes
+                        <span class="sched-label-optional">Optional</span>
+                    </span>
+                    <div class="sched-field">
+                        <label class="sched-label" for="sched-notes">Notes for Interviewers</label>
+                        <textarea id="sched-notes"
+                                  class="sched-textarea"
+                                  rows="3"
+                                  placeholder="Topics to cover, questions to ask, context about the candidate..."
+                                  @bind="NewInterview.Notes"></textarea>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="sched-footer">
+                <p class="sched-footer-hint">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    Fields marked <span>*</span> are required.
+                </p>
+                <div class="sched-footer-actions">
+                    <button class="sched-btn-cancel" type="button" @onclick="CloseScheduleModal">Cancel</button>
+                    <button class="sched-btn-confirm" type="button" @onclick="ConfirmSchedule">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        Schedule Interview
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+}

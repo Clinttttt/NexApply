@@ -1,0 +1,992 @@
+﻿@page "/recruiter/interviews"
+@rendermode InteractiveServer
+
+<div class="app-shell">
+    <RecruiterSidebar />
+
+    <div class="main-content">
+        <RecruiterHeader Title="Interviews" Subtitle="Schedule and manage candidate interviews" />
+
+        <div class="page-body">
+
+            <!-- Summary Stats -->
+            <div class="summary-stats">
+                <div class="stat-chip stat-chip--today">
+                    <span class="stat-chip-dot"></span>
+                    <span class="stat-chip-value">@TodayCount</span>
+                    <span class="stat-chip-label">Today</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-chip stat-chip--upcoming">
+                    <span class="stat-chip-dot"></span>
+                    <span class="stat-chip-value">@UpcomingCount</span>
+                    <span class="stat-chip-label">Upcoming</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-chip stat-chip--completed">
+                    <span class="stat-chip-dot"></span>
+                    <span class="stat-chip-value">@CompletedCount</span>
+                    <span class="stat-chip-label">Completed</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-chip stat-chip--cancelled">
+                    <span class="stat-chip-dot"></span>
+                    <span class="stat-chip-value">@CancelledCount</span>
+                    <span class="stat-chip-label">Cancelled</span>
+                </div>
+                <div class="stat-actions">
+                    <button class="btn-secondary" @onclick="() => ShowScheduleModal = true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                            <line x1="16" y1="2" x2="16" y2="6" />
+                            <line x1="8" y1="2" x2="8" y2="6" />
+                            <line x1="3" y1="10" x2="21" y2="10" />
+                        </svg>
+                        Schedule Interview
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Layout: Calendar + List -->
+            <div class="interviews-layout">
+
+                <!-- Left: Mini Calendar + Upcoming Today -->
+                <aside class="interviews-aside">
+
+                    <!-- Mini Calendar -->
+                    <div class="mini-calendar">
+                        <div class="cal-nav">
+                            <button class="cal-nav-btn" @onclick="PrevMonth" aria-label="Previous month">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="15 18 9 12 15 6" />
+                                </svg>
+                            </button>
+                            <span class="cal-month-label">@CalendarDate.ToString("MMMM yyyy")</span>
+                            <button class="cal-nav-btn" @onclick="NextMonth" aria-label="Next month">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="9 18 15 12 9 6" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="cal-grid">
+                            @foreach (var day in new[] { "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa" })
+                            {
+                                <div class="cal-day-header">@day</div>
+                            }
+                            @foreach (var cell in CalendarCells)
+                            {
+                                <button class="cal-day
+                                    @(cell == null ? "cal-day--empty" : "")
+                                    @(cell.HasValue && cell.Value.Date == DateTime.Today ? "cal-day--today" : "")
+                                    @(cell.HasValue && cell.Value.Date == SelectedCalendarDate?.Date ? "cal-day--selected" : "")
+                                    @(cell.HasValue && HasInterviewOn(cell.Value) ? "cal-day--has-event" : "")"
+                                        @onclick="() => SelectCalendarDay(cell)"
+                                        disabled="@(cell == null)"
+                                        aria-label="@(cell.HasValue? cell.Value.ToString("MMMM d") : "")">
+                                    @(cell.HasValue? cell.Value.Day.ToString() : "")
+                                    @if (cell.HasValue && HasInterviewOn(cell.Value))
+                                    {
+                                        <span class="cal-event-dot"></span>
+                                    }
+                                </button>
+                            }
+                        </div>
+
+                        @if (SelectedCalendarDate.HasValue)
+                        {
+                            <button class="cal-clear-btn" @onclick="ClearCalendarSelection">
+                                Clear date filter
+                            </button>
+                        }
+                    </div>
+
+                    <!-- Today's Schedule -->
+                    <div class="today-panel">
+                        <div class="today-panel-header">
+                            <span class="today-panel-title">Today's Schedule</span>
+                            <span class="today-panel-date">@DateTime.Today.ToString("MMM d")</span>
+                        </div>
+                        @{
+                            var todayList = Interviews
+                                .Where(i => i.ScheduledAt.Date == DateTime.Today)
+                                .OrderBy(i => i.ScheduledAt)
+                                .ToList();
+                        }
+                        @if (todayList.Count == 0)
+                        {
+                            <p class="today-empty">No interviews scheduled today.</p>
+                        }
+                        else
+                        {
+                            <div class="today-list">
+                                @foreach (var iv in todayList)
+                                {
+                                    <div class="today-item">
+                                        <div class="today-time">
+                                            <span class="today-time-val">@iv.ScheduledAt.ToString("h:mm")</span>
+                                            <span class="today-time-ampm">@iv.ScheduledAt.ToString("tt")</span>
+                                        </div>
+                                        <div class="today-item-info">
+                                            <span class="today-name">@iv.CandidateName</span>
+                                            <span class="today-role">@iv.JobTitle</span>
+                                        </div>
+                                        <span class="today-type-badge today-type-badge--@iv.Format.ToLower().Replace(" ", "")">
+                                            @iv.Format
+                                        </span>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                </aside>
+
+                <!-- Right: Interview List -->
+                <div class="interviews-main">
+
+                    <!-- Filter Bar -->
+                    <div class="filter-bar">
+                        <div class="search-wrap">
+                            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                 stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8" />
+                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                            </svg>
+                            <input class="search-input" type="search"
+                                   placeholder="Search by candidate or position..."
+                                   @bind="SearchQuery" @bind:after="ApplyFilters" />
+                        </div>
+                        <div class="filter-controls">
+                            <select class="filter-select" @bind="StatusFilter" @bind:after="ApplyFilters">
+                                <option value="">All Statuses</option>
+                                <option value="Scheduled">Scheduled</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Cancelled">Cancelled</option>
+                                <option value="No-show">No-show</option>
+                            </select>
+                            <select class="filter-select" @bind="FormatFilter" @bind:after="ApplyFilters">
+                                <option value="">All Formats</option>
+                                <option value="Video Call">Video Call</option>
+                                <option value="On-site">On-site</option>
+                                <option value="Phone">Phone</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tab Strip -->
+                    <div class="tab-strip">
+                        @foreach (var tab in new[] { "All", "Today", "Upcoming", "Completed", "Cancelled" })
+                        {
+                            <button class="tab-btn @(ActiveTab == tab ? "active" : "")"
+                                    @onclick="() => SetTab(tab)">
+                                @tab
+                                <span class="tab-count">@GetTabCount(tab)</span>
+                            </button>
+                        }
+                    </div>
+
+                    <!-- Interview Cards -->
+                    @if (FilteredInterviews.Count == 0)
+                    {
+                        <div class="empty-state">
+                            <div class="empty-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                    <line x1="16" y1="2" x2="16" y2="6" />
+                                    <line x1="8" y1="2" x2="8" y2="6" />
+                                    <line x1="3" y1="10" x2="21" y2="10" />
+                                </svg>
+                            </div>
+                            <p class="empty-title">No interviews found</p>
+                            <p class="empty-sub">Try changing your filters or schedule a new interview.</p>
+                            <button class="btn-secondary" @onclick="() => ShowScheduleModal = true">
+                                Schedule Interview
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="interview-list">
+                            @foreach (var group in GroupedInterviews)
+                            {
+                                <!-- Date Group Header -->
+                                <div class="date-group-header">
+                                    <span class="date-group-label">
+                                        @GetGroupLabel(group.Key)
+                                    </span>
+                                    <div class="date-group-line"></div>
+                                    <span class="date-group-count">@group.Value.Count</span>
+                                </div>
+
+                                @foreach (var iv in group.Value)
+                                {
+                                    var isExpanded = ExpandedInterviewId == iv.Id;
+
+                                    <div class="interview-card
+                                        interview-card--@iv.Status.ToLower().Replace("-", "").Replace(" ", "")
+                                        @(isExpanded ? "expanded" : "")
+                                        @(iv.ScheduledAt.Date == DateTime.Today && iv.Status == "Scheduled" ? "interview-card--today" : "")">
+
+                                        <!-- Card Header Row -->
+                                        <div class="interview-card-main" @onclick="() => ToggleExpand(iv.Id)">
+
+                                            <!-- Time Column -->
+                                            <div class="iv-time-col">
+                                                <span class="iv-time">@iv.ScheduledAt.ToString("h:mm tt")</span>
+                                                <span class="iv-duration">· @iv.DurationMins min</span>
+                                            </div>
+
+                                            <!-- Candidate Info -->
+                                            <div class="iv-candidate">
+                                                <span class="iv-name">@iv.CandidateName</span>
+                                                <span class="iv-role">· @iv.JobTitle</span>
+                                            </div>
+
+                                            <!-- Format & Location -->
+                                            <div class="iv-format">
+                                                <span class="format-badge">@iv.Format</span>
+                                                @if (!string.IsNullOrWhiteSpace(iv.Location))
+                                                {
+                                                    <span class="iv-location">· @iv.Location</span>
+                                                }
+                                            </div>
+
+                                            <!-- Date -->
+                                            <div class="iv-date">
+                                                <span class="iv-date-day">@iv.ScheduledAt.ToString("ddd, MMM d")</span>
+                                            </div>
+
+                                            <!-- Status & Actions -->
+                                            <div class="iv-right" @onclick:stopPropagation="true">
+                                                <button class="expand-toggle" aria-label="@(isExpanded ? "Collapse" : "Expand") interview">
+                                                    <svg class="chevron @(isExpanded ? "rotated" : "")"
+                                                         xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <polyline points="6 9 12 15 18 9" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+
+                                        </div>
+
+                                        <!-- Expanded Panel -->
+                                        @if (isExpanded)
+                                        {
+                                            <div class="interview-detail">
+                                                <div class="interview-detail-grid">
+
+                                                    <!-- Col 1: Interview Details -->
+                                                    <div class="detail-col">
+                                                        <span class="detail-label">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                                                                 fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                                                <line x1="16" y1="2" x2="16" y2="6" />
+                                                                <line x1="8" y1="2" x2="8" y2="6" />
+                                                                <line x1="3" y1="10" x2="21" y2="10" />
+                                                            </svg>
+                                                            Interview Details
+                                                        </span>
+                                                        <div class="detail-info-grid">
+                                                            <span class="di-key">Date</span>
+                                                            <span class="di-val">@iv.ScheduledAt.ToString("dddd, MMMM d, yyyy")</span>
+                                                            <span class="di-key">Time</span>
+                                                            <span class="di-val">@iv.ScheduledAt.ToString("h:mm tt") — @iv.ScheduledAt.AddMinutes(iv.DurationMins).ToString("h:mm tt")</span>
+                                                            <span class="di-key">Format</span>
+                                                            <span class="di-val">@iv.Format</span>
+                                                            @if (!string.IsNullOrWhiteSpace(iv.Location))
+                                                            {
+                                                                <span class="di-key">Location</span>
+                                                                <span class="di-val">@iv.Location</span>
+                                                            }
+                                                            @if (!string.IsNullOrWhiteSpace(iv.MeetingLink))
+                                                            {
+                                                                <span class="di-key">Link</span>
+                                                                <span class="di-val">
+                                                                    <a href="@iv.MeetingLink" target="_blank" class="detail-link">@iv.MeetingLink</a>
+                                                                </span>
+                                                            }
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="detail-divider-v"></div>
+
+                                                    <!-- Col 2: Interviewers -->
+                                                    <div class="detail-col">
+                                                        <span class="detail-label">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                                                                 fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                                                <circle cx="9" cy="7" r="4" />
+                                                                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                                                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                                                            </svg>
+                                                            Interview Panel
+                                                        </span>
+                                                        <div class="interviewer-list">
+                                                            @foreach (var person in iv.Interviewers)
+                                                            {
+                                                                <div class="interviewer-row">
+                                                                    <div class="interviewer-avatar">@person[0]</div>
+                                                                    <span class="interviewer-name">@person</span>
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                        @if (!string.IsNullOrWhiteSpace(iv.Notes))
+                                                        {
+                                                            <div class="detail-notes-block">
+                                                                <span class="di-key">Notes</span>
+                                                                <p class="detail-notes-text">@iv.Notes</p>
+                                                            </div>
+                                                        }
+                                                        @if (iv.Status == "Completed" && !string.IsNullOrWhiteSpace(iv.Feedback))
+                                                        {
+                                                            <div class="detail-notes-block">
+                                                                <span class="di-key">Feedback</span>
+                                                                <p class="detail-notes-text">@iv.Feedback</p>
+                                                            </div>
+                                                        }
+                                                    </div>
+
+                                                    <div class="detail-divider-v"></div>
+
+                                                    <!-- Col 3: Feedback (Completed) or Prep Notes (Scheduled) -->
+                                                    <div class="detail-col">
+                                                        @if (iv.Status == "Completed")
+                                                        {
+                                                            <span class="detail-label">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                                                                     fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                                    <path d="M12 20h9" />
+                                                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                                                                </svg>
+                                                                Interview Feedback
+                                                            </span>
+                                                            @if (!string.IsNullOrWhiteSpace(iv.Feedback) && EditingFeedbackId != iv.Id)
+                                                            {
+                                                                <div class="feedback-display">
+                                                                    <p class="feedback-display-text">@iv.Feedback</p>
+                                                                    <button class="feedback-edit-btn" @onclick="() => EditingFeedbackId = iv.Id" title="Edit feedback">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                                                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                            <path d="M12 20h9" />
+                                                                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                                                                        </svg>
+                                                                    </button>
+                                                                </div>
+                                                            }
+                                                            else
+                                                            {
+                                                                <textarea class="feedback-textarea"
+                                                                          placeholder="Rate the candidate — strengths, areas for improvement, hire recommendation..."
+                                                                          @bind="iv.Feedback"
+                                                                          @onblur="() => SaveFeedback(iv)"
+                                                                          rows="5"></textarea>
+                                                            }
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="detail-label">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                                                                     fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                                    <polyline points="14 2 14 8 20 8" />
+                                                                </svg>
+                                                                Prep Notes
+                                                            </span>
+                                                            <textarea class="feedback-textarea"
+                                                                      placeholder="Notes for the interview panel, topics to cover, or questions to ask..."
+                                                                      @bind="iv.Notes"
+                                                                      rows="5"></textarea>
+                                                            <div class="detail-quick-actions">
+                                                                <span class="status-badge status-badge--@iv.Status.ToLower().Replace("-", "").Replace(" ", "")">
+                                                                    <span class="status-dot"></span>
+                                                                    @iv.Status
+                                                                </span>
+                                                                <button class="qbtn qbtn--complete" @onclick="() => MarkComplete(iv)">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                                                         fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                                        <polyline points="20 6 9 17 4 12" />
+                                                                    </svg>
+                                                                    Mark as Completed
+                                                                </button>
+                                                                <button class="qbtn qbtn--reschedule" @onclick="() => OpenReschedule(iv)">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                        <polyline points="1 4 1 10 7 10" />
+                                                                        <path d="M3.51 15a9 9 0 1 0 .49-3.3" />
+                                                                    </svg>
+                                                                    Reschedule
+                                                                </button>
+                                                                <button class="qbtn qbtn--cancel" @onclick="() => CancelInterview(iv)">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                        <circle cx="12" cy="12" r="10" />
+                                                                        <line x1="15" y1="9" x2="9" y2="15" />
+                                                                        <line x1="9" y1="9" x2="15" y2="15" />
+                                                                    </svg>
+                                                                    Cancel Interview
+                                                                </button>
+                                                            </div>
+                                                        }
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        }
+
+                                    </div>
+                                }
+                            }
+                        </div>
+                    }
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+<!-- Schedule/Reschedule Interview Modal (outside app-shell, scoped classes) -->
+@if (ShowScheduleModal)
+{
+    <div class="sched-backdrop" @onclick="CloseScheduleModal">
+        <div class="sched-modal" @onclick:stopPropagation="true"
+             role="dialog" aria-modal="true" aria-labelledby="sched-modal-title">
+
+            <!-- Header -->
+            <div class="sched-header">
+                <div class="sched-header-icon">
+                    @if (IsRescheduleMode)
+                    {
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="1 4 1 10 7 10" />
+                            <path d="M3.51 15a9 9 0 1 0 .49-3.3" />
+                        </svg>
+                    }
+                    else
+                    {
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                            <line x1="16" y1="2" x2="16" y2="6" />
+                            <line x1="8" y1="2" x2="8" y2="6" />
+                            <line x1="3" y1="10" x2="21" y2="10" />
+                        </svg>
+                    }
+                </div>
+                <div class="sched-header-text">
+                    <h2 class="sched-title" id="sched-modal-title">@(IsRescheduleMode ? "Reschedule Interview" : "Schedule Interview")</h2>
+                    <p class="sched-subtitle">@(IsRescheduleMode ? "Update interview date, time, or details" : "Set up a new candidate interview")</p>
+                </div>
+                <button class="sched-close" @onclick="CloseScheduleModal" aria-label="Close modal">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="sched-body">
+
+                <!-- Section: Candidate & Position -->
+                <div class="sched-section">
+                    <span class="sched-section-label">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        Candidate & Position
+                    </span>
+                    <div class="sched-field">
+                        <label class="sched-label" for="sched-candidate">
+                            Candidate Name <span class="sched-required">*</span>
+                        </label>
+                        <input id="sched-candidate"
+                               class="sched-input"
+                               type="text"
+                               placeholder="e.g. Kira Reyes"
+                               @bind="NewInterview.CandidateName" />
+                    </div>
+                    <div class="sched-field">
+                        <label class="sched-label" for="sched-position">
+                            Position <span class="sched-required">*</span>
+                        </label>
+                        <select id="sched-position" class="sched-select" @bind="NewInterview.JobTitle">
+                            <option value="">Select position…</option>
+                            <option>Full-Stack Developer Intern</option>
+                            <option>React Frontend Developer</option>
+                            <option>API Developer (.NET)</option>
+                            <option>.NET Core Developer</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="sched-divider"></div>
+
+                <!-- Section: Date, Time & Duration -->
+                <div class="sched-section">
+                    <span class="sched-section-label">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        Date & Time
+                    </span>
+                    <div class="sched-field-row">
+                        <div class="sched-field">
+                            <label class="sched-label" for="sched-date">
+                                Date <span class="sched-required">*</span>
+                            </label>
+                            <input id="sched-date"
+                                   class="sched-input"
+                                   type="date"
+                                   @bind="NewInterview.ScheduledAt" />
+                        </div>
+                        <div class="sched-field">
+                            <label class="sched-label" for="sched-time">
+                                Time <span class="sched-required">*</span>
+                            </label>
+                            <input id="sched-time"
+                                   class="sched-input"
+                                   type="time"
+                                   @bind-value="NewInterviewTime"
+                                   @bind-value:format="HH:mm" />
+                        </div>
+                        <div class="sched-field">
+                            <label class="sched-label" for="sched-duration">Duration</label>
+                            <select id="sched-duration" class="sched-select" @bind="NewInterview.DurationMins">
+                                <option value="30">30 min</option>
+                                <option value="45">45 min</option>
+                                <option value="60">1 hour</option>
+                                <option value="90">1.5 hours</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sched-divider"></div>
+
+                <!-- Section: Format & Location -->
+                <div class="sched-section">
+                    <span class="sched-section-label">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        Format & Location
+                    </span>
+                    <div class="sched-field">
+                        <label class="sched-label">
+                            Interview Format <span class="sched-required">*</span>
+                        </label>
+                        <div class="sched-format-toggle">
+                            @foreach (var fmt in new[] { "Video Call", "On-site", "Phone" })
+                            {
+                                <button type="button"
+                                        class="sched-fmt-btn @(NewInterview.Format == fmt ? "active" : "")"
+                                        @onclick="() => NewInterview.Format = fmt">
+                                    @fmt
+                                </button>
+                            }
+                        </div>
+                    </div>
+                    <div class="sched-field">
+                        <label class="sched-label" for="sched-location">
+                            Location / Meeting Link
+                            <span class="sched-label-hint">
+                                @(NewInterview.Format == "Video Call" ? "— paste your Zoom or Meet URL" :
+                                  NewInterview.Format == "On-site"    ? "— include room or floor" : "")
+                            </span>
+                        </label>
+                        <input id="sched-location"
+                               class="sched-input"
+                               type="text"
+                               placeholder="@(NewInterview.Format == "Video Call" ? "https://zoom.us/j/..." :
+                                             NewInterview.Format == "On-site"    ? "e.g. HQ Conference Room A" :
+                                                                                   "e.g. +63 2 1234 5678")"
+                               @bind="NewInterview.Location" />
+                    </div>
+                </div>
+
+                <div class="sched-divider"></div>
+
+                <!-- Section: Panel Notes -->
+                <div class="sched-section">
+                    <span class="sched-section-label">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                        Interview Panel
+                        <span class="sched-label-optional">Optional</span>
+                    </span>
+                    <div class="sched-field">
+                        <label class="sched-label" for="sched-panel">Interviewer Name</label>
+                        <input id="sched-panel"
+                               class="sched-input"
+                               type="text"
+                               placeholder="e.g. Anna Vidal"
+                               @bind="NewInterviewerName" />
+                    </div>
+                    <div class="sched-field">
+                        <label class="sched-label" for="sched-notes">Notes for Interviewers</label>
+                        <textarea id="sched-notes"
+                                  class="sched-textarea"
+                                  rows="3"
+                                  placeholder="Topics to cover, questions to ask, context about the candidate..."
+                                  @bind="NewInterview.Notes"></textarea>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="sched-footer">
+                <p class="sched-footer-hint">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    Fields marked <span>*</span> are required.
+                </p>
+                <div class="sched-footer-actions">
+                    <button class="sched-btn-cancel" type="button" @onclick="CloseScheduleModal">Cancel</button>
+                    <button class="sched-btn-confirm" type="button" @onclick="ConfirmSchedule">
+                        @if (IsRescheduleMode)
+                        {
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="1 4 1 10 7 10" />
+                                <path d="M3.51 15a9 9 0 1 0 .49-3.3" />
+                            </svg>
+                            <span>Update Interview</span>
+                        }
+                        else
+                        {
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                            <span>Schedule Interview</span>
+                        }
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+}
+</div>
+@code {
+    private string SearchQuery = "";
+    private string StatusFilter = "";
+    private string FormatFilter = "";
+    private string ActiveTab = "All";
+    private int? ExpandedInterviewId = null;
+    private int? EditingFeedbackId = null;
+    private bool ShowScheduleModal = false;
+    private bool IsRescheduleMode = false;
+    private InterviewItem? RescheduleInterview = null;
+    private DateTime CalendarDate = DateTime.Today;
+    private DateTime? SelectedCalendarDate = null;
+    private List<InterviewItem> FilteredInterviews = new();
+
+    private InterviewItem NewInterview = new();
+    private TimeOnly NewInterviewTime = new TimeOnly(10, 0);
+    private string NewInterviewerName = "";
+
+    private int TodayCount => Interviews.Count(i => i.ScheduledAt.Date == DateTime.Today && i.Status == "Scheduled");
+    private int UpcomingCount => Interviews.Count(i => i.ScheduledAt.Date > DateTime.Today && i.Status == "Scheduled");
+    private int CompletedCount => Interviews.Count(i => i.Status == "Completed");
+    private int CancelledCount => Interviews.Count(i => i.Status == "Cancelled" || i.Status == "No-show");
+
+    private List<InterviewItem> Interviews = new()
+    {
+        new InterviewItem
+        {
+            Id = 1, CandidateName = "Kira Reyes", JobTitle = "Full-Stack Developer Intern",
+            ScheduledAt = DateTime.Today.AddHours(10), DurationMins = 60, Format = "Video Call",
+            Status = "Scheduled", Location = "", MeetingLink = "https://meet.google.com/abc-defg",
+            Interviewers = new() { "Anna Vidal", "Marcus Lee" },
+            Notes = "Focus on React and .NET Core fundamentals.", Feedback = "", Rating = 0, Recommendation = ""
+        },
+        new InterviewItem
+        {
+            Id = 2, CandidateName = "Sofia Cruz", JobTitle = "API Developer (.NET)",
+            ScheduledAt = DateTime.Today.AddHours(14).AddMinutes(30), DurationMins = 45, Format = "On-site",
+            Status = "Scheduled", Location = "HQ Conference Room B", MeetingLink = "",
+            Interviewers = new() { "Anna Vidal", "James Ortiz", "Patricia Sy" },
+            Notes = "Technical panel — system design portion included.", Feedback = "", Rating = 0, Recommendation = ""
+        },
+        new InterviewItem
+        {
+            Id = 3, CandidateName = "Marco Guerrero", JobTitle = "React Frontend Developer",
+            ScheduledAt = DateTime.Today.AddDays(2).AddHours(9), DurationMins = 60, Format = "Video Call",
+            Status = "Scheduled", Location = "", MeetingLink = "https://zoom.us/j/12345678",
+            Interviewers = new() { "Marcus Lee" },
+            Notes = "", Feedback = "", Rating = 0, Recommendation = ""
+        },
+        new InterviewItem
+        {
+            Id = 4, CandidateName = "Rachel Ong", JobTitle = "API Developer (.NET)",
+            ScheduledAt = DateTime.Today.AddDays(3).AddHours(11), DurationMins = 90, Format = "On-site",
+            Status = "Scheduled", Location = "HQ Conference Room A", MeetingLink = "",
+            Interviewers = new() { "Anna Vidal", "James Ortiz" },
+            Notes = "Senior-level technical assessment.", Feedback = "", Rating = 0, Recommendation = ""
+        },
+        new InterviewItem
+        {
+            Id = 5, CandidateName = "Ana Villanueva", JobTitle = "React Frontend Developer",
+            ScheduledAt = DateTime.Today.AddDays(-3).AddHours(10), DurationMins = 60, Format = "Video Call",
+            Status = "Completed", Location = "", MeetingLink = "",
+            Interviewers = new() { "Marcus Lee", "Patricia Sy" },
+            Notes = "", Feedback = "Strong React skills. Good communication. Needs TypeScript depth.",
+            Rating = 4, Recommendation = "Hire"
+        },
+        new InterviewItem
+        {
+            Id = 6, CandidateName = "James Tan", JobTitle = "Full-Stack Developer Intern",
+            ScheduledAt = DateTime.Today.AddDays(-5).AddHours(14), DurationMins = 45, Format = "Phone",
+            Status = "Completed", Location = "", MeetingLink = "",
+            Interviewers = new() { "Anna Vidal" },
+            Notes = "", Feedback = "Promising candidate but needs more backend exposure. Would work well as intern.",
+            Rating = 3, Recommendation = "Hire"
+        },
+        new InterviewItem
+        {
+            Id = 7, CandidateName = "Mark David", JobTitle = "API Developer (.NET)",
+            ScheduledAt = DateTime.Today.AddDays(-7).AddHours(9), DurationMins = 60, Format = "Video Call",
+            Status = "No-show", Location = "", MeetingLink = "https://meet.google.com/xyz-uvwx",
+            Interviewers = new() { "James Ortiz" },
+            Notes = "Candidate did not attend. Attempted contact.", Feedback = "", Rating = 0, Recommendation = ""
+        },
+        new InterviewItem
+        {
+            Id = 8, CandidateName = "Luis Santos", JobTitle = "React Frontend Developer",
+            ScheduledAt = DateTime.Today.AddDays(-2).AddHours(15), DurationMins = 30, Format = "Phone",
+            Status = "Cancelled", Location = "", MeetingLink = "",
+            Interviewers = new() { "Marcus Lee" },
+            Notes = "Candidate withdrew application.", Feedback = "", Rating = 0, Recommendation = ""
+        },
+    };
+
+    // Group filtered interviews by month
+    private Dictionary<DateTime, List<InterviewItem>> GroupedInterviews =>
+        FilteredInterviews
+            .GroupBy(i => new DateTime(i.ScheduledAt.Year, i.ScheduledAt.Month, 1))
+            .OrderBy(g => g.Key)
+            .ToDictionary(g => g.Key, g => g.OrderBy(i => i.ScheduledAt).ToList());
+
+    // Calendar cells (null = empty padding cell)
+    private List<DateTime?> CalendarCells
+    {
+        get
+        {
+            var cells = new List<DateTime?>();
+            var first = new DateTime(CalendarDate.Year, CalendarDate.Month, 1);
+            var days = DateTime.DaysInMonth(CalendarDate.Year, CalendarDate.Month);
+            for (int i = 0; i < (int)first.DayOfWeek; i++) cells.Add(null);
+            for (int d = 1; d <= days; d++) cells.Add(new DateTime(CalendarDate.Year, CalendarDate.Month, d));
+            return cells;
+        }
+    }
+
+    protected override void OnInitialized() => ApplyFilters();
+
+    private void ApplyFilters()
+    {
+        var q = SearchQuery?.Trim().ToLower() ?? "";
+
+        FilteredInterviews = Interviews
+            .Where(i =>
+                (string.IsNullOrEmpty(q) ||
+                    i.CandidateName.ToLower().Contains(q) ||
+                    i.JobTitle.ToLower().Contains(q)) &&
+                (string.IsNullOrEmpty(StatusFilter) || i.Status == StatusFilter) &&
+                (string.IsNullOrEmpty(FormatFilter) || i.Format == FormatFilter) &&
+                (!SelectedCalendarDate.HasValue || i.ScheduledAt.Date == SelectedCalendarDate.Value.Date) &&
+                ActiveTab switch
+                {
+                    "Today" => i.ScheduledAt.Date == DateTime.Today,
+                    "Upcoming" => i.ScheduledAt.Date > DateTime.Today && i.Status == "Scheduled",
+                    "Completed" => i.Status == "Completed",
+                    "Cancelled" => i.Status is "Cancelled" or "No-show",
+                    _ => true
+                }
+            )
+            .OrderBy(i => i.ScheduledAt)
+            .ToList();
+    }
+
+    private void SetTab(string tab) { ActiveTab = tab; ApplyFilters(); }
+
+    private int GetTabCount(string tab) => tab switch
+    {
+        "Today" => Interviews.Count(i => i.ScheduledAt.Date == DateTime.Today),
+        "Upcoming" => Interviews.Count(i => i.ScheduledAt.Date > DateTime.Today && i.Status == "Scheduled"),
+        "Completed" => CompletedCount,
+        "Cancelled" => CancelledCount,
+        _ => Interviews.Count
+    };
+
+    private string GetGroupLabel(DateTime monthStart)
+    {
+        return monthStart.ToString("MMMM yyyy").ToUpper();
+    }
+
+    private void ToggleExpand(int id) =>
+        ExpandedInterviewId = ExpandedInterviewId == id ? null : id;
+
+    private async Task SaveFeedback(InterviewItem iv)
+    {
+        EditingFeedbackId = null;
+        
+        // TODO: Call your API here to save feedback
+        // Example:
+        // await HttpClient.PutAsJsonAsync($"/api/interviews/{iv.Id}/feedback", new { Feedback = iv.Feedback });
+        
+        // For now, feedback is already saved in the local object via @bind
+        // When you integrate with API, add the HTTP call here
+    }
+
+    private void MarkComplete(InterviewItem iv) { iv.Status = "Completed"; ApplyFilters(); }
+    private void CancelInterview(InterviewItem iv) { iv.Status = "Cancelled"; ApplyFilters(); }
+    private void OpenReschedule(InterviewItem iv)
+    {
+        RescheduleInterview = iv;
+        IsRescheduleMode = true;
+        NewInterview = new InterviewItem
+        {
+            CandidateName = iv.CandidateName,
+            JobTitle = iv.JobTitle,
+            ScheduledAt = iv.ScheduledAt.Date,
+            DurationMins = iv.DurationMins,
+            Format = iv.Format,
+            Location = iv.Location,
+            MeetingLink = iv.MeetingLink,
+            Notes = iv.Notes
+        };
+        NewInterviewTime = new TimeOnly(iv.ScheduledAt.Hour, iv.ScheduledAt.Minute);
+        NewInterviewerName = iv.Interviewers.FirstOrDefault() ?? "";
+        ShowScheduleModal = true;
+    }
+
+    private void PrevMonth() => CalendarDate = CalendarDate.AddMonths(-1);
+    private void NextMonth() => CalendarDate = CalendarDate.AddMonths(1);
+
+    private bool HasInterviewOn(DateTime date) =>
+        Interviews.Any(i => i.ScheduledAt.Date == date.Date);
+
+    private void SelectCalendarDay(DateTime? date)
+    {
+        if (!date.HasValue) return;
+        SelectedCalendarDate = SelectedCalendarDate?.Date == date.Value.Date ? null : date.Value;
+        ApplyFilters();
+    }
+
+    private void ClearCalendarSelection() { SelectedCalendarDate = null; ApplyFilters(); }
+
+    private void CloseScheduleModal() 
+    { 
+        ShowScheduleModal = false; 
+        IsRescheduleMode = false;
+        RescheduleInterview = null;
+        NewInterview = new(); 
+        NewInterviewerName = ""; 
+    }
+
+    private void ConfirmSchedule()
+    {
+        if (string.IsNullOrWhiteSpace(NewInterview.CandidateName) ||
+            string.IsNullOrWhiteSpace(NewInterview.JobTitle) ||
+            string.IsNullOrWhiteSpace(NewInterview.Format)) return;
+
+        if (IsRescheduleMode && RescheduleInterview != null)
+        {
+            // Update existing interview
+            RescheduleInterview.CandidateName = NewInterview.CandidateName;
+            RescheduleInterview.JobTitle = NewInterview.JobTitle;
+            RescheduleInterview.ScheduledAt = NewInterview.ScheduledAt.Date
+                .AddHours(NewInterviewTime.Hour)
+                .AddMinutes(NewInterviewTime.Minute);
+            RescheduleInterview.DurationMins = NewInterview.DurationMins;
+            RescheduleInterview.Format = NewInterview.Format;
+            RescheduleInterview.Location = NewInterview.Location;
+            RescheduleInterview.MeetingLink = NewInterview.MeetingLink;
+            RescheduleInterview.Notes = NewInterview.Notes;
+            RescheduleInterview.Interviewers = string.IsNullOrWhiteSpace(NewInterviewerName)
+                ? RescheduleInterview.Interviewers
+                : new() { NewInterviewerName.Trim() };
+        }
+        else
+        {
+            // Create new interview
+            NewInterview.Id = Interviews.Count > 0 ? Interviews.Max(i => i.Id) + 1 : 1;
+            NewInterview.Status = "Scheduled";
+            NewInterview.ScheduledAt = NewInterview.ScheduledAt.Date
+                .AddHours(NewInterviewTime.Hour)
+                .AddMinutes(NewInterviewTime.Minute);
+            NewInterview.Interviewers = string.IsNullOrWhiteSpace(NewInterviewerName) 
+                ? new() { "Anna Vidal" } 
+                : new() { NewInterviewerName.Trim() };
+            Interviews.Add(NewInterview);
+        }
+        
+        CloseScheduleModal();
+        ApplyFilters();
+    }
+
+    private string GetFormatIcon(string format) => format switch
+    {
+        "Video Call" => "📹",
+        "On-site" => "🏢",
+        "Phone" => "📞",
+        _ => "📋"
+    };
+
+    private string GetAvatarColor(int id) =>
+        new[] { "blue", "green", "amber", "slate", "purple" }[id % 5];
+
+    private class InterviewItem
+    {
+        public int Id { get; set; }
+        public string CandidateName { get; set; } = "";
+        public string JobTitle { get; set; } = "";
+        public DateTime ScheduledAt { get; set; } = DateTime.Today.AddHours(10);
+        public int DurationMins { get; set; } = 60;
+        public string Format { get; set; } = "";
+        public string Status { get; set; } = "Scheduled";
+        public string Location { get; set; } = "";
+        public string MeetingLink { get; set; } = "";
+        public List<string> Interviewers { get; set; } = new();
+        public string Notes { get; set; } = "";
+        public string Feedback { get; set; } = "";
+        public int Rating { get; set; } = 0;
+        public string Recommendation { get; set; } = "";
+        public string Initials => string.Join("", CandidateName.Split(' ').Take(2).Select(w => w.Length > 0 ? w[0].ToString() : ""));
+    }
+}

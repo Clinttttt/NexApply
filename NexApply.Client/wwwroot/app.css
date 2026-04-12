@@ -238,3 +238,35 @@ body {
     color: var(--color-slate-400);
     font-style: italic;
 }
+
+/* =========================================
+   Global Modal Styles (for portals)
+   ========================================= */
+
+.modal-backdrop {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: rgba(15, 23, 42, 0.7) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 99999 !important;
+    padding: 24px !important;
+}
+
+.modal {
+    background: white !important;
+    border-radius: 12px !important;
+    width: 100% !important;
+    max-width: 500px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    max-height: 90vh !important;
+    overflow: hidden !important;
+    position: relative !important;
+    z-index: 100000 !important;
+}

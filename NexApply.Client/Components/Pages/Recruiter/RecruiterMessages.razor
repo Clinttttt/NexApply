@@ -1,0 +1,891 @@
+﻿@page "/recruiter/messages"
+@rendermode InteractiveServer
+
+<div class="app-shell">
+    <RecruiterSidebar />
+
+    <div class="main-content">
+        <RecruiterHeader Title="Messages" Subtitle="Communicate with candidates and your team" />
+
+        <div class="messages-shell">
+
+            <!-- ═══════════════════════════════════════
+                 LEFT PANEL — Conversation List
+                 ═══════════════════════════════════════ -->
+            <aside class="conv-panel">
+
+                <!-- Panel Header -->
+                <div class="conv-panel-header">
+                    <div class="conv-panel-title-row">
+                        <h1 class="conv-panel-title">Messages</h1>
+                        <button class="compose-btn" @onclick="OpenNewMessage" title="New message" aria-label="Compose new message">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 20h9"/>
+                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Search -->
+                    <div class="conv-search-wrap">
+                        <svg class="conv-search-icon" xmlns="http://www.w3.org/2000/svg" width="13" height="13"
+                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"/>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <input class="conv-search-input" type="search"
+                               placeholder="Search conversations..."
+                               @bind="ConvSearch" @bind:after="FilterConversations" />
+                    </div>
+
+                    <!-- Filter Tabs -->
+                    <div class="conv-tabs">
+                        @foreach (var tab in new[] { "All", "Unread", "Candidates" })
+                        {
+                            <button class="conv-tab @(ConvTab == tab ? "active" : "")"
+                                    @onclick="() => SetConvTab(tab)">
+                                @tab
+                                @if (tab == "Unread" && UnreadCount > 0)
+                                {
+                                    <span class="conv-tab-badge">@UnreadCount</span>
+                                }
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <!-- Conversation List -->
+                <div class="conv-list">
+                    @if (FilteredConversations.Count == 0)
+                    {
+                        <div class="conv-empty">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                            </svg>
+                            <p>No conversations found</p>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var conv in FilteredConversations)
+                        {
+                            <button class="conv-item @(ActiveConvId == conv.Id ? "active" : "") @(!conv.IsRead ? "unread" : "")"
+                                    @onclick="() => SelectConversation(conv.Id)"
+                                    aria-label="Open conversation with @conv.Name"
+                                    aria-pressed="@(ActiveConvId == conv.Id)">
+
+                                <div class="conv-avatar conv-avatar--@GetAvatarColor(conv.Id)">
+                                    @conv.Initials
+                                    @if (conv.IsOnline)
+                                    {
+                                        <span class="online-dot"></span>
+                                    }
+                                </div>
+
+                                <div class="conv-item-info">
+                                    <div class="conv-item-top">
+                                        <span class="conv-item-name">@conv.Name</span>
+                                        <span class="conv-item-time">@FormatTime(conv.LastMessageAt)</span>
+                                    </div>
+                                    <div class="conv-item-preview">
+                                        <span class="conv-item-snippet">
+                                            @if (conv.LastSenderIsMe)
+                                            {
+                                                <span class="snippet-you">You: </span>
+                                            }
+                                            @conv.LastMessage
+                                        </span>
+                                        @if (!conv.IsRead)
+                                        {
+                                            <span class="unread-dot"></span>
+                                        }
+                                    </div>
+                                    <div class="conv-item-meta">
+                                        <span class="conv-item-role">@conv.Role</span>
+                                        @if (!string.IsNullOrWhiteSpace(conv.JobTitle))
+                                        {
+                                            <span class="conv-item-dot">·</span>
+                                            <span class="conv-item-job">@conv.JobTitle</span>
+                                        }
+                                    </div>
+                                </div>
+
+                            </button>
+                        }
+                    }
+                </div>
+
+            </aside>
+
+            <!-- ═══════════════════════════════════════
+                 RIGHT PANEL — Chat View
+                 ═══════════════════════════════════════ -->
+            <div class="chat-panel">
+
+                @if (ActiveConversation == null)
+                {
+                    <!-- Empty state -->
+                    <div class="chat-empty-state">
+                        <div class="chat-empty-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                            </svg>
+                        </div>
+                        <p class="chat-empty-title">Select a conversation</p>
+                        <p class="chat-empty-sub">Choose a conversation from the list to start messaging.</p>
+                        <button class="chat-empty-btn" @onclick="OpenNewMessage">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 20h9"/>
+                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                            </svg>
+                            New Message
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <!-- Chat Header -->
+                    <div class="chat-header">
+                        <div class="chat-header-left">
+                            <div class="chat-avatar chat-avatar--@GetAvatarColor(ActiveConversation.Id)">
+                                @ActiveConversation.Initials
+                                @if (ActiveConversation.IsOnline)
+                                {
+                                    <span class="online-dot online-dot--lg"></span>
+                                }
+                            </div>
+                            <div class="chat-header-info">
+                                <span class="chat-header-name">@ActiveConversation.Name</span>
+                                <span class="chat-header-meta">
+                                    @ActiveConversation.Role
+                                    @if (!string.IsNullOrWhiteSpace(ActiveConversation.JobTitle))
+                                    {
+                                        <span> · @ActiveConversation.JobTitle</span>
+                                    }
+                                    @if (ActiveConversation.IsOnline)
+                                    {
+                                        <span class="online-label"> · Online</span>
+                                    }
+                                </span>
+                            </div>
+                        </div>
+                        <div class="chat-header-actions">
+                            @if (ActiveConversation.Role == "Candidate")
+                            {
+                                <a href="/recruiter/applicants/@ActiveConversation.ApplicantId"
+                                   class="chat-hdr-btn chat-hdr-btn--profile" title="View applicant profile">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="12" cy="7" r="4"/>
+                                    </svg>
+                                    View Profile
+                                </a>
+                            }
+                            <button class="chat-hdr-btn chat-hdr-btn--schedule"
+                                    title="Schedule interview" @onclick="() => OpenScheduleModal(ActiveConversation)">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6"/>
+                                    <line x1="8" y1="2" x2="8" y2="6"/>
+                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                                Schedule Interview
+                            </button>
+                            <button class="chat-hdr-icon-btn" title="More options" aria-label="More options">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="5" r="1"/>
+                                    <circle cx="12" cy="12" r="1"/>
+                                    <circle cx="12" cy="19" r="1"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Messages Area -->
+                    <div class="chat-messages" id="chat-messages-area">
+
+                        @{
+                            var grouped = ActiveConversation.Messages
+                                .GroupBy(m => m.SentAt.Date)
+                                .OrderBy(g => g.Key)
+                                .ToList();
+                        }
+
+                        @foreach (var dayGroup in grouped)
+                        {
+                            <!-- Date Separator -->
+                            <div class="msg-date-sep">
+                                <div class="msg-date-line"></div>
+                                <span class="msg-date-label">@GetDateLabel(dayGroup.Key)</span>
+                                <div class="msg-date-line"></div>
+                            </div>
+
+                            @foreach (var msg in dayGroup.OrderBy(m => m.SentAt))
+                            {
+                                var isMe = msg.SenderId == "me";
+
+                                <!-- Message Bubble -->
+                                <div class="msg-row @(isMe ? "msg-row--me" : "msg-row--them")">
+
+                                    @if (!isMe)
+                                    {
+                                        <div class="msg-avatar msg-avatar--@GetAvatarColor(ActiveConversation.Id)">
+                                            @ActiveConversation.Initials
+                                        </div>
+                                    }
+
+                                    <div class="msg-bubble-wrap">
+                                        @if (msg.Type == "interview-invite")
+                                        {
+                                            <!-- Interview Invite Card -->
+                                            <div class="msg-invite-card">
+                                                <div class="mic-header">
+                                                    <div class="mic-icon">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                                            <line x1="16" y1="2" x2="16" y2="6"/>
+                                                            <line x1="8" y1="2" x2="8" y2="6"/>
+                                                            <line x1="3" y1="10" x2="21" y2="10"/>
+                                                        </svg>
+                                                    </div>
+                                                    <div>
+                                                        <p class="mic-title">Interview Invitation</p>
+                                                        <p class="mic-sub">@msg.InviteDetails?.Position</p>
+                                                    </div>
+                                                </div>
+                                                <div class="mic-details">
+                                                    <div class="mic-detail-row">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                                            <line x1="16" y1="2" x2="16" y2="6"/>
+                                                            <line x1="8" y1="2" x2="8" y2="6"/>
+                                                            <line x1="3" y1="10" x2="21" y2="10"/>
+                                                        </svg>
+                                                        @msg.InviteDetails?.DateDisplay
+                                                    </div>
+                                                    <div class="mic-detail-row">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <circle cx="12" cy="12" r="10"/>
+                                                            <polyline points="12 6 12 12 16 14"/>
+                                                        </svg>
+                                                        @msg.InviteDetails?.TimeDisplay
+                                                    </div>
+                                                    <div class="mic-detail-row">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                                            <circle cx="12" cy="10" r="3"/>
+                                                        </svg>
+                                                        @msg.InviteDetails?.Format
+                                                    </div>
+                                                </div>
+                                                <p class="mic-body">@msg.Content</p>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <!-- Regular Bubble -->
+                                            <div class="msg-bubble @(isMe ? "msg-bubble--me" : "msg-bubble--them")">
+                                                @msg.Content
+                                            </div>
+                                        }
+                                        <span class="msg-time @(isMe ? "msg-time--me" : "")">
+                                            @msg.SentAt.ToString("h:mm tt")
+                                            @if (isMe)
+                                            {
+                                                <!-- Read receipt -->
+                                                <svg class="msg-read-check" xmlns="http://www.w3.org/2000/svg" width="12" height="12"
+                                                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                                     stroke-linecap="round" stroke-linejoin="round">
+                                                    <polyline points="20 6 9 17 4 12"/>
+                                                </svg>
+                                            }
+                                        </span>
+                                    </div>
+
+                                </div>
+                            }
+                        }
+
+                        <!-- Typing indicator -->
+                        @if (IsTypingIndicatorVisible)
+                        {
+                            <div class="msg-row msg-row--them">
+                                <div class="msg-avatar msg-avatar--@GetAvatarColor(ActiveConversation.Id)">
+                                    @ActiveConversation.Initials
+                                </div>
+                                <div class="msg-bubble-wrap">
+                                    <div class="msg-bubble msg-bubble--them msg-typing">
+                                        <span class="typing-dot"></span>
+                                        <span class="typing-dot"></span>
+                                        <span class="typing-dot"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                    </div>
+
+                    <!-- Compose Bar -->
+                    <div class="compose-bar">
+                        <div class="compose-tools">
+                            <button class="compose-tool-btn" title="Attach file" aria-label="Attach file">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                                </svg>
+                            </button>
+                            <button class="compose-tool-btn compose-tool-btn--template"
+                                    title="Use template" @onclick="ToggleTemplates"
+                                    aria-label="Message templates">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                    <line x1="16" y1="13" x2="8" y2="13"/>
+                                    <line x1="16" y1="17" x2="8" y2="17"/>
+                                    <polyline points="10 9 9 9 8 9"/>
+                                </svg>
+                                Templates
+                            </button>
+                        </div>
+
+                        <!-- Template Picker (popover above compose bar) -->
+                        @if (ShowTemplates)
+                        {
+                            <div class="template-picker">
+                                <div class="template-picker-header">
+                                    <span class="template-picker-title">Message Templates</span>
+                                    <button class="template-picker-close" @onclick="ToggleTemplates" aria-label="Close templates">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                             fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="18" y1="6" x2="6" y2="18"/>
+                                            <line x1="6" y1="6" x2="18" y2="18"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                @foreach (var tmpl in MessageTemplates)
+                                {
+                                    <button class="template-item" @onclick="() => UseTemplate(tmpl)">
+                                        <span class="template-name">@tmpl.Name</span>
+                                        <span class="template-preview">@tmpl.Body</span>
+                                    </button>
+                                }
+                            </div>
+                        }
+
+                        <div class="compose-input-row">
+                            <textarea class="compose-input"
+                                      placeholder="Type your message…"
+                                      rows="1"
+                                      @bind="ComposeText"
+                                      @onkeydown="HandleComposeKey"
+                                      aria-label="Message input"></textarea>
+                            <button class="send-btn @(string.IsNullOrWhiteSpace(ComposeText) ? "" : "active")"
+                                    @onclick="SendMessage"
+                                    disabled="@string.IsNullOrWhiteSpace(ComposeText)"
+                                    aria-label="Send message">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="22" y1="2" x2="11" y2="13"/>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <p class="compose-hint">Press <kbd>Enter</kbd> to send · <kbd>Shift+Enter</kbd> for new line</p>
+                    </div>
+                }
+
+            </div>
+
+            <!-- ═══════════════════════════════════════
+                 RIGHTMOST PANEL — Candidate Context
+                 ═══════════════════════════════════════ -->
+            @if (ActiveConversation != null && ActiveConversation.Role == "Candidate")
+            {
+                <aside class="context-panel">
+                    <div class="context-header">
+                        <span class="context-title">Candidate Info</span>
+                    </div>
+
+                    <!-- Profile Block -->
+                    <div class="context-profile">
+                        <div class="context-avatar context-avatar--@GetAvatarColor(ActiveConversation.Id)">
+                            @ActiveConversation.Initials
+                        </div>
+                        <span class="context-name">@ActiveConversation.Name</span>
+                        <span class="context-role-label">@ActiveConversation.Role</span>
+                        @if (!string.IsNullOrWhiteSpace(ActiveConversation.JobTitle))
+                        {
+                            <span class="context-job-badge">@ActiveConversation.JobTitle</span>
+                        }
+                    </div>
+
+                    <div class="context-divider"></div>
+
+                    <!-- Details -->
+                    <div class="context-section">
+                        <span class="context-section-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                            </svg>
+                            Application
+                        </span>
+                        <div class="context-info-grid">
+                            <span class="cig-key">Stage</span>
+                            <span class="cig-val cig-val--stage stage-@(ActiveConversation.ApplicationStage?.ToLower().Replace(" ", ""))">
+                                @ActiveConversation.ApplicationStage
+                            </span>
+                            <span class="cig-key">Match</span>
+                            <span class="cig-val cig-val--match match-@GetMatchClass(ActiveConversation.MatchScore)">
+                                @ActiveConversation.MatchScore%
+                            </span>
+                            <span class="cig-key">Applied</span>
+                            <span class="cig-val">@ActiveConversation.AppliedDate?.ToString("MMM d, yyyy")</span>
+                        </div>
+                    </div>
+
+                    <div class="context-divider"></div>
+
+                    <!-- Skills -->
+                    <div class="context-section">
+                        <span class="context-section-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 11 12 14 22 4"/>
+                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                            </svg>
+                            Key Skills
+                        </span>
+                        <div class="context-skills">
+                            @foreach (var skill in (ActiveConversation.Skills ?? new()))
+                            {
+                                <span class="context-skill">@skill</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="context-divider"></div>
+
+                    <!-- Quick Actions -->
+                    <div class="context-section">
+                        <span class="context-section-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                            </svg>
+                            Quick Actions
+                        </span>
+                        <div class="context-actions">
+                            <a href="/recruiter/applicants/@ActiveConversation.ApplicantId"
+                               class="ctx-action-btn ctx-action-btn--profile">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                                View Full Profile
+                            </a>
+                            <button class="ctx-action-btn ctx-action-btn--schedule"
+                                    @onclick="() => OpenScheduleModal(ActiveConversation)">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6"/>
+                                    <line x1="8" y1="2" x2="8" y2="6"/>
+                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                                Schedule Interview
+                            </button>
+                            <button class="ctx-action-btn ctx-action-btn--shortlist"
+                                    @onclick="UseShortlistTemplate">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                </svg>
+                                Send Shortlist Notice
+                            </button>
+                        </div>
+                    </div>
+
+                </aside>
+            }
+
+        </div>
+    </div>
+</div>
+
+<!-- Schedule Interview Modal — mounted outside app-shell so z-index is clean -->
+<ScheduleInterviewModal IsVisible="ShowScheduleModal"
+                        IsRescheduleMode="false"
+                        Interview="ModalInterview"
+                        InterviewTime="ModalInterviewTime"
+                        InterviewerName="ModalInterviewerName"
+                        OnClose="CloseScheduleModal"
+                        OnConfirm="HandleScheduleConfirm" />
+
+@code {
+    private string ConvSearch = "";
+    private string ConvTab = "All";
+    private int? ActiveConvId = null;
+    private string ComposeText = "";
+    private bool ShowTemplates = false;
+    private bool IsTypingIndicatorVisible = false;
+
+    private int UnreadCount => Conversations.Count(c => !c.IsRead);
+
+    private ConversationItem? ActiveConversation =>
+        Conversations.FirstOrDefault(c => c.Id == ActiveConvId);
+
+    private List<ConversationItem> FilteredConversations = new();
+
+    // ---- Message Templates ----
+    private List<MessageTemplate> MessageTemplates = new()
+    {
+        new MessageTemplate
+        {
+            Name = "Interview Invitation",
+            Body = "Hi {name}, we'd like to invite you to an interview for the {position} role. Please let us know your availability."
+        },
+        new MessageTemplate
+        {
+            Name = "Shortlist Notification",
+            Body = "Hi {name}, congratulations! You've been shortlisted for the {position} position. We'll be in touch with next steps."
+        },
+        new MessageTemplate
+        {
+            Name = "Application Received",
+            Body = "Hi {name}, thank you for applying to {position}. We've received your application and will review it shortly."
+        },
+        new MessageTemplate
+        {
+            Name = "Status Update",
+            Body = "Hi {name}, we wanted to give you an update on your application for {position}. We're still reviewing candidates and will be in touch soon."
+        },
+        new MessageTemplate
+        {
+            Name = "Request for Documents",
+            Body = "Hi {name}, as part of the application process for {position}, we'd like to request the following documents: [list documents here]."
+        },
+    };
+
+    // ---- Conversations ----
+    private List<ConversationItem> Conversations = new()
+    {
+        new ConversationItem
+        {
+            Id = 1, Name = "Kira Reyes", Role = "Candidate", JobTitle = "Full-Stack Developer Intern",
+            IsRead = false, IsOnline = true, LastSenderIsMe = false,
+            LastMessage = "Thank you! I'll confirm my availability shortly.",
+            LastMessageAt = DateTime.Now.AddMinutes(-5),
+            ApplicationStage = "For Interview", MatchScore = 91, ApplicantId = 1,
+            AppliedDate = new DateTime(2025, 4, 9),
+            Skills = new() { "React", "ASP.NET Core", "SQL", "Git" },
+            Messages = new()
+            {
+                new MessageItem { Id = 1, SenderId = "me", Content = "Hi Kira! We've reviewed your application for the Full-Stack Developer Intern role and we're very impressed.", SentAt = DateTime.Today.AddDays(-2).AddHours(9) },
+                new MessageItem { Id = 2, SenderId = "me", Content = "We'd like to invite you to a technical interview. Are you available this week?", SentAt = DateTime.Today.AddDays(-2).AddHours(9).AddMinutes(1) },
+                new MessageItem { Id = 3, SenderId = "them", Content = "Hello! Thank you so much, I'm really excited about this opportunity!", SentAt = DateTime.Today.AddDays(-2).AddHours(10) },
+                new MessageItem { Id = 4, SenderId = "them", Content = "I'm available Thursday or Friday afternoon. Would either of those work?", SentAt = DateTime.Today.AddDays(-2).AddHours(10).AddMinutes(2) },
+                new MessageItem { Id = 5, SenderId = "me", Content = "Thursday at 2PM sounds perfect. I'll send you a calendar invite shortly.", SentAt = DateTime.Today.AddDays(-1).AddHours(9) },
+                new MessageItem { Id = 6, SenderId = "me", Type = "interview-invite", Content = "Please find your interview details below. The session will be 60 minutes via Google Meet.",
+                    SentAt = DateTime.Today.AddDays(-1).AddHours(9).AddMinutes(5),
+                    InviteDetails = new() { Position = "Full-Stack Developer Intern", DateDisplay = "Thursday, April 10, 2025", TimeDisplay = "2:00 PM – 3:00 PM", Format = "Video Call (Google Meet)" } },
+                new MessageItem { Id = 7, SenderId = "them", Content = "Thank you! I'll confirm my availability shortly.", SentAt = DateTime.Now.AddMinutes(-5) },
+            }
+        },
+        new ConversationItem
+        {
+            Id = 2, Name = "Marco Guerrero", Role = "Candidate", JobTitle = "React Frontend Developer",
+            IsRead = true, IsOnline = false, LastSenderIsMe = true,
+            LastMessage = "We'll be in touch with the next steps soon.",
+            LastMessageAt = DateTime.Today.AddHours(8),
+            ApplicationStage = "Shortlisted", MatchScore = 85, ApplicantId = 2,
+            AppliedDate = new DateTime(2025, 4, 8),
+            Skills = new() { "React", "TypeScript", "CSS" },
+            Messages = new()
+            {
+                new MessageItem { Id = 1, SenderId = "them", Content = "Hi, I wanted to ask about the status of my application for the React Frontend Developer role.", SentAt = DateTime.Today.AddDays(-1).AddHours(14) },
+                new MessageItem { Id = 2, SenderId = "me", Content = "Hi Marco! Great news — you've been shortlisted for the next round.", SentAt = DateTime.Today.AddHours(8) },
+                new MessageItem { Id = 3, SenderId = "me", Content = "We'll be in touch with the next steps soon.", SentAt = DateTime.Today.AddHours(8).AddMinutes(1) },
+            }
+        },
+        new ConversationItem
+        {
+            Id = 3, Name = "Sofia Cruz", Role = "Candidate", JobTitle = "API Developer (.NET)",
+            IsRead = false, IsOnline = true, LastSenderIsMe = false,
+            LastMessage = "Could you share more about the tech stack you use?",
+            LastMessageAt = DateTime.Now.AddHours(-1),
+            ApplicationStage = "Under Review", MatchScore = 78, ApplicantId = 3,
+            AppliedDate = new DateTime(2025, 4, 7),
+            Skills = new() { "ASP.NET Core", "PostgreSQL", "Docker" },
+            Messages = new()
+            {
+                new MessageItem { Id = 1, SenderId = "them", Content = "Hi! I recently applied for the API Developer (.NET) position.", SentAt = DateTime.Now.AddHours(-2) },
+                new MessageItem { Id = 2, SenderId = "them", Content = "Could you share more about the tech stack you use?", SentAt = DateTime.Now.AddHours(-1) },
+            }
+        },
+        new ConversationItem
+        {
+            Id = 4, Name = "Marcus Lee", Role = "Team", JobTitle = "",
+            IsRead = true, IsOnline = true, LastSenderIsMe = false,
+            LastMessage = "I've finished reviewing the shortlist for React Frontend.",
+            LastMessageAt = DateTime.Today.AddHours(11),
+            ApplicationStage = null, MatchScore = 0, ApplicantId = null,
+            AppliedDate = null, Skills = null,
+            Messages = new()
+            {
+                new MessageItem { Id = 1, SenderId = "them", Content = "Hey, do you have a moment to discuss the React Frontend candidate pool?", SentAt = DateTime.Today.AddHours(10) },
+                new MessageItem { Id = 2, SenderId = "me", Content = "Sure! What are your thoughts so far?", SentAt = DateTime.Today.AddHours(10).AddMinutes(5) },
+                new MessageItem { Id = 3, SenderId = "them", Content = "I've finished reviewing the shortlist for React Frontend.", SentAt = DateTime.Today.AddHours(11) },
+            }
+        },
+        new ConversationItem
+        {
+            Id = 5, Name = "Rachel Ong", Role = "Candidate", JobTitle = "API Developer (.NET)",
+            IsRead = true, IsOnline = false, LastSenderIsMe = true,
+            LastMessage = "Looking forward to meeting you on Thursday.",
+            LastMessageAt = DateTime.Today.AddDays(-1).AddHours(16),
+            ApplicationStage = "For Interview", MatchScore = 95, ApplicantId = 7,
+            AppliedDate = new DateTime(2025, 4, 4),
+            Skills = new() { "ASP.NET Core", "PostgreSQL", "Docker", "Redis" },
+            Messages = new()
+            {
+                new MessageItem { Id = 1, SenderId = "me", Content = "Hi Rachel! Congratulations — you've been selected for an interview for the API Developer (.NET) role.", SentAt = DateTime.Today.AddDays(-2).AddHours(14) },
+                new MessageItem { Id = 2, SenderId = "them", Content = "That's wonderful news! I'm really looking forward to it.", SentAt = DateTime.Today.AddDays(-2).AddHours(15) },
+                new MessageItem { Id = 3, SenderId = "me", Content = "Looking forward to meeting you on Thursday.", SentAt = DateTime.Today.AddDays(-1).AddHours(16) },
+            }
+        },
+    };
+
+    protected override void OnInitialized()
+    {
+        FilterConversations();
+        // Auto-open first conversation
+        if (FilteredConversations.Count > 0)
+            SelectConversation(FilteredConversations[0].Id);
+    }
+
+    private void FilterConversations()
+    {
+        var q = ConvSearch?.Trim().ToLower() ?? "";
+        FilteredConversations = Conversations
+            .Where(c =>
+                (string.IsNullOrEmpty(q) ||
+                    c.Name.ToLower().Contains(q) ||
+                    c.JobTitle.ToLower().Contains(q) ||
+                    c.LastMessage.ToLower().Contains(q)) &&
+                ConvTab switch
+                {
+                    "Unread"     => !c.IsRead,
+                    "Candidates" => c.Role == "Candidate",
+                    _            => true
+                }
+            )
+            .OrderByDescending(c => c.LastMessageAt)
+            .ToList();
+    }
+
+    private void SetConvTab(string tab) { ConvTab = tab; FilterConversations(); }
+
+    private void SelectConversation(int id)
+    {
+        ActiveConvId = id;
+        ShowTemplates = false;
+        var conv = Conversations.FirstOrDefault(c => c.Id == id);
+        if (conv != null) conv.IsRead = true;
+    }
+
+    private void SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(ComposeText) || ActiveConversation == null) return;
+
+        ActiveConversation.Messages.Add(new MessageItem
+        {
+            Id = ActiveConversation.Messages.Count + 1,
+            SenderId = "me",
+            Content = ComposeText.Trim(),
+            SentAt = DateTime.Now
+        });
+
+        ActiveConversation.LastMessage = ComposeText.Trim();
+        ActiveConversation.LastMessageAt = DateTime.Now;
+        ActiveConversation.LastSenderIsMe = true;
+        ComposeText = "";
+        ShowTemplates = false;
+    }
+
+    private void HandleComposeKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey) SendMessage();
+    }
+
+    private void OpenNewMessage()
+    {
+        // TODO: open new message modal
+    }
+
+    private void ToggleTemplates() => ShowTemplates = !ShowTemplates;
+
+    private void UseTemplate(MessageTemplate tmpl)
+    {
+        if (ActiveConversation == null) return;
+        ComposeText = tmpl.Body
+            .Replace("{name}", ActiveConversation.Name.Split(' ')[0])
+            .Replace("{position}", ActiveConversation.JobTitle);
+        ShowTemplates = false;
+    }
+
+    // ---- Schedule Interview Modal state ----
+    private bool ShowScheduleModal = false;
+    private ScheduleInterviewModal.InterviewData ModalInterview = new();
+    private TimeOnly ModalInterviewTime = new TimeOnly(10, 0);
+    private string ModalInterviewerName = "";
+
+    private void OpenScheduleModal(ConversationItem? conv)
+    {
+        // Pre-fill from the active conversation
+        ModalInterview = new ScheduleInterviewModal.InterviewData
+        {
+            CandidateName = conv?.Name ?? "",
+            JobTitle      = conv?.JobTitle ?? "",
+            ScheduledAt   = DateTime.Today.AddDays(1),
+            DurationMins  = 60,
+            Format        = "",
+            Location      = "",
+            Notes         = ""
+        };
+        ModalInterviewTime    = new TimeOnly(10, 0);
+        ModalInterviewerName  = "";
+        ShowScheduleModal     = true;
+    }
+
+    private void CloseScheduleModal() => ShowScheduleModal = false;
+
+    private async Task HandleScheduleConfirm(ScheduleInterviewModal.ScheduleResult result)
+    {
+        ShowScheduleModal = false;
+
+        if (ActiveConversation == null) return;
+
+        var iv = result.Interview;
+        var scheduledAt = iv.ScheduledAt.Date
+            .AddHours(result.InterviewTime.Hour)
+            .AddMinutes(result.InterviewTime.Minute);
+        var endTime = scheduledAt.AddMinutes(iv.DurationMins);
+
+        // Build the interview-invite card message
+        var inviteMsg = new MessageItem
+        {
+            Id        = ActiveConversation.Messages.Count + 1,
+            SenderId  = "me",
+            Type      = "interview-invite",
+            Content   = $"Please find your interview details below. The session will be {iv.DurationMins} minutes{(string.IsNullOrWhiteSpace(iv.Location) ? "." : $" via {iv.Format}.")}",
+            SentAt    = DateTime.Now,
+            InviteDetails = new InterviewInviteDetails
+            {
+                Position    = iv.JobTitle,
+                DateDisplay = scheduledAt.ToString("dddd, MMMM d, yyyy"),
+                TimeDisplay = $"{scheduledAt:h:mm tt} – {endTime:h:mm tt}",
+                Format      = string.IsNullOrWhiteSpace(iv.Location)
+                                  ? iv.Format
+                                  : $"{iv.Format} · {iv.Location}"
+            }
+        };
+
+        ActiveConversation.Messages.Add(inviteMsg);
+        ActiveConversation.LastMessage     = "📅 Interview Invitation sent";
+        ActiveConversation.LastMessageAt   = DateTime.Now;
+        ActiveConversation.LastSenderIsMe  = true;
+        ActiveConversation.IsRead          = true;
+
+        await Task.CompletedTask; // keep async signature for EventCallback
+    }
+
+    private string FormatTime(DateTime dt)
+    {
+        if (dt.Date == DateTime.Today) return dt.ToString("h:mm tt");
+        if (dt.Date == DateTime.Today.AddDays(-1)) return "Yesterday";
+        if ((DateTime.Today - dt.Date).TotalDays < 7) return dt.ToString("ddd");
+        return dt.ToString("MMM d");
+    }
+
+    private string GetDateLabel(DateTime date)
+    {
+        if (date == DateTime.Today) return "Today";
+        if (date == DateTime.Today.AddDays(-1)) return "Yesterday";
+        return date.ToString("dddd, MMMM d");
+    }
+
+    private string GetAvatarColor(int id) =>
+        new[] { "blue", "green", "amber", "slate", "purple" }[id % 5];
+
+    private string GetMatchClass(int score) =>
+        score >= 80 ? "high" : score >= 60 ? "mid" : "low";
+
+    private void UseShortlistTemplate()
+    {
+        var template = MessageTemplates.FirstOrDefault(t => t.Name == "Shortlist Notification");
+        if (template != null) UseTemplate(template);
+    }
+
+    // ---- Models ----
+    private class ConversationItem
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public string Role { get; set; } = "";
+        public string JobTitle { get; set; } = "";
+        public bool IsRead { get; set; }
+        public bool IsOnline { get; set; }
+        public bool LastSenderIsMe { get; set; }
+        public string LastMessage { get; set; } = "";
+        public DateTime LastMessageAt { get; set; }
+        public string? ApplicationStage { get; set; }
+        public int MatchScore { get; set; }
+        public int? ApplicantId { get; set; }
+        public DateTime? AppliedDate { get; set; }
+        public List<string>? Skills { get; set; }
+        public List<MessageItem> Messages { get; set; } = new();
+        public string Initials => string.Join("", Name.Split(' ').Take(2).Select(w => w.Length > 0 ? w[0].ToString() : ""));
+    }
+
+    private class MessageItem
+    {
+        public int Id { get; set; }
+        public string SenderId { get; set; } = "";
+        public string Content { get; set; } = "";
+        public DateTime SentAt { get; set; }
+        public string Type { get; set; } = "text";
+        public InterviewInviteDetails? InviteDetails { get; set; }
+    }
+
+    private class InterviewInviteDetails
+    {
+        public string Position { get; set; } = "";
+        public string DateDisplay { get; set; } = "";
+        public string TimeDisplay { get; set; } = "";
+        public string Format { get; set; } = "";
+    }
+
+    private class MessageTemplate
+    {
+        public string Name { get; set; } = "";
+        public string Body { get; set; } = "";
+    }
+}

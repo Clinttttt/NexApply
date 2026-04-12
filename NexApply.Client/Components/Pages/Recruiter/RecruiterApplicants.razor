@@ -206,9 +206,6 @@
                                         </div>
 
                                         <div class="td td--applicant">
-                                            <div class="applicant-avatar applicant-avatar--@GetAvatarColor(app.Id)">
-                                                @app.Initials
-                                            </div>
                                             <div class="applicant-info">
                                                 <span class="applicant-name">@app.Name</span>
                                                 <span class="applicant-email">@app.Email</span>
@@ -693,6 +690,10 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label class="form-label">Interview Panel</label>
+                    <input type="text" class="form-input" placeholder="e.g. Anna Vidal" @bind="InterviewPanel" />
+                </div>
+                <div class="form-group">
                     <label class="form-label">Meeting Link (optional)</label>
                     <input type="url" class="form-input" placeholder="https://meet.google.com/..." @bind="MeetingLink" />
                 </div>
@@ -736,6 +737,7 @@
     private DateTime InterviewDate = DateTime.Today.AddDays(7);
     private TimeOnly InterviewTime = new TimeOnly(10, 0);
     private string InterviewType = "Video Call";
+    private string InterviewPanel = "";
     private string MeetingLink = "";
     private string InterviewNotes = "";
 
@@ -977,6 +979,7 @@
         InterviewDate = DateTime.Today.AddDays(7);
         InterviewTime = new TimeOnly(10, 0);
         InterviewType = "Video Call";
+        InterviewPanel = "";
         MeetingLink = "";
         InterviewNotes = "";
     }
