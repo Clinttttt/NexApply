@@ -11,4 +11,8 @@
     <Folder Include="Components\Pages\Recruiter\RecruiterModal\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.17.0" />
+  </ItemGroup>
+
 </Project>

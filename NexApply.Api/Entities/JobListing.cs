@@ -1,43 +1,106 @@
-﻿namespace NexApply.Api.Entities
+using NexApply.Api.Entities.Enums;
+
+namespace NexApply.Api.Entities;
+
+public class JobListing : BaseEntity
 {
-    public enum JobType
+    public Guid CompanyId { get; private set; }
+    public string Title { get; private set; } = string.Empty;
+    public string Description { get; private set; } = string.Empty;
+    public string Responsibilities { get; private set; } = string.Empty;
+    public string Qualifications { get; private set; } = string.Empty;
+    public string RequiredSkills { get; private set; } = string.Empty;
+    public string? Benefits { get; private set; }
+    public string Location { get; private set; } = string.Empty;
+    public JobType JobType { get; private set; }
+    public WorkSetup WorkSetup { get; private set; }
+    public decimal? SalaryMin { get; private set; }
+    public decimal? SalaryMax { get; private set; }
+    public string? ExperienceLevel { get; private set; }
+    public int Openings { get; private set; } = 1;
+    public DateTime? Deadline { get; private set; }
+    public JobListingStatus Status { get; private set; } = JobListingStatus.Active;
+
+    // Navigation properties
+    public CompanyProfile Company { get; private set; } = null!;
+    public ICollection<Application> Applications { get; private set; } = [];
+    public ICollection<SavedJob> SavedByStudents { get; private set; } = [];
+
+    private JobListing() { } // EF Core
+
+    public static JobListing Create(
+        Guid companyId,
+        string title,
+        string description,
+        string responsibilities,
+        string qualifications,
+        string requiredSkills,
+        string location,
+        JobType jobType,
+        WorkSetup workSetup)
     {
-        FullTime,
-        PartTime,
-        Internship,
-        Freelance,
-        Remote
+        return new JobListing
+        {
+            CompanyId = companyId,
+            Title = title,
+            Description = description,
+            Responsibilities = responsibilities,
+            Qualifications = qualifications,
+            RequiredSkills = requiredSkills,
+            Location = location,
+            JobType = jobType,
+            WorkSetup = workSetup
+        };
     }
 
-    public class JobListing
+    public void Update(
+        string title,
+        string description,
+        string responsibilities,
+        string qualifications,
+        string requiredSkills,
+        string? benefits,
+        string location,
+        JobType jobType,
+        WorkSetup workSetup,
+        decimal? salaryMin,
+        decimal? salaryMax,
+        string? experienceLevel,
+        int openings,
+        DateTime? deadline)
     {
-        public Guid Id { get; set; } = Guid.NewGuid();
-
-        public Guid CompanyId { get; set; }
-
-        public string Title { get; set; } = string.Empty;
-
-        public string Description { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Comma-separated or free-text required skills.
-        /// Used together with Description for PostgreSQL full-text search matching.
-        /// </summary>
-        public string RequiredSkills { get; set; } = string.Empty;
-
-        public string Location { get; set; } = string.Empty;
-
-        public JobType JobType { get; set; }
-
-        public DateTime? Deadline { get; set; }
-
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        public DateTime? UpdatedAt { get; set; }
-
-        // Navigation properties
-        public CompanyProfile Company { get; set; } = null!;
-        public ICollection<Application> Applications { get; set; } = [];
+        Title = title;
+        Description = description;
+        Responsibilities = responsibilities;
+        Qualifications = qualifications;
+        RequiredSkills = requiredSkills;
+        Benefits = benefits;
+        Location = location;
+        JobType = jobType;
+        WorkSetup = workSetup;
+        SalaryMin = salaryMin;
+        SalaryMax = salaryMax;
+        ExperienceLevel = experienceLevel;
+        Openings = openings;
+        Deadline = deadline;
+        MarkAsUpdated();
     }
 
+    public void Pause()
+    {
+        Status = JobListingStatus.Paused;
+        MarkAsUpdated();
+    }
+
+    public void Activate()
+    {
+        Status = JobListingStatus.Active;
+        MarkAsUpdated();
+    }
+
+    public void Close()
+    {
+        Status = JobListingStatus.Closed;
+        MarkAsUpdated();
+    }
 }

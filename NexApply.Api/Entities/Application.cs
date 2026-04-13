@@ -1,42 +1,64 @@
-﻿namespace NexApply.Api.Entities
+using NexApply.Api.Entities.Enums;
+
+namespace NexApply.Api.Entities;
+
+public class Application : BaseEntity
 {
-    public enum ApplicationStatus
+    public Guid StudentId { get; private set; }
+    public Guid JobListingId { get; private set; }
+    public string? CoverLetter { get; private set; }
+    public string? ResumeUrl { get; private set; }
+    public ApplicationStatus Status { get; private set; } = ApplicationStatus.Submitted;
+    public string? RecruiterNotes { get; private set; }
+
+    // Navigation properties
+    public StudentProfile Student { get; private set; } = null!;
+    public JobListing JobListing { get; private set; } = null!;
+
+    private Application() { } // EF Core
+
+    public static Application Create(
+        Guid studentId,
+        Guid jobListingId,
+        string? coverLetter,
+        string? resumeUrl)
     {
-        Submitted,
-        UnderReview,
-        Shortlisted,
-        ForInterview,
-        Declined
+        return new Application
+        {
+            StudentId = studentId,
+            JobListingId = jobListingId,
+            CoverLetter = coverLetter,
+            ResumeUrl = resumeUrl
+        };
     }
 
-    public class Application
+    public void MoveToUnderReview()
     {
-        public Guid Id { get; set; } = Guid.NewGuid();
+        Status = ApplicationStatus.UnderReview;
+        MarkAsUpdated();
+    }
 
-        public Guid StudentId { get; set; }
+    public void Shortlist()
+    {
+        Status = ApplicationStatus.Shortlisted;
+        MarkAsUpdated();
+    }
 
-        public Guid JobListingId { get; set; }
+    public void MoveToInterview()
+    {
+        Status = ApplicationStatus.ForInterview;
+        MarkAsUpdated();
+    }
 
-        public string? CoverLetter { get; set; }
+    public void Decline()
+    {
+        Status = ApplicationStatus.Declined;
+        MarkAsUpdated();
+    }
 
-        /// <summary>
-        /// Snapshot of resume path at time of application.
-        /// Stored separately from StudentProfile.ResumeFilePath
-        /// so future resume uploads don't affect existing applications.
-        /// </summary>
-        public string? ResumeUrl { get; set; }
-
-        /// <summary>
-        /// Status flow: Submitted → UnderReview → Shortlisted → ForInterview | Declined
-        /// </summary>
-        public ApplicationStatus Status { get; set; } = ApplicationStatus.Submitted;
-
-        public DateTime AppliedAt { get; set; } = DateTime.UtcNow;
-
-        public DateTime? UpdatedAt { get; set; }
-
-        // Navigation properties
-        public StudentProfile Student { get; set; } = null!;
-        public JobListing JobListing { get; set; } = null!;
+    public void UpdateRecruiterNotes(string notes)
+    {
+        RecruiterNotes = notes;
+        MarkAsUpdated();
     }
 }

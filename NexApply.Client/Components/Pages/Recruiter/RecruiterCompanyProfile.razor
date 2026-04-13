@@ -1,0 +1,739 @@
+﻿@page "/recruiter/company-profile"
+@rendermode InteractiveServer
+
+<div class="app-shell">
+    <RecruiterSidebar />
+
+    <div class="main-content">
+        <RecruiterHeader Title="Company Profile" Subtitle="Manage your company's public presence on NexApply" />
+
+        <div class="page-body">
+
+            <!-- Save Success Banner -->
+            @if (ShowSavedBanner)
+            {
+                <div class="save-banner">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Profile updated successfully. Changes are now visible to candidates.
+                </div>
+            }
+
+            <!-- Main Layout -->
+            <div class="profile-layout">
+
+                <!-- LEFT: Preview Card (sticky) -->
+                <aside class="profile-preview">
+                    <div class="preview-card">
+                        <div class="preview-card-header">
+                            <span class="preview-label">Candidate Preview</span>
+                            <span class="preview-hint">How candidates see your company</span>
+                        </div>
+
+                        <!-- Company Logo -->
+                        <div class="preview-logo-wrap">
+                            <div class="preview-logo">
+                                <span class="preview-logo-initials">@GetInitials(Profile.CompanyName)</span>
+                            </div>
+                            @if (IsEditing)
+                            {
+                                <button class="logo-upload-btn" title="Upload company logo">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="17 8 12 3 7 8"/>
+                                        <line x1="12" y1="3" x2="12" y2="15"/>
+                                    </svg>
+                                    Upload Logo
+                                </button>
+                            }
+                        </div>
+
+                        <div class="preview-body">
+                            <h2 class="preview-company-name">@(string.IsNullOrWhiteSpace(Profile.CompanyName) ? "Company Name" : Profile.CompanyName)</h2>
+                            @if (!string.IsNullOrWhiteSpace(Profile.Tagline))
+                            {
+                                <p class="preview-tagline">@Profile.Tagline</p>
+                            }
+
+                            <div class="preview-meta">
+                                @if (!string.IsNullOrWhiteSpace(Profile.Industry))
+                                {
+                                    <span class="preview-meta-item">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                                        </svg>
+                                        @Profile.Industry
+                                    </span>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Profile.Location))
+                                {
+                                    <span class="preview-meta-item">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                            <circle cx="12" cy="10" r="3"/>
+                                        </svg>
+                                        @Profile.Location
+                                    </span>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Profile.CompanySize))
+                                {
+                                    <span class="preview-meta-item">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                            <circle cx="9" cy="7" r="4"/>
+                                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                        </svg>
+                                        @Profile.CompanySize
+                                    </span>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Profile.Founded))
+                                {
+                                    <span class="preview-meta-item">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                            <line x1="16" y1="2" x2="16" y2="6"/>
+                                            <line x1="8" y1="2" x2="8" y2="6"/>
+                                            <line x1="3" y1="10" x2="21" y2="10"/>
+                                        </svg>
+                                        Est. @Profile.Founded
+                                    </span>
+                                }
+                            </div>
+
+                            <!-- Active Listings -->
+                            <div class="preview-listings">
+                                <span class="preview-listings-count">@ActiveListingsCount</span>
+                                <span class="preview-listings-label">active listing@(ActiveListingsCount == 1 ? "" : "s")</span>
+                            </div>
+                        </div>
+
+                        <!-- Perks Preview -->
+                        @if (Profile.Perks.Count > 0)
+                        {
+                            <div class="preview-perks">
+                                @foreach (var perk in Profile.Perks.Take(4))
+                                {
+                                    <span class="preview-perk-chip">@perk</span>
+                                }
+                                @if (Profile.Perks.Count > 4)
+                                {
+                                    <span class="preview-perk-chip preview-perk-more">+@(Profile.Perks.Count - 4) more</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                </aside>
+
+                <!-- RIGHT: Edit / View Sections -->
+                <div class="profile-sections">
+
+                    <!-- ── Section 1: Basic Information ── -->
+                    <div class="profile-card">
+                        <div class="profile-card-header">
+                            <div class="profile-card-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="profile-card-title">Basic Information</h2>
+                                <p class="profile-card-subtitle">Core details about your company</p>
+                            </div>
+                            <div class="profile-card-actions">
+                                @if (IsEditing)
+                                {
+                                    <button class="btn-ghost" @onclick="CancelEdit">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="18" y1="6" x2="6" y2="18"/>
+                                            <line x1="6" y1="6" x2="18" y2="18"/>
+                                        </svg>
+                                        Discard Changes
+                                    </button>
+                                    <button class="btn-primary" @onclick="SaveProfile">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                                            <polyline points="17 21 17 13 7 13 7 21"/>
+                                            <polyline points="7 3 7 8 15 8"/>
+                                        </svg>
+                                        Save Changes
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn-secondary" @onclick="StartEdit">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                        </svg>
+                                        Edit Profile
+                                    </button>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="profile-card-body">
+                            @if (IsEditing)
+                            {
+                                <div class="field-group">
+                                    <label class="field-label" for="company-name">Company Name <span class="required">*</span></label>
+                                    <input id="company-name" class="field-input" type="text"
+                                           placeholder="e.g. CodeBridge Co."
+                                           @bind="Profile.CompanyName" />
+                                </div>
+                                <div class="field-group">
+                                    <label class="field-label" for="tagline">Tagline</label>
+                                    <input id="tagline" class="field-input" type="text"
+                                           placeholder="A short, memorable description of your company"
+                                           @bind="Profile.Tagline" />
+                                    <span class="field-hint">Appears directly below your company name on listings.</span>
+                                </div>
+                                <div class="field-row">
+                                    <div class="field-group">
+                                        <label class="field-label" for="industry">Industry <span class="required">*</span></label>
+                                        <select id="industry" class="field-select" @bind="Profile.Industry">
+                                            <option value="">Select industry…</option>
+                                            @foreach (var ind in Industries)
+                                            {
+                                                <option>@ind</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="field-group">
+                                        <label class="field-label" for="company-size">Company Size</label>
+                                        <select id="company-size" class="field-select" @bind="Profile.CompanySize">
+                                            <option value="">Select size…</option>
+                                            <option>1–10 employees</option>
+                                            <option>11–50 employees</option>
+                                            <option>51–200 employees</option>
+                                            <option>201–500 employees</option>
+                                            <option>500+ employees</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="field-row">
+                                    <div class="field-group">
+                                        <label class="field-label" for="location">Headquarters <span class="required">*</span></label>
+                                        <input id="location" class="field-input" type="text"
+                                               placeholder="e.g. Manila, Philippines"
+                                               @bind="Profile.Location" />
+                                    </div>
+                                    <div class="field-group">
+                                        <label class="field-label" for="founded">Year Founded</label>
+                                        <input id="founded" class="field-input" type="text"
+                                               placeholder="e.g. 2018"
+                                               @bind="Profile.Founded" />
+                                    </div>
+                                </div>
+                                <div class="field-group">
+                                    <label class="field-label" for="website">Website</label>
+                                    <input id="website" class="field-input" type="url"
+                                           placeholder="https://yourcompany.com"
+                                           @bind="Profile.Website" />
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="view-info-grid">
+                                    <span class="vig-key">Company Name</span>
+                                    <span class="vig-val">@(Or(Profile.CompanyName, "—"))</span>
+                                    <span class="vig-key">Tagline</span>
+                                    <span class="vig-val vig-val--muted">@(Or(Profile.Tagline, "Not set"))</span>
+                                    <span class="vig-key">Industry</span>
+                                    <span class="vig-val">@(Or(Profile.Industry, "—"))</span>
+                                    <span class="vig-key">Company Size</span>
+                                    <span class="vig-val">@(Or(Profile.CompanySize, "—"))</span>
+                                    <span class="vig-key">Headquarters</span>
+                                    <span class="vig-val">@(Or(Profile.Location, "—"))</span>
+                                    <span class="vig-key">Founded</span>
+                                    <span class="vig-val">@(string.IsNullOrWhiteSpace(Profile.Founded) ? "—" : $"Est. {Profile.Founded}")</span>
+                                    <span class="vig-key">Website</span>
+                                    <span class="vig-val">
+                                        @if (!string.IsNullOrWhiteSpace(Profile.Website))
+                                        {
+                                            <a href="@Profile.Website" target="_blank" class="vig-link">@Profile.Website</a>
+                                        }
+                                        else
+                                        {
+                                            <span>—</span>
+                                        }
+                                    </span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- ── Section 2: About the Company ── -->
+                    <div class="profile-card">
+                        <div class="profile-card-header">
+                            <div class="profile-card-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                    <line x1="16" y1="13" x2="8" y2="13"/>
+                                    <line x1="16" y1="17" x2="8" y2="17"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="profile-card-title">About the Company</h2>
+                                <p class="profile-card-subtitle">Tell candidates what makes your company great</p>
+                            </div>
+                        </div>
+
+                        <div class="profile-card-body">
+                            @if (IsEditing)
+                            {
+                                <div class="field-group">
+                                    <label class="field-label" for="about">Company Description <span class="required">*</span></label>
+                                    <textarea id="about" class="field-textarea" rows="6"
+                                              placeholder="Describe your company's mission, culture, products, and what makes it a great place to work…"
+                                              @bind="Profile.About"></textarea>
+                                    <span class="field-hint">Aim for 100–300 words. This is the first thing candidates read about you.</span>
+                                </div>
+                                <div class="field-group">
+                                    <label class="field-label" for="mission">Mission Statement</label>
+                                    <textarea id="mission" class="field-textarea" rows="3"
+                                              placeholder="e.g. We build bridges between talent and opportunity."
+                                              @bind="Profile.Mission"></textarea>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="view-text-block">
+                                    <span class="view-block-label">Description</span>
+                                    <p class="view-block-text">@(Or(Profile.About, "No description added yet."))</p>
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(Profile.Mission))
+                                {
+                                    <div class="view-text-block">
+                                        <span class="view-block-label">Mission</span>
+                                        <p class="view-block-text view-block-text--mission">@Profile.Mission</p>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+
+                    <!-- ── Section 3: Culture & Perks ── -->
+                    <div class="profile-card">
+                        <div class="profile-card-header">
+                            <div class="profile-card-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="profile-card-title">Culture & Perks</h2>
+                                <p class="profile-card-subtitle">Benefits and values that attract top talent</p>
+                            </div>
+                        </div>
+
+                        <div class="profile-card-body">
+                            @if (IsEditing)
+                            {
+                                <div class="field-group">
+                                    <label class="field-label">Perks & Benefits</label>
+                                    <div class="perk-input-row">
+                                        <input class="field-input perk-input" type="text"
+                                               placeholder="e.g. Remote-first, Health insurance, Learning budget…"
+                                               @bind="PerkInput"
+                                               @onkeydown="HandlePerkKeydown" />
+                                        <button class="btn-add" type="button" @onclick="AddPerk">Add</button>
+                                    </div>
+                                    @if (Profile.Perks.Count > 0)
+                                    {
+                                        <div class="perk-tags">
+                                            @foreach (var perk in Profile.Perks)
+                                            {
+                                                <div class="perk-tag">
+                                                    <span>@perk</span>
+                                                    <button type="button" class="perk-remove" @onclick="() => RemovePerk(perk)" aria-label="Remove @perk">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24"
+                                                             fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                            <line x1="18" y1="6" x2="6" y2="18"/>
+                                                            <line x1="6" y1="6" x2="18" y2="18"/>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    <span class="field-hint">Press Enter or click Add. These appear on all your listings.</span>
+                                </div>
+
+                                <div class="field-group">
+                                    <label class="field-label">Work Culture Tags</label>
+                                    <div class="culture-tags">
+                                        @foreach (var tag in CultureOptions)
+                                        {
+                                            <button type="button"
+                                                    class="culture-tag @(Profile.CultureTags.Contains(tag) ? "selected" : "")"
+                                                    @onclick="() => ToggleCultureTag(tag)">
+                                                @tag
+                                            </button>
+                                        }
+                                    </div>
+                                    <span class="field-hint">Select all that apply.</span>
+                                </div>
+                            }
+                            else
+                            {
+                                @if (Profile.Perks.Count > 0)
+                                {
+                                    <div class="view-perk-section">
+                                        <span class="view-block-label">Perks & Benefits</span>
+                                        <div class="view-perk-tags">
+                                            @foreach (var perk in Profile.Perks)
+                                            {
+                                                <span class="view-perk-chip">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                                                         fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                        <polyline points="20 6 9 17 4 12"/>
+                                                    </svg>
+                                                    @perk
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                                @if (Profile.CultureTags.Count > 0)
+                                {
+                                    <div class="view-perk-section">
+                                        <span class="view-block-label">Work Culture</span>
+                                        <div class="view-perk-tags">
+                                            @foreach (var tag in Profile.CultureTags)
+                                            {
+                                                <span class="culture-view-chip">@tag</span>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                                @if (Profile.Perks.Count == 0 && Profile.CultureTags.Count == 0)
+                                {
+                                    <p class="view-empty">No perks or culture tags added yet.</p>
+                                }
+                            }
+                        </div>
+                    </div>
+
+                    <!-- ── Section 4: Contact & Social ── -->
+                    <div class="profile-card">
+                        <div class="profile-card-header">
+                            <div class="profile-card-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                    <polyline points="22,6 12,13 2,6"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="profile-card-title">Contact & Social</h2>
+                                <p class="profile-card-subtitle">How candidates can reach you or learn more</p>
+                            </div>
+                        </div>
+
+                        <div class="profile-card-body">
+                            @if (IsEditing)
+                            {
+                                <div class="field-row">
+                                    <div class="field-group">
+                                        <label class="field-label" for="contact-email">Contact Email</label>
+                                        <input id="contact-email" class="field-input" type="email"
+                                               placeholder="careers@yourcompany.com"
+                                               @bind="Profile.ContactEmail" />
+                                    </div>
+                                    <div class="field-group">
+                                        <label class="field-label" for="contact-phone">Contact Phone</label>
+                                        <input id="contact-phone" class="field-input" type="tel"
+                                               placeholder="+63 2 1234 5678"
+                                               @bind="Profile.ContactPhone" />
+                                    </div>
+                                </div>
+                                <div class="social-fields">
+                                    @foreach (var social in SocialFields)
+                                    {
+                                        <div class="field-group social-field-group">
+                                            <label class="field-label social-label" for="social-@social.Key.ToLower()">
+                                                <span class="social-icon social-icon--@social.Key.ToLower()">@social.Icon</span>
+                                                @social.Key
+                                            </label>
+                                            <input id="social-@social.Key.ToLower()" class="field-input" type="url"
+                                                   placeholder="@social.Placeholder"
+                                                   @bind="social.Value" />
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="view-info-grid">
+                                    <span class="vig-key">Email</span>
+                                    <span class="vig-val">
+                                        @if (!string.IsNullOrWhiteSpace(Profile.ContactEmail))
+                                        {
+                                            <a href="mailto:@Profile.ContactEmail" class="vig-link">@Profile.ContactEmail</a>
+                                        }
+                                        else { <span>—</span> }
+                                    </span>
+                                    <span class="vig-key">Phone</span>
+                                    <span class="vig-val">@(Or(Profile.ContactPhone, "—"))</span>
+                                </div>
+
+                                <div class="social-view-list">
+                                    @foreach (var social in SocialFields.Where(s => !string.IsNullOrWhiteSpace(s.Value)))
+                                    {
+                                        <a href="@social.Value" target="_blank" class="social-view-item">
+                                            <span class="social-icon social-icon--@social.Key.ToLower()">@social.Icon</span>
+                                            <span class="social-view-name">@social.Key</span>
+                                            <span class="social-view-url">@social.Value</span>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                                <polyline points="15 3 21 3 21 9"/>
+                                                <line x1="10" y1="14" x2="21" y2="3"/>
+                                            </svg>
+                                        </a>
+                                    }
+                                    @if (!SocialFields.Any(s => !string.IsNullOrWhiteSpace(s.Value)))
+                                    {
+                                        <p class="view-empty">No social links added yet.</p>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- ── Section 5: Hiring Manager ── -->
+                    <div class="profile-card">
+                        <div class="profile-card-header">
+                            <div class="profile-card-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="profile-card-title">Hiring Manager</h2>
+                                <p class="profile-card-subtitle">The person candidates will interact with</p>
+                            </div>
+                        </div>
+
+                        <div class="profile-card-body">
+                            @if (IsEditing)
+                            {
+                                <div class="field-row">
+                                    <div class="field-group">
+                                        <label class="field-label" for="hm-name">Full Name</label>
+                                        <input id="hm-name" class="field-input" type="text"
+                                               placeholder="e.g. Anna Vidal"
+                                               @bind="Profile.HiringManagerName" />
+                                    </div>
+                                    <div class="field-group">
+                                        <label class="field-label" for="hm-title">Job Title</label>
+                                        <input id="hm-title" class="field-input" type="text"
+                                               placeholder="e.g. Hiring Manager"
+                                               @bind="Profile.HiringManagerTitle" />
+                                    </div>
+                                </div>
+                                <div class="field-group">
+                                    <label class="field-label" for="hm-email">Work Email</label>
+                                    <input id="hm-email" class="field-input" type="email"
+                                           placeholder="e.g. anna@yourcompany.com"
+                                           @bind="Profile.HiringManagerEmail" />
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="hm-view">
+                                    <div class="hm-avatar">
+                                        @GetInitials(Profile.HiringManagerName)
+                                    </div>
+                                    <div class="hm-info">
+                                        <span class="hm-name">@(Or(Profile.HiringManagerName, "Not set"))</span>
+                                        <span class="hm-title">@(Or(Profile.HiringManagerTitle, ""))</span>
+                                        @if (!string.IsNullOrWhiteSpace(Profile.HiringManagerEmail))
+                                        {
+                                            <a href="mailto:@Profile.HiringManagerEmail" class="hm-email">@Profile.HiringManagerEmail</a>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool IsEditing = false;
+    private bool ShowSavedBanner = false;
+    private string PerkInput = "";
+    private int ActiveListingsCount = 4;
+
+    private CompanyProfile Profile = new()
+    {
+        CompanyName        = "CodeBridge Co.",
+        Tagline            = "Connecting talent with innovation.",
+        Industry           = "Software & Technology",
+        CompanySize        = "51–200 employees",
+        Location           = "Manila, Philippines",
+        Founded            = "2019",
+        Website            = "https://codebridge.co",
+        About              = "CodeBridge Co. is a software development company specializing in enterprise web applications, mobile platforms, and API integrations. We partner with businesses to build scalable digital solutions that drive growth.\n\nOur team of engineers, designers, and product managers work in a collaborative, remote-first environment where initiative is rewarded and learning never stops.",
+        Mission            = "To bridge the gap between great talent and impactful technology — building software that matters.",
+        ContactEmail       = "careers@codebridge.co",
+        ContactPhone       = "+63 2 8123 4567",
+        HiringManagerName  = "Anna Vidal",
+        HiringManagerTitle = "Hiring Manager",
+        HiringManagerEmail = "anna.vidal@codebridge.co",
+        Perks              = new() { "Remote-first", "Health Insurance", "Learning Stipend", "Flexible Hours", "13th Month Pay", "Team Retreats" },
+        CultureTags        = new() { "Collaborative", "Fast-paced", "Innovative" }
+    };
+
+    // Backup for cancel
+    private CompanyProfile ProfileBackup = new();
+
+    private List<string> Industries = new()
+    {
+        "Software & Technology", "Financial Services", "Healthcare", "Education",
+        "E-commerce & Retail", "Media & Entertainment", "Manufacturing",
+        "Telecommunications", "Consulting", "Government", "Non-profit", "Other"
+    };
+
+    private List<string> CultureOptions = new()
+    {
+        "Collaborative", "Fast-paced", "Innovative", "Data-driven", "Customer-obsessed",
+        "Remote-first", "Inclusive", "Results-oriented", "Mission-driven", "Flat hierarchy"
+    };
+
+    private class SocialFieldDef
+    {
+        public string Key         { get; set; } = "";
+        public string Icon        { get; set; } = "";
+        public string Placeholder { get; set; } = "";
+        public string Value       { get; set; } = "";
+    }
+
+    private List<SocialFieldDef> SocialFields = new()
+    {
+        new() { Key = "LinkedIn",  Icon = "in", Placeholder = "https://linkedin.com/company/…",   Value = "https://linkedin.com/company/codebridge" },
+        new() { Key = "Facebook",  Icon = "f",  Placeholder = "https://facebook.com/…",           Value = "" },
+        new() { Key = "Twitter",   Icon = "𝕏",  Placeholder = "https://twitter.com/…",            Value = "" },
+        new() { Key = "GitHub",    Icon = "gh", Placeholder = "https://github.com/…",             Value = "https://github.com/codebridge" },
+    };
+
+    // ---- Edit Actions ----
+    private void StartEdit()
+    {
+        ProfileBackup = Profile.Clone();
+        IsEditing = true;
+        ShowSavedBanner = false;
+    }
+
+    private void CancelEdit()
+    {
+        Profile = ProfileBackup;
+        IsEditing = false;
+    }
+
+    private async Task SaveProfile()
+    {
+        // TODO: persist to backend
+        IsEditing = false;
+        ShowSavedBanner = true;
+        await Task.Delay(3500);
+        ShowSavedBanner = false;
+    }
+
+    private void AddPerk()
+    {
+        var trimmed = PerkInput?.Trim();
+        if (!string.IsNullOrWhiteSpace(trimmed) && !Profile.Perks.Contains(trimmed))
+        {
+            Profile.Perks.Add(trimmed);
+            PerkInput = "";
+        }
+    }
+
+    private void RemovePerk(string perk) => Profile.Perks.Remove(perk);
+
+    private void HandlePerkKeydown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") AddPerk();
+    }
+
+    private void ToggleCultureTag(string tag)
+    {
+        if (!Profile.CultureTags.Remove(tag))
+            Profile.CultureTags.Add(tag);
+    }
+
+    private static string Or(string? s, string fallback) =>
+        string.IsNullOrWhiteSpace(s) ? fallback : s;
+
+    private string GetInitials(string name) =>
+        string.Join("", (name ?? "").Split(' ').Take(2).Select(w => w.Length > 0 ? w[0].ToString() : "")).ToUpper();
+
+    // ---- Model ----
+    private class CompanyProfile
+    {
+        public string CompanyName        { get; set; } = "";
+        public string Tagline            { get; set; } = "";
+        public string Industry           { get; set; } = "";
+        public string CompanySize        { get; set; } = "";
+        public string Location           { get; set; } = "";
+        public string Founded            { get; set; } = "";
+        public string Website            { get; set; } = "";
+        public string About              { get; set; } = "";
+        public string Mission            { get; set; } = "";
+        public string ContactEmail       { get; set; } = "";
+        public string ContactPhone       { get; set; } = "";
+        public string HiringManagerName  { get; set; } = "";
+        public string HiringManagerTitle { get; set; } = "";
+        public string HiringManagerEmail { get; set; } = "";
+        public List<string> Perks        { get; set; } = new();
+        public List<string> CultureTags  { get; set; } = new();
+
+        public CompanyProfile Clone() => new()
+        {
+            CompanyName        = CompanyName,
+            Tagline            = Tagline,
+            Industry           = Industry,
+            CompanySize        = CompanySize,
+            Location           = Location,
+            Founded            = Founded,
+            Website            = Website,
+            About              = About,
+            Mission            = Mission,
+            ContactEmail       = ContactEmail,
+            ContactPhone       = ContactPhone,
+            HiringManagerName  = HiringManagerName,
+            HiringManagerTitle = HiringManagerTitle,
+            HiringManagerEmail = HiringManagerEmail,
+            Perks              = new(Perks),
+            CultureTags        = new(CultureTags)
+        };
+    }
+}
+
+

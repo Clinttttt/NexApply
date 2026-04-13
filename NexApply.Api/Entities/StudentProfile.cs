@@ -1,36 +1,63 @@
-﻿using static System.Net.Mime.MediaTypeNames;
+namespace NexApply.Api.Entities;
 
-namespace NexApply.Api.Entities
+public class StudentProfile : BaseEntity
 {
-    public class StudentProfile
+    public Guid UserId { get; private set; }
+    public string FullName { get; private set; } = string.Empty;
+    public string? Phone { get; private set; }
+    public string? Location { get; private set; }
+    public string? University { get; private set; }
+    public string? Course { get; private set; }
+    public int? GraduationYear { get; private set; }
+    public string? LinkedIn { get; private set; }
+    public string? GitHub { get; private set; }
+    public string? Portfolio { get; private set; }
+    public string? ResumeFilePath { get; private set; }
+    public string? ParsedResumeText { get; private set; }
+
+    // Navigation properties
+    public User User { get; private set; } = null!;
+    public ICollection<Application> Applications { get; private set; } = [];
+    public ICollection<SavedJob> SavedJobs { get; private set; } = [];
+
+    private StudentProfile() { } // EF Core
+
+    public static StudentProfile Create(Guid userId, string fullName)
     {
-        public Guid Id { get; set; } = Guid.NewGuid();
-
-        public Guid UserId { get; set; }
-
-        public string FullName { get; set; } = string.Empty;
-
-        public string? University { get; set; }
-
-        public string? Course { get; set; }
-
-        public int? GraduationYear { get; set; }
-
-        /// <summary>
-        /// Relative path to uploaded resume file.
-        /// Stored at: wwwroot/uploads/resumes/{userId}/
-        /// </summary>
-        public string? ResumeFilePath { get; set; }
-
-        /// <summary>
-        /// Raw text extracted from uploaded resume (PDF or DOCX).
-        /// Used by the PostgreSQL full-text search matching engine.
-        /// </summary>
-        public string? ParsedResumeText { get; set; }
-
-        // Navigation properties
-        public User User { get; set; } = null!;
-        public ICollection<Application> Applications { get; set; } = [];
+        return new StudentProfile
+        {
+            UserId = userId,
+            FullName = fullName
+        };
     }
 
+    public void UpdateProfile(
+        string fullName,
+        string? phone,
+        string? location,
+        string? university,
+        string? course,
+        int? graduationYear,
+        string? linkedIn,
+        string? gitHub,
+        string? portfolio)
+    {
+        FullName = fullName;
+        Phone = phone;
+        Location = location;
+        University = university;
+        Course = course;
+        GraduationYear = graduationYear;
+        LinkedIn = linkedIn;
+        GitHub = gitHub;
+        Portfolio = portfolio;
+        MarkAsUpdated();
+    }
+
+    public void UpdateResume(string filePath, string parsedText)
+    {
+        ResumeFilePath = filePath;
+        ParsedResumeText = parsedText;
+        MarkAsUpdated();
+    }
 }
