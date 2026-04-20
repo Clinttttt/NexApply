@@ -54,6 +54,18 @@ public class User : BaseEntity
         MarkAsUpdated();
     }
 
+    public void SwitchToCompany()
+    {
+        Role = UserRole.Company;
+        MarkAsUpdated();
+    }
+
+    public void SwitchToStudent()
+    {
+        Role = UserRole.Student;
+        MarkAsUpdated();
+    }
+
     public void Deactivate()
     {
         IsActive = false;

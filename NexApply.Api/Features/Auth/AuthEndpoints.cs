@@ -1,5 +1,7 @@
 ﻿using NexApply.Api.Features.Auth.Login;
 using NexApply.Api.Features.Auth.LoginWithEmail;
+using NexApply.Api.Features.Auth.Refresh;
+using NexApply.Api.Features.Auth.SwitchRole;
 
 namespace NexApply.Api.Features.Auth
 {
@@ -10,6 +12,8 @@ namespace NexApply.Api.Features.Auth
         {
             app.MapLoginEndpoint();
             app.MapLoginWithEmail();
+            app.MapRefreshToken();
+            app.MapSwitchRoleEndpoint();
         }
     }
 }

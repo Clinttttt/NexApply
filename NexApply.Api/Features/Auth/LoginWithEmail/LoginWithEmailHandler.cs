@@ -8,7 +8,7 @@ using System.Text.Json;
 
 namespace NexApply.Api.Features.Auth.LoginWithEmail;
 
-public record LoginWithEmailCommand(string IdToken, UserRole Role) : IRequest<Result<TokenResponseDto>>;
+public record LoginWithEmailCommand(string IdToken) : IRequest<Result<TokenResponseDto>>;
 
 public class LoginWithEmailHandler(IHttpClientFactory _http, AppDbContext context, TokenService tokenService) 
     : IRequestHandler<LoginWithEmailCommand, Result<TokenResponseDto>>
@@ -38,9 +38,8 @@ public class LoginWithEmailHandler(IHttpClientFactory _http, AppDbContext contex
                 counter++;
             }
 
-            user = request.Role == UserRole.Student
-                ? User.CreateStudent(email, userName, string.Empty)
-                : User.CreateCompany(email, userName, string.Empty);
+            // Create user with Student role by default - they can change it after login
+            user = User.CreateStudent(email, userName, string.Empty);
 
             await context.Users.AddAsync(user, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);

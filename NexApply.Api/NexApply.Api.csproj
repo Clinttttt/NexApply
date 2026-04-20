@@ -26,7 +26,6 @@
     <Folder Include="Features\Applications\ViewAll\" />
     <Folder Include="Features\Applications\UpdateStatus\" />
     <Folder Include="Features\Auth\Logout\" />
-    <Folder Include="Features\Auth\Refresh\" />
     <Folder Include="Features\JobListings\CreateJobListing\" />
     <Folder Include="Features\JobListings\EditJobListing\" />
     <Folder Include="Features\JobListings\DeleteJobListing\" />

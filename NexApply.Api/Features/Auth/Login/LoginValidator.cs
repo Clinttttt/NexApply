@@ -1,6 +1,17 @@
-﻿namespace NexApply.Api.Features.Auth.Login
+﻿using FluentValidation;
+
+namespace NexApply.Api.Features.Auth.Login;
+
+public class LoginValidator : AbstractValidator<LoginCommand>
 {
-    public class LoginValidator
+    public LoginValidator()
     {
+        RuleFor(x => x.username)
+            .NotEmpty()
+            .WithMessage("Username is required.");
+
+        RuleFor(x => x.password)
+            .NotEmpty()
+            .WithMessage("Password is required.");
     }
 }

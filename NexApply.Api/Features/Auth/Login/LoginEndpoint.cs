@@ -11,7 +11,11 @@ namespace NexApply.Api.Features.Auth.Login
             {
                 var result = await mediator.Send(request);
                 return ResultExtensions.ToIResult(result);
-            });
+            })
+            .Accepts<LoginCommand>("application/json")
+            .Produces<TokenResponseDto>(200)
+            .Produces(401)
+            .WithTags("Auth");
         }
     }
 }
