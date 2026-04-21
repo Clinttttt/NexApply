@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using Npgsql;
 using System.Text.Json;
 
 namespace NexApply.Client.Securities

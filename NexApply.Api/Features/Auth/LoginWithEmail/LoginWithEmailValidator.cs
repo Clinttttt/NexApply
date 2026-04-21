@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using NexApply.Contracts.Auth;
 
 namespace NexApply.Api.Features.Auth.LoginWithEmail;
 

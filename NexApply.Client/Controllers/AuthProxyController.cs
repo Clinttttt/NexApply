@@ -2,10 +2,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using NexApply.Api.Features.Auth;
-using NexApply.Api.Features.Auth.Login;
-using NexApply.Api.Features.Auth.LoginWithEmail;
-using NexApply.Api.Features.Auth.Refresh;
+using NexApply.Contracts.Auth;
 using NexApply.Client.Interfaces;
 using System.Security.Claims;
 

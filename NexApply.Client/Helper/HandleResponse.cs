@@ -1,4 +1,4 @@
-﻿using NexApply.Api.Common;
+﻿using NexApply.Contracts.Common;
 using System.Net;
 using System.Text.Json;
 

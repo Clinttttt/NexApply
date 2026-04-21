@@ -1,6 +1,6 @@
 ﻿using MediatR;
+using NexApply.Contracts.Auth;
 using NexApply.Api.Common;
-using NexApply.Api.Features.Auth.Login;
 
 namespace NexApply.Api.Features.Auth.LoginWithEmail
 {

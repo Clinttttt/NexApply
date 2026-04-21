@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using NexApply.Contracts.Common;
 using System.Security.Claims;
 
 namespace NexApply.Api.Common

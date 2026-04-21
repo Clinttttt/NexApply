@@ -1,8 +1,5 @@
-﻿using NexApply.Api.Common;
-using NexApply.Api.Features.Auth;
-using NexApply.Api.Features.Auth.Login;
-using NexApply.Api.Features.Auth.LoginWithEmail;
-using NexApply.Api.Features.Auth.Refresh;
+﻿using NexApply.Contracts.Common;
+using NexApply.Contracts.Auth;
 
 namespace NexApply.Client.Interfaces
 {

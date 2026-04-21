@@ -23,6 +23,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\NexApply.Contracts\NexApply.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Features\Applications\ViewAll\" />
     <Folder Include="Features\Applications\UpdateStatus\" />
     <Folder Include="Features\Auth\Logout\" />

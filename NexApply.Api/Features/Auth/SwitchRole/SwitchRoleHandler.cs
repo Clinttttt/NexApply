@@ -1,12 +1,12 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using NexApply.Api.Common;
+using NexApply.Contracts.Common;
+using NexApply.Contracts.Auth;
+using NexApply.Contracts.Enums;
 using NexApply.Api.Data;
-using NexApply.Api.Entities.Enums;
+using NexApply.Api.Common;
 
 namespace NexApply.Api.Features.Auth.SwitchRole;
-
-public record SwitchRoleCommand(UserRole NewRole) : IRequest<Result<TokenResponseDto>>;
 
 public class SwitchRoleHandler(AppDbContext context, CurrentUser currentUser, TokenService tokenService) 
     : IRequestHandler<SwitchRoleCommand, Result<TokenResponseDto>>

@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NexApply.Api\NexApply.Api.csproj" />
+    <ProjectReference Include="..\NexApply.Contracts\NexApply.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

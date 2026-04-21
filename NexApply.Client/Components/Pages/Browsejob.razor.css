@@ -949,6 +949,7 @@
     display: flex;
     align-items: flex-start;
     gap: 14px;
+    padding-bottom: 4px;
 }
 
 .jd-header-meta {
@@ -967,6 +968,40 @@
     letter-spacing: -0.3px;
     margin: 0;
 }
+
+.jd-company-link {
+    font-size: var(--text-md);
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-base);
+    background: transparent;
+}
+
+    .jd-company-link:hover {
+        background: var(--color-primary-bg);
+        color: var(--color-primary-light);
+    }
+
+    .jd-company-link::after {
+        content: '';
+        width: 12px;
+        height: 12px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231D4ED8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'/%3E%3Cpolyline points='15 3 21 3 21 9'/%3E%3Cline x1='10' y1='14' x2='21' y2='3'/%3E%3C/svg%3E");
+        background-size: contain;
+        background-repeat: no-repeat;
+        opacity: 0.6;
+        transition: opacity var(--transition-base);
+    }
+
+    .jd-company-link:hover::after {
+        opacity: 1;
+    }
 
 .jd-company-name {
     font-size: var(--text-md);

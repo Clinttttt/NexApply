@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using NexApply.Contracts.Auth;
 using NexApply.Api.Common;
 
 namespace NexApply.Api.Features.Auth.SwitchRole;

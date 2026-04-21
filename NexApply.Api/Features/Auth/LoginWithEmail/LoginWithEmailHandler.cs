@@ -1,14 +1,13 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
-using NexApply.Api.Common;
+using NexApply.Contracts.Common;
+using NexApply.Contracts.Auth;
 using NexApply.Api.Data;
 using NexApply.Api.Entities;
 using NexApply.Api.Entities.Enums;
 using System.Text.Json;
 
 namespace NexApply.Api.Features.Auth.LoginWithEmail;
-
-public record LoginWithEmailCommand(string IdToken) : IRequest<Result<TokenResponseDto>>;
 
 public class LoginWithEmailHandler(IHttpClientFactory _http, AppDbContext context, TokenService tokenService) 
     : IRequestHandler<LoginWithEmailCommand, Result<TokenResponseDto>>

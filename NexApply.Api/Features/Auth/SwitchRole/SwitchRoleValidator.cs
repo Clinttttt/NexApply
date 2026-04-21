@@ -1,5 +1,6 @@
 using FluentValidation;
-using NexApply.Api.Entities.Enums;
+using NexApply.Contracts.Auth;
+using NexApply.Contracts.Enums;
 
 namespace NexApply.Api.Features.Auth.SwitchRole;
 

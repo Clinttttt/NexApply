@@ -1,12 +1,9 @@
 ﻿using MediatR;
-using NexApply.Api.Common;
+using NexApply.Contracts.Common;
+using NexApply.Contracts.Auth;
 
 namespace NexApply.Api.Features.Auth.Refresh
 {
-    public class RefreshTokenCommand() : IRequest<Result<TokenResponseDto>>
-    {
-        public string RefreshToken { get; set; } = string.Empty;    
-    }
     public class RefreshTokenCommandHandler(TokenService tokenService) : IRequestHandler<RefreshTokenCommand, Result<TokenResponseDto>>
     {
         public async Task<Result<TokenResponseDto>> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)

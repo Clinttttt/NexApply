@@ -1,0 +1,662 @@
+﻿@page "/company/{CompanyId:int}"
+@rendermode InteractiveServer
+
+<div class="app-shell">
+    <Sidebar />
+
+    <div class="main-content">
+        <PageHeader />
+
+        <div class="page-body">
+
+            @if (Company == null)
+            {
+                <div class="cp-loading">
+                    <div class="cp-loading-spinner"></div>
+                    <p>Loading company profile…</p>
+                </div>
+            }
+            else
+            {
+                <!-- ─── Hero Banner ─── -->
+                <div class="cp-hero">
+                    <div class="cp-hero-bg"></div>
+
+                    <div class="cp-hero-content">
+                        <!-- Logo -->
+                        <div class="cp-logo">
+                            <span class="cp-logo-initials">@GetInitials(Company.Name)</span>
+                        </div>
+
+                        <!-- Identity -->
+                        <div class="cp-identity">
+                            <h1 class="cp-company-name">@Company.Name</h1>
+                            @if (!string.IsNullOrWhiteSpace(Company.Tagline))
+                            {
+                                <p class="cp-tagline">@Company.Tagline</p>
+                            }
+                            <div class="cp-hero-meta">
+                                @if (!string.IsNullOrWhiteSpace(Company.Industry))
+                                {
+                                    <span class="cp-meta-chip">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                                        </svg>
+                                        @Company.Industry
+                                    </span>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Company.Location))
+                                {
+                                    <span class="cp-meta-chip">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                            <circle cx="12" cy="10" r="3" />
+                                        </svg>
+                                        @Company.Location
+                                    </span>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Company.CompanySize))
+                                {
+                                    <span class="cp-meta-chip">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                            <circle cx="9" cy="7" r="4" />
+                                            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                                        </svg>
+                                        @Company.CompanySize
+                                    </span>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Company.Founded))
+                                {
+                                    <span class="cp-meta-chip">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                            <line x1="16" y1="2" x2="16" y2="6" />
+                                            <line x1="8" y1="2" x2="8" y2="6" />
+                                            <line x1="3" y1="10" x2="21" y2="10" />
+                                        </svg>
+                                        Est. @Company.Founded
+                                    </span>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Hero Actions -->
+                        <div class="cp-hero-actions">
+                            @if (!string.IsNullOrWhiteSpace(Company.Website))
+                            {
+                                <a href="@Company.Website" target="_blank" class="cp-btn-secondary">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10" />
+                                        <line x1="2" y1="12" x2="22" y2="12" />
+                                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                                    </svg>
+                                    Website
+                                </a>
+                            }
+                            <button class="cp-btn-follow @(IsFollowing ? "following" : "")"
+                                    @onclick="ToggleFollow">
+                                @if (IsFollowing)
+                                {
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                    <span>Following</span>
+                                }
+                                else
+                                {
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                        <circle cx="12" cy="7" r="4" />
+                                        <line x1="19" y1="8" x2="19" y2="14" />
+                                        <line x1="22" y1="11" x2="16" y2="11" />
+                                    </svg>
+                                    <span>Follow</span>
+                                }
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tab Nav -->
+                    <nav class="cp-tab-nav" aria-label="Company profile sections">
+                        @foreach (var tab in Tabs)
+                        {
+                            <button class="cp-tab @(ActiveTab == tab ? "active" : "")"
+                                    @onclick="() => ActiveTab = tab">
+                                @tab
+                                @if (tab == "Open Roles")
+                                {
+                                    <span class="cp-tab-count">@Company.Jobs.Count</span>
+                                }
+                            </button>
+                        }
+                    </nav>
+                </div>
+
+                <!-- ─── Main Content ─── -->
+                <div class="cp-layout">
+
+                    <!-- CENTER: Tab Content -->
+                    <div class="cp-center">
+
+                        <!-- ── TAB: Overview ── -->
+                        @if (ActiveTab == "Overview")
+                        {
+                            <!-- About -->
+                            <div class="cp-card">
+                                <div class="cp-card-header">
+                                    <h2 class="cp-card-title">About @Company.Name</h2>
+                                </div>
+                                <div class="cp-card-body">
+                                    <p class="cp-about-text">@Company.About</p>
+                                    @if (!string.IsNullOrWhiteSpace(Company.Mission))
+                                    {
+                                        <div class="cp-mission">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                            </svg>
+                                            <p class="cp-mission-text">@Company.Mission</p>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Perks & Culture -->
+                            @if (Company.Perks.Count > 0 || Company.CultureTags.Count > 0)
+                            {
+                                <div class="cp-card">
+                                    <div class="cp-card-header">
+                                        <h2 class="cp-card-title">Culture & Perks</h2>
+                                    </div>
+                                    <div class="cp-card-body">
+                                        @if (Company.Perks.Count > 0)
+                                        {
+                                            <div class="cp-perks-section">
+                                                <span class="cp-section-label">Benefits & Perks</span>
+                                                <div class="cp-perk-grid">
+                                                    @foreach (var perk in Company.Perks)
+                                                    {
+                                                        <div class="cp-perk-item">
+                                                            <div class="cp-perk-icon">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                                                     fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                                    <polyline points="20 6 9 17 4 12" />
+                                                                </svg>
+                                                            </div>
+                                                            <span class="cp-perk-name">@perk</span>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                        @if (Company.CultureTags.Count > 0)
+                                        {
+                                            <div class="cp-culture-section">
+                                                <span class="cp-section-label">Work Culture</span>
+                                                <div class="cp-culture-chips">
+                                                    @foreach (var tag in Company.CultureTags)
+                                                    {
+                                                        <span class="cp-culture-chip">@tag</span>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- Featured Roles (top 3) -->
+                            @if (Company.Jobs.Count > 0)
+                            {
+                                <div class="cp-card">
+                                    <div class="cp-card-header">
+                                        <h2 class="cp-card-title">Open Roles</h2>
+                                        <button class="cp-card-link" @onclick='() => ActiveTab = "Open Roles"'>
+                                            View all @Company.Jobs.Count →
+                                        </button>
+                                    </div>
+                                    <div class="cp-card-body cp-card-body--jobs">
+                                        @foreach (var job in Company.Jobs.Take(3))
+                                        {
+                                            <a href="/jobs/@job.Id" class="cp-job-card">
+                                                <div class="cp-job-card-left">
+                                                    <span class="cp-job-title">@job.Title</span>
+                                                    <div class="cp-job-tags">
+                                                        <span class="cp-job-badge cp-job-badge--type">@FormatType(job.Type)</span>
+                                                        <span class="cp-job-badge cp-job-badge--setup">@job.Setup</span>
+                                                        @if (!string.IsNullOrWhiteSpace(job.Location))
+                                                        {
+                                                            <span class="cp-job-location">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                                                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                                                    <circle cx="12" cy="10" r="3" />
+                                                                </svg>
+                                                                @job.Location
+                                                            </span>
+                                                        }
+                                                    </div>
+                                                    @if (!string.IsNullOrWhiteSpace(job.SalaryRange))
+                                                    {
+                                                        <span class="cp-job-salary">@job.SalaryRange</span>
+                                                    }
+                                                </div>
+                                                <div class="cp-job-card-right">
+                                                    @if (job.MatchScore > 0)
+                                                    {
+                                                        <div class="cp-match-score cp-match-score--@GetMatchClass(job.MatchScore)">
+                                                            @job.MatchScore%
+                                                            <span class="cp-match-label">match</span>
+                                                        </div>
+                                                    }
+                                                    <span class="cp-job-posted">@FormatPosted(job.PostedDate)</span>
+                                                    <svg class="cp-job-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <polyline points="9 18 15 12 9 6" />
+                                                    </svg>
+                                                </div>
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        }
+
+                        <!-- ── TAB: Open Roles ── -->
+                        @if (ActiveTab == "Open Roles")
+                        {
+                            <div class="cp-card">
+                                <div class="cp-card-header">
+                                    <h2 class="cp-card-title">@Company.Jobs.Count Open Role@(Company.Jobs.Count == 1 ? "" : "s")</h2>
+                                    <div class="cp-jobs-filter">
+                                        <select class="cp-filter-select" @bind="JobTypeFilter" @bind:after="FilterJobs">
+                                            <option value="">All Types</option>
+                                            <option>Full-time</option>
+                                            <option>Internship</option>
+                                            <option>Part-time</option>
+                                            <option>Freelance</option>
+                                        </select>
+                                        <select class="cp-filter-select" @bind="JobSetupFilter" @bind:after="FilterJobs">
+                                            <option value="">All Setups</option>
+                                            <option>Remote</option>
+                                            <option>On-site</option>
+                                            <option>Hybrid</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="cp-card-body cp-card-body--jobs">
+                                    @if (FilteredJobs.Count == 0)
+                                    {
+                                        <div class="cp-jobs-empty">
+                                            <p>No roles match your filters.</p>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        @foreach (var job in FilteredJobs)
+                                        {
+                                            <a href="/jobs/@job.Id" class="cp-job-card">
+                                                <div class="cp-job-card-left">
+                                                    <span class="cp-job-title">@job.Title</span>
+                                                    <div class="cp-job-tags">
+                                                        <span class="cp-job-badge cp-job-badge--type">@FormatType(job.Type)</span>
+                                                        <span class="cp-job-badge cp-job-badge--setup">@job.Setup</span>
+                                                        @if (!string.IsNullOrWhiteSpace(job.Location))
+                                                        {
+                                                            <span class="cp-job-location">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                                                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                                                    <circle cx="12" cy="10" r="3" />
+                                                                </svg>
+                                                                @job.Location
+                                                            </span>
+                                                        }
+                                                    </div>
+                                                    <div class="cp-job-meta-row">
+                                                        @if (!string.IsNullOrWhiteSpace(job.SalaryRange))
+                                                        {
+                                                            <span class="cp-job-salary">@job.SalaryRange</span>
+                                                        }
+                                                        <span class="cp-job-applicants">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                                                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                                                <circle cx="9" cy="7" r="4" />
+                                                                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                                                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                                                            </svg>
+                                                            @job.Applicants applied
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="cp-job-card-right">
+                                                    @if (job.MatchScore > 0)
+                                                    {
+                                                        <div class="cp-match-score cp-match-score--@GetMatchClass(job.MatchScore)">
+                                                            @job.MatchScore%
+                                                            <span class="cp-match-label">match</span>
+                                                        </div>
+                                                    }
+                                                    <span class="cp-job-posted">@FormatPosted(job.PostedDate)</span>
+                                                    <svg class="cp-job-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <polyline points="9 18 15 12 9 6" />
+                                                    </svg>
+                                                </div>
+                                            </a>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        <!-- ── TAB: About ── -->
+                        @if (ActiveTab == "About")
+                        {
+                            <div class="cp-card">
+                                <div class="cp-card-header">
+                                    <h2 class="cp-card-title">About @Company.Name</h2>
+                                </div>
+                                <div class="cp-card-body">
+                                    <p class="cp-about-text">@Company.About</p>
+                                    @if (!string.IsNullOrWhiteSpace(Company.Mission))
+                                    {
+                                        <div class="cp-mission">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                            </svg>
+                                            <p class="cp-mission-text">@Company.Mission</p>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Contact & Socials -->
+                            <div class="cp-card">
+                                <div class="cp-card-header">
+                                    <h2 class="cp-card-title">Contact & Links</h2>
+                                </div>
+                                <div class="cp-card-body">
+                                    <div class="cp-contact-grid">
+                                        @if (!string.IsNullOrWhiteSpace(Company.ContactEmail))
+                                        {
+                                            <div class="cp-contact-item">
+                                                <div class="cp-contact-icon">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                                                        <polyline points="22,6 12,13 2,6" />
+                                                    </svg>
+                                                </div>
+                                                <div class="cp-contact-info">
+                                                    <span class="cp-contact-label">Email</span>
+                                                    <a href="mailto:@Company.ContactEmail" class="cp-contact-value cp-contact-link">@Company.ContactEmail</a>
+                                                </div>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(Company.Website))
+                                        {
+                                            <div class="cp-contact-item">
+                                                <div class="cp-contact-icon">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <circle cx="12" cy="12" r="10" />
+                                                        <line x1="2" y1="12" x2="22" y2="12" />
+                                                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                                                    </svg>
+                                                </div>
+                                                <div class="cp-contact-info">
+                                                    <span class="cp-contact-label">Website</span>
+                                                    <a href="@Company.Website" target="_blank" class="cp-contact-value cp-contact-link">@Company.Website</a>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    @if (Company.Socials.Count > 0)
+                                    {
+                                        <div class="cp-socials">
+                                            @foreach (var social in Company.Socials)
+                                            {
+                                                <a href="@social.Url" target="_blank" class="cp-social-btn" title="@social.Platform">
+                                                    <span class="cp-social-icon cp-social-icon--@social.Platform.ToLower()">@social.Icon</span>
+                                                    @social.Platform
+                                                </a>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                    </div>
+
+                    <!-- RIGHT: Company Sidebar -->
+                    <aside class="cp-sidebar">
+
+                        <!-- Quick Stats -->
+                        <div class="cp-aside-card">
+                            <span class="cp-aside-label">Company at a Glance</span>
+                            <div class="cp-stats-grid">
+                                <div class="cp-stat">
+                                    <span class="cp-stat-value">@Company.Jobs.Count</span>
+                                    <span class="cp-stat-label">Open Roles</span>
+                                </div>
+                                <div class="cp-stat">
+                                    <span class="cp-stat-value">@Company.CompanySize.Split('–')[0].Trim().Split(' ')[0]</span>
+                                    <span class="cp-stat-label">Min. Employees</span>
+                                </div>
+                                <div class="cp-stat">
+                                    <span class="cp-stat-value">@(string.IsNullOrWhiteSpace(Company.Founded) ? "—" : Company.Founded)</span>
+                                    <span class="cp-stat-label">Founded</span>
+                                </div>
+                                <div class="cp-stat">
+                                    <span class="cp-stat-value">@Company.Jobs.Sum(j => j.Applicants)</span>
+                                    <span class="cp-stat-label">Total Applicants</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hiring Manager -->
+                        @if (!string.IsNullOrWhiteSpace(Company.HiringManagerName))
+                        {
+                            <div class="cp-aside-card">
+                                <span class="cp-aside-label">Hiring Manager</span>
+                                <div class="cp-hm">
+                                    <div class="cp-hm-avatar">@GetInitials(Company.HiringManagerName)</div>
+                                    <div class="cp-hm-info">
+                                        <span class="cp-hm-name">@Company.HiringManagerName</span>
+                                        <span class="cp-hm-title">@Company.HiringManagerTitle</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Perk Quick List -->
+                        @if (Company.Perks.Count > 0)
+                        {
+                            <div class="cp-aside-card">
+                                <span class="cp-aside-label">Top Perks</span>
+                                <ul class="cp-aside-perks">
+                                    @foreach (var perk in Company.Perks.Take(5))
+                                    {
+                                        <li class="cp-aside-perk">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                                                 fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="20 6 9 17 4 12" />
+                                            </svg>
+                                            @perk
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+
+                        <!-- Social Links -->
+                        @if (Company.Socials.Count > 0)
+                        {
+                            <div class="cp-aside-card">
+                                <span class="cp-aside-label">Links</span>
+                                <div class="cp-aside-socials">
+                                    @foreach (var s in Company.Socials)
+                                    {
+                                        <a href="@s.Url" target="_blank" class="cp-aside-social-link">
+                                            <span class="cp-social-icon cp-social-icon--@s.Platform.ToLower()">@s.Icon</span>
+                                            <span>@s.Platform</span>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24"
+                                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                                <polyline points="15 3 21 3 21 9" />
+                                                <line x1="10" y1="14" x2="21" y2="3" />
+                                            </svg>
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                    </aside>
+
+                </div>
+            }
+
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int CompanyId { get; set; }
+
+    private string ActiveTab = "Overview";
+    private bool IsFollowing = false;
+    private string JobTypeFilter = "";
+    private string JobSetupFilter = "";
+    private List<JobItem> FilteredJobs = new();
+
+    private string[] Tabs = { "Overview", "Open Roles", "About" };
+
+    private CompanyData? Company;
+
+    protected override void OnInitialized()
+    {
+        // Simulate loading company by ID — replace with actual service call
+        Company = GetMockCompany(CompanyId);
+        FilterJobs();
+    }
+
+    private void FilterJobs()
+    {
+        if (Company == null) return;
+        FilteredJobs = Company.Jobs
+            .Where(j =>
+                (string.IsNullOrEmpty(JobTypeFilter) || j.Type == JobTypeFilter) &&
+                (string.IsNullOrEmpty(JobSetupFilter) || j.Setup == JobSetupFilter))
+            .ToList();
+    }
+
+    private void ToggleFollow() => IsFollowing = !IsFollowing;
+
+    private string GetInitials(string name) =>
+        string.Join("", (name ?? "").Split(' ').Take(2).Select(w => w.Length > 0 ? w[0].ToString() : "")).ToUpper();
+
+    private string FormatType(string t) => t switch
+    {
+        "FullTime" => "Full-time",
+        "PartTime" => "Part-time",
+        _ => t
+    };
+
+    private string GetMatchClass(int score) => score >= 80 ? "high" : score >= 60 ? "mid" : "low";
+
+    private string FormatPosted(DateTime d)
+    {
+        var days = (DateTime.Today - d.Date).Days;
+        return days == 0 ? "Today" : days == 1 ? "Yesterday" : days < 7 ? $"{days}d ago" : d.ToString("MMM d");
+    }
+
+    // ── Mock data — replace with actual data service ──
+    private CompanyData GetMockCompany(int id) => new CompanyData
+    {
+        Id = id,
+        Name = id switch { 1 => "ApexCore Solutions", 2 => "NovaByte Inc.", _ => "TechSpark PH" },
+        Tagline = "Building enterprise-grade APIs that power the digital economy.",
+        Industry = "Software & Technology",
+        CompanySize = "51–200 employees",
+        Location = "Makati City, Philippines",
+        Founded = "2017",
+        Website = "https://apexcore.solutions",
+        About = "ApexCore Solutions is a leading software engineering company specializing in enterprise API development, cloud infrastructure, and backend systems. We serve clients across the financial, logistics, and healthcare sectors with reliable, scalable technology.\n\nOur team of 80+ engineers, architects, and product managers work in a fast-paced environment where code quality and developer experience are first-class concerns.",
+        Mission = "To build the API infrastructure that the next generation of digital products runs on.",
+        ContactEmail = "careers@apexcore.solutions",
+        HiringManagerName = "Reina Santos",
+        HiringManagerTitle = "Talent Acquisition Lead",
+        Perks = new() { "Remote-first", "Health Insurance", "Learning Budget", "13th Month Pay", "Stock Options", "Team Retreats" },
+        CultureTags = new() { "Fast-paced", "Innovative", "Collaborative", "Data-driven" },
+        Socials = new()
+        {
+            new() { Platform = "LinkedIn", Icon = "in", Url = "https://linkedin.com/company/apexcore" },
+            new() { Platform = "GitHub",   Icon = "gh", Url = "https://github.com/apexcore" },
+        },
+        Jobs = new()
+        {
+            new JobItem { Id = 101, Title = "API Developer (.NET)",         Type = "Full-time",  Setup = "Hybrid",  Location = "Makati City", SalaryRange = "₱35,000 – ₱50,000 / mo", Applicants = 11, MatchScore = 62, PostedDate = DateTime.Today.AddDays(-2) },
+            new JobItem { Id = 102, Title = "Senior Backend Engineer",      Type = "Full-time",  Setup = "On-site", Location = "Makati City", SalaryRange = "₱60,000 – ₱90,000 / mo", Applicants = 8,  MatchScore = 74, PostedDate = DateTime.Today.AddDays(-5) },
+            new JobItem { Id = 103, Title = "DevOps Engineer",              Type = "Full-time",  Setup = "Remote",  Location = "Remote",      SalaryRange = "₱55,000 – ₱75,000 / mo", Applicants = 14, MatchScore = 51, PostedDate = DateTime.Today.AddDays(-7) },
+            new JobItem { Id = 104, Title = ".NET Intern",                  Type = "Internship", Setup = "Hybrid",  Location = "Makati City", SalaryRange = "₱15,000 – ₱18,000 / mo", Applicants = 32, MatchScore = 85, PostedDate = DateTime.Today.AddDays(-1) },
+        }
+    };
+
+    // ── Models ──
+    private class CompanyData
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public string Tagline { get; set; } = "";
+        public string Industry { get; set; } = "";
+        public string CompanySize { get; set; } = "";
+        public string Location { get; set; } = "";
+        public string Founded { get; set; } = "";
+        public string Website { get; set; } = "";
+        public string About { get; set; } = "";
+        public string Mission { get; set; } = "";
+        public string ContactEmail { get; set; } = "";
+        public string HiringManagerName { get; set; } = "";
+        public string HiringManagerTitle { get; set; } = "";
+        public List<string> Perks { get; set; } = new();
+        public List<string> CultureTags { get; set; } = new();
+        public List<SocialLink> Socials { get; set; } = new();
+        public List<JobItem> Jobs { get; set; } = new();
+    }
+
+    private class JobItem
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = "";
+        public string Type { get; set; } = "";
+        public string Setup { get; set; } = "";
+        public string Location { get; set; } = "";
+        public string SalaryRange { get; set; } = "";
+        public int Applicants { get; set; }
+        public int MatchScore { get; set; }
+        public DateTime PostedDate { get; set; }
+    }
+
+    private class SocialLink
+    {
+        public string Platform { get; set; } = "";
+        public string Icon { get; set; } = "";
+        public string Url { get; set; } = "";
+    }
+}

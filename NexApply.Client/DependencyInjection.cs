@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.Circuits;
-using NexApply.Api.Features.Auth;
 using NexApply.Client.Interfaces;
 using NexApply.Client.Securities;
 using NexApply.Client.Services.Auth;

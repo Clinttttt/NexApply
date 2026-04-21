@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using NexApply.Contracts.Auth;
 using NexApply.Api.Data;
 using NexApply.Api.Entities;
 using System.IdentityModel.Tokens.Jwt;

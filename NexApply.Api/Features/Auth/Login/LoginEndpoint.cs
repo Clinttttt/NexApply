@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using NexApply.Contracts.Auth;
 using NexApply.Api.Common;
 
 namespace NexApply.Api.Features.Auth.Login
