@@ -30,9 +30,9 @@ public class Result<T>
             ValidationErrors = errors
         };
     }
-    public static Result<T> NotFound() => new(false, default, 404);
-    public static Result<T> Unauthorized() => new(false, default, 401);
-    public static Result<T> Conflict() => new(false, default, 409);
+    public static Result<T> NotFound(string? error = null) => new(false, default, 404, error);
+    public static Result<T> Unauthorized(string? error = null) => new(false, default, 401, error);
+    public static Result<T> Conflict(string? error = null) => new(false, default, 409, error);
     public static Result<T> Forbidden() => new(false, default, 403);
     public static Result<T> NoContent() => new(true, default, 204);
     public static Result<T> InternalServerError() => new(false, default, 500);

@@ -726,7 +726,8 @@
 
 /* ── Document Section ── */
 .rdoc-section {
-    margin-bottom: 4px;
+    margin-bottom: 0;
+    padding-bottom: 0;
 }
 
 .rdoc-section-header {
@@ -780,6 +781,7 @@
     line-height: 1.7;
     border-left: 3px solid transparent;
     padding-left: 10px;
+    margin-bottom: 0;
     transition: border-color var(--transition-fast);
     box-sizing: border-box;
 }
@@ -795,8 +797,8 @@
 
 /* ── Resume Entry (Edu / Exp) ── */
 .rdoc-entry {
-    margin-bottom: 8px;
-    padding-bottom: 8px;
+    margin-bottom: 6px;
+    padding-bottom: 6px;
     border-bottom: 1px dashed var(--color-slate-200);
 }
 
@@ -928,7 +930,8 @@
     resize: none;
     line-height: 1.5;
     border-left: 3px solid transparent;
-    padding: 2px 0 0 8px;
+    padding: 2px 0 2px 8px;
+    margin-bottom: 0;
     transition: border-color var(--transition-fast);
     box-sizing: border-box;
     overflow: hidden;
@@ -946,32 +949,39 @@
 /* ── Skills Grid ── */
 .rdoc-skills-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 4px 12px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0;
+    margin: 0;
+    padding: 0;
 }
 
 .rdoc-skill-item {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
+    margin: 0;
+    padding: 2px 8px 2px 0;
 }
 
 .rdoc-bullet {
     color: var(--color-slate-500);
-    font-size: var(--text-md);
+    font-size: 15px;
     flex-shrink: 0;
     user-select: none;
+    line-height: 1;
 }
 
 .rdoc-skill-input {
     font-family: Georgia, serif;
-    font-size: var(--text-base);
+    font-size: 15px;
+    font-weight: 400;
     color: var(--color-slate-700);
     background: transparent;
     border: none;
     outline: none;
     border-bottom: 1.5px solid transparent;
-    padding: 1px 2px;
+    padding: 0;
+    margin: 0;
     flex: 1;
     min-width: 0;
     transition: border-color var(--transition-fast);

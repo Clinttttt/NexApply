@@ -11,6 +11,9 @@ public class User : BaseEntity
     public DateTime? RefreshTokenExpiry { get; private set; }
     public UserRole Role { get; private set; }
     public bool IsActive { get; private set; } = true;
+    public bool IsEmailVerified { get; private set; } = false;
+    public string? EmailVerificationCode { get; private set; }
+    public DateTime? EmailVerificationCodeExpiry { get; private set; }
 
     // Navigation properties
     public CompanyProfile? CompanyProfile { get; private set; }
@@ -75,6 +78,21 @@ public class User : BaseEntity
     public void Activate()
     {
         IsActive = true;
+        MarkAsUpdated();
+    }
+
+    public void SetEmailVerificationCode(string code, DateTime expiry)
+    {
+        EmailVerificationCode = code;
+        EmailVerificationCodeExpiry = expiry;
+        MarkAsUpdated();
+    }
+
+    public void VerifyEmail()
+    {
+        IsEmailVerified = true;
+        EmailVerificationCode = null;
+        EmailVerificationCodeExpiry = null;
         MarkAsUpdated();
     }
 }

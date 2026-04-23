@@ -9,7 +9,7 @@ namespace NexApply.Api.Features.Auth.Refresh
         public async Task<Result<TokenResponseDto>> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
         {
             var user = await tokenService.ValidateRefreshToken(request.RefreshToken, cancellationToken);
-            if (user is null) return Result<TokenResponseDto>.Unauthorized();
+            if (user is null) return Result<TokenResponseDto>.Unauthorized("Invalid token");
             return Result<TokenResponseDto>.Success( await tokenService.CreateTokenResponse(user));
         }
     }

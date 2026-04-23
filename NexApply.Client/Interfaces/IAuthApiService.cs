@@ -7,6 +7,9 @@ namespace NexApply.Client.Interfaces
     {
         Task<Result<TokenResponseDto>> LoginWithEmail(LoginWithEmailCommand request);
         Task<Result<TokenResponseDto>> LogIn(LoginCommand request);
+        Task<Result<TokenResponseDto>> Register(RegisterCommand request);
+        Task<Result<string>> SendVerificationCode(SendVerificationCodeCommand request);
+        Task<Result<TokenResponseDto>> VerifyEmail(VerifyEmailCommand request);
         Task<Result<TokenResponseDto>> Refresh(RefreshTokenCommand request);
     }
 }

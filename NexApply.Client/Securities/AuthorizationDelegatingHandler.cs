@@ -1,4 +1,4 @@
-﻿using System.Net.Http.Headers;
+using System.Net.Http.Headers;
 
 namespace NexApply.Client.Securities
 {
@@ -12,7 +12,7 @@ namespace NexApply.Client.Securities
                 if(httpContext?.User.Identity?.IsAuthenticated == true)
                 {
                     var token = httpContext.User.FindFirst("AccessToken")?.Value;
-                    if (string.IsNullOrEmpty(token))
+                    if (!string.IsNullOrEmpty(token))
                     {
                         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
                     }

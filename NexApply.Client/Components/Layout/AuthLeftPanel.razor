@@ -1,0 +1,111 @@
+@* Auth Left Panel - Reusable component for Login/Register pages *@
+
+<div class="auth-left">
+    <!-- Decorative grid -->
+    <div class="left-grid">
+        <div class="grid-line grid-line--v1"></div>
+        <div class="grid-line grid-line--v2"></div>
+        <div class="grid-line grid-line--h1"></div>
+        <div class="grid-line grid-line--h2"></div>
+        <div class="grid-orb grid-orb--1"></div>
+        <div class="grid-orb grid-orb--2"></div>
+    </div>
+
+    <!-- Content -->
+    <div class="auth-left-inner">
+        <!-- Brand + Eyebrow Group -->
+        <div class="brand-group">
+            <!-- Brand -->
+            <div class="brand">
+                <div class="brand-logo">
+                    <svg width="32" height="32" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Outer hexagon -->
+                        <path d="M14 2L24 8V20L14 26L4 20V8L14 2Z" fill="#1D4ED8"/>
+                        <!-- Inner N shape -->
+                        <path d="M10 10V18M10 10L18 18M18 18V10" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <span class="brand-name">NexApply</span>
+            </div>
+
+            <!-- Eyebrow -->
+            <div class="left-eyebrow">
+                <span class="eyebrow-dot"></span>
+                @Eyebrow
+            </div>
+        </div>
+
+        <!-- Headline -->
+        <div class="left-headline">
+            <h1 class="left-title">@((MarkupString)Title)</h1>
+            <p class="left-sub">@Subtitle</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="left-stats">
+            <div class="left-stat">
+                <div class="stat-value">2,400+</div>
+                <div class="stat-label">Active listings</div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="left-stat">
+                <div class="stat-value">840</div>
+                <div class="stat-label">Companies</div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="left-stat">
+                <div class="stat-value">Free</div>
+                <div class="stat-label">For students</div>
+            </div>
+        </div>
+
+        <!-- Testimonials -->
+        <div class="ticker-wrap">
+            <div class="ticker-track">
+                @foreach (var testimonial in Testimonials)
+                {
+                    <div class="ticker-card">
+                        <div class="ticker-author">
+                            <div class="ticker-avatar ticker-avatar--@testimonial.Color">@testimonial.Initials</div>
+                            <div>
+                                <span class="ticker-name">@testimonial.Name</span>
+                                <span class="ticker-role">@testimonial.Role</span>
+                            </div>
+                        </div>
+                        <p class="ticker-quote">@testimonial.Quote</p>
+                    </div>
+                }
+                @* Duplicate for infinite scroll *@
+                @foreach (var testimonial in Testimonials)
+                {
+                    <div class="ticker-card">
+                        <div class="ticker-author">
+                            <div class="ticker-avatar ticker-avatar--@testimonial.Color">@testimonial.Initials</div>
+                            <div>
+                                <span class="ticker-name">@testimonial.Name</span>
+                                <span class="ticker-role">@testimonial.Role</span>
+                            </div>
+                        </div>
+                        <p class="ticker-quote">@testimonial.Quote</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Eyebrow { get; set; } = "Trusted by 12,000+ students";
+    [Parameter] public string Title { get; set; } = "Your next<br/><span class='left-title-accent'>opportunity</span><br/>starts here.";
+    [Parameter] public string Subtitle { get; set; } = "Browse thousands of listings, track your applications, and let your resume match you to roles automatically.";
+
+    private List<Testimonial> Testimonials = new()
+    {
+        new("Got my first internship offer within 2 weeks of uploading my resume.", "KR", "Kira Reyes", "Full-Stack Intern · CodeBridge Co.", "blue"),
+        new("The resume matching feature showed me roles I actually qualified for. Game changer.", "MG", "Marco Guerrero", "React Intern · NovaByte Inc.", "green"),
+        new("Applied to 6 companies in one morning. The pipeline tracker kept me sane during interviews.", "SC", "Sofia Cruz", "API Developer Intern · ApexCore Solutions", "amber"),
+        new("Landed a full-time role straight out of college. NexApply made the process so much less overwhelming.", "RO", "Rachel Ong", "Backend Engineer · TechSpark PH", "purple")
+    };
+
+    private record Testimonial(string Quote, string Initials, string Name, string Role, string Color);
+}

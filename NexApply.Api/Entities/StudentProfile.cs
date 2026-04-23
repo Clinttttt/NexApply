@@ -19,6 +19,7 @@ public class StudentProfile : BaseEntity
     public User User { get; private set; } = null!;
     public ICollection<Application> Applications { get; private set; } = [];
     public ICollection<SavedJob> SavedJobs { get; private set; } = [];
+    public Resume? Resume { get; private set; }
 
     private StudentProfile() { } // EF Core
 

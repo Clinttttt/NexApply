@@ -1,4 +1,6 @@
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -12,6 +14,8 @@ using NexApply.Api.Data;
 using NexApply.Api.Features.Auth;
 using NexApply.Api.Features.Auth.Login;
 using NexApply.Api.Features.Auth.LoginWithEmail;
+using NexApply.Api.Features.Profile;
+using NexApply.Api.Services;
 using System.Xml.Linq;
 
 
@@ -44,7 +48,24 @@ builder.Services.AddAuthentication(options =>
             ValidAudience = builder.Configuration["AppSettings:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(builder.Configuration["AppSettings:Token"]!))
         };
-
+    })
+    .AddGoogle(options =>
+    {
+        options.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? "";
+        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? "";
+        options.CallbackPath = "/api/auth/google-callback";
+        options.SaveTokens = true;
+        options.Scope.Add("email");
+        options.Scope.Add("profile");
+    })
+    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+    {
+        options.Cookie.Name = "NexApply.Auth";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.ExpireTimeSpan = TimeSpan.FromDays(7);
+        options.SlidingExpiration = true;
     });
 builder.Services.AddCors(options =>
 {
@@ -95,6 +116,7 @@ builder.Services.AddMediatR(cfg =>
 //------------------SERVICES---------------------------------//
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<CurrentUser>();
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 
 
 
@@ -126,6 +148,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.MapAuthEndpoints();
+app.MapProfileEndpoints();
 
 app.Run();
 

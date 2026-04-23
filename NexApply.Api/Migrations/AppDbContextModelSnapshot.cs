@@ -200,6 +200,48 @@ namespace NexApply.Api.Migrations
                     b.ToTable("JobListings");
                 });
 
+            modelBuilder.Entity("NexApply.Api.Entities.Resume", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AboutMe")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EducationJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Headline")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("SkillsJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("StudentProfileId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("WorkExperienceJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentProfileId")
+                        .IsUnique();
+
+                    b.ToTable("Resumes");
+                });
+
             modelBuilder.Entity("NexApply.Api.Entities.SavedJob", b =>
                 {
                     b.Property<Guid>("Id")
@@ -308,7 +350,16 @@ namespace NexApply.Api.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
+                    b.Property<string>("EmailVerificationCode")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("EmailVerificationCodeExpiry")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsEmailVerified")
                         .HasColumnType("boolean");
 
                     b.Property<string>("PasswordHash")
@@ -384,6 +435,17 @@ namespace NexApply.Api.Migrations
                     b.Navigation("Company");
                 });
 
+            modelBuilder.Entity("NexApply.Api.Entities.Resume", b =>
+                {
+                    b.HasOne("NexApply.Api.Entities.StudentProfile", "StudentProfile")
+                        .WithOne("Resume")
+                        .HasForeignKey("NexApply.Api.Entities.Resume", "StudentProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("StudentProfile");
+                });
+
             modelBuilder.Entity("NexApply.Api.Entities.SavedJob", b =>
                 {
                     b.HasOne("NexApply.Api.Entities.JobListing", "JobListing")
@@ -429,6 +491,8 @@ namespace NexApply.Api.Migrations
             modelBuilder.Entity("NexApply.Api.Entities.StudentProfile", b =>
                 {
                     b.Navigation("Applications");
+
+                    b.Navigation("Resume");
 
                     b.Navigation("SavedJobs");
                 });

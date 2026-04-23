@@ -6,6 +6,7 @@ using NexApply.Api.Common;
 using NexApply.Api.Features.Auth;
 using NexApply.Api.Features.Auth.LoginWithEmail;
 using NexApply.Client.Services.Auth;
+using NexApply.Contracts.Auth;
 
 namespace NexApply.Tests.Unit;
 

@@ -37,11 +37,18 @@ public class LoginWithEmailHandler(IHttpClientFactory _http, AppDbContext contex
                 counter++;
             }
 
-            // Create user with Student role by default - they can change it after login
-            user = User.CreateStudent(email, userName, string.Empty);
+            var fullName = json.TryGetProperty("name", out var nameElement) ? nameElement.GetString() : userName;
 
+            // Create user with Student role by default
+            user = User.CreateStudent(email, userName, string.Empty);
             await context.Users.AddAsync(user, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
+
+         
+            var studentProfile = StudentProfile.Create(user.Id, fullName ?? userName);
+            await context.StudentProfiles.AddAsync(studentProfile, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
+
             await transaction.CommitAsync(cancellationToken);
         }
 

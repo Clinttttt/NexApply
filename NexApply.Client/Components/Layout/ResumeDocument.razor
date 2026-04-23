@@ -1,4 +1,10 @@
-﻿@* ══════════════════════════════════════════════════════
+@inject IProfileApiService ProfileApi
+@using NexApply.Contracts.Profile.Commands
+@using NexApply.Contracts.Profile.Dtos
+@using NexApply.Client.Interfaces
+@using System.Text.Json
+
+@* ══════════════════════════════════════════════════════
    ResumeDocument.razor
    Owns all resume state internally. Profile.razor accesses
    it via @ref to read computed properties for ProfileStrength.
@@ -9,7 +15,7 @@
 
     <!-- ── Header ── -->
     <div class="rdoc-header">
-        <input class="rdoc-name" type="text" @bind="_name" @bind:event="oninput"
+        <input class="rdoc-name" type="text" @bind="_name" @bind:event="oninput" @bind:after="NotifyDataChanged"
                placeholder="YOUR FULL NAME" disabled="@(!IsEditing)" />
         <input class="rdoc-headline" type="text" @bind="_headline" @bind:event="oninput"
                placeholder="Professional Title or Headline" disabled="@(!IsEditing)" />
@@ -47,7 +53,7 @@
     <!-- ── About Me ── -->
     <div class="rdoc-section">
         <div class="rdoc-section-title">ABOUT ME</div>
-        <textarea class="rdoc-textarea" rows="3" @bind="_about" @bind:event="oninput"
+        <textarea class="rdoc-textarea" rows="2" @bind="_about" @bind:event="oninput" @bind:after="NotifyDataChanged"
                   placeholder="Write a short professional summary..." disabled="@(!IsEditing)"></textarea>
     </div>
 
@@ -59,7 +65,7 @@
             <div class="rdoc-section-title">EDUCATION</div>
             @if (IsEditing)
             {
-                <button class="rdoc-add-btn" @onclick="() => _education.Add(new ResumeEntry())">+ Add</button>
+                <button class="rdoc-add-btn" @onclick="async () => { _education.Add(new ResumeEntry()); await NotifyDataChanged(); }">+ Add</button>
             }
         </div>
         @foreach (var edu in _education)
@@ -69,13 +75,13 @@
                     <div class="rdoc-entry-left">
                         <input class="rdoc-entry-org" type="text" @bind="edu.Organization" @bind:event="oninput"
                                placeholder="University or School" disabled="@(!IsEditing)" />
-                        <span class="rdoc-entry-sep"> | </span>
+                        <span class="rdoc-entry-sep">|</span>
                         <input class="rdoc-entry-period" type="text" @bind="edu.Period" @bind:event="oninput"
                                placeholder="2021-2025" disabled="@(!IsEditing)" />
                     </div>
                     @if (IsEditing)
                     {
-                        <button class="rdoc-remove-btn" @onclick="() => _education.Remove(edu)">
+                        <button class="rdoc-remove-btn" @onclick="async () => { _education.Remove(edu); await NotifyDataChanged(); }">
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="18" y1="6" x2="6" y2="18" />
                                 <line x1="6" y1="6" x2="18" y2="18" />
@@ -85,7 +91,7 @@
                 </div>
                 <input class="rdoc-entry-title" type="text" @bind="edu.Title" @bind:event="oninput"
                        placeholder="Degree or Program" disabled="@(!IsEditing)" />
-                <textarea class="rdoc-entry-desc" rows="2" @bind="edu.Description" @bind:event="oninput"
+                <textarea class="rdoc-entry-desc" rows="1" @bind="edu.Description" @bind:event="oninput"
                           placeholder="Relevant coursework, honors, or achievements..." disabled="@(!IsEditing)"></textarea>
             </div>
         }
@@ -99,7 +105,7 @@
             <div class="rdoc-section-title">WORK EXPERIENCE</div>
             @if (IsEditing)
             {
-                <button class="rdoc-add-btn" @onclick="() => _experience.Add(new ResumeEntry())">+ Add</button>
+                <button class="rdoc-add-btn" @onclick="async () => { _experience.Add(new ResumeEntry()); await NotifyDataChanged(); }">+ Add</button>
             }
         </div>
         @if (!_experience.Any())
@@ -113,13 +119,13 @@
                     <div class="rdoc-entry-left">
                         <input class="rdoc-entry-org" type="text" @bind="exp.Organization" @bind:event="oninput"
                                placeholder="Company or Organization" disabled="@(!IsEditing)" />
-                        <span class="rdoc-entry-sep"> | </span>
+                        <span class="rdoc-entry-sep">|</span>
                         <input class="rdoc-entry-period" type="text" @bind="exp.Period" @bind:event="oninput"
                                placeholder="2023-2024" disabled="@(!IsEditing)" />
                     </div>
                     @if (IsEditing)
                     {
-                        <button class="rdoc-remove-btn" @onclick="() => _experience.Remove(exp)">
+                        <button class="rdoc-remove-btn" @onclick="async () => { _experience.Remove(exp); await NotifyDataChanged(); }">
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="18" y1="6" x2="6" y2="18" />
                                 <line x1="6" y1="6" x2="18" y2="18" />
@@ -129,7 +135,7 @@
                 </div>
                 <input class="rdoc-entry-title" type="text" @bind="exp.Title" @bind:event="oninput"
                        placeholder="Job Title" disabled="@(!IsEditing)" />
-                <textarea class="rdoc-entry-desc" rows="2" @bind="exp.Description" @bind:event="oninput"
+                <textarea class="rdoc-entry-desc" rows="1" @bind="exp.Description" @bind:event="oninput"
                           placeholder="Key responsibilities and achievements..." disabled="@(!IsEditing)"></textarea>
             </div>
         }
@@ -143,7 +149,7 @@
             <div class="rdoc-section-title">SKILLS</div>
             @if (IsEditing)
             {
-                <button class="rdoc-add-btn" @onclick="() => _skills.Add(new SkillItem())">+ Add</button>
+                <button class="rdoc-add-btn" @onclick="async () => { _skills.Add(new SkillItem()); await NotifyDataChanged(); }">+ Add</button>
             }
         </div>
         <div class="rdoc-skills-grid">
@@ -155,7 +161,7 @@
                            placeholder="Skill" disabled="@(!IsEditing)" />
                     @if (IsEditing)
                     {
-                        <button class="rdoc-skill-remove" @onclick="() => _skills.Remove(skill)">
+                        <button class="rdoc-skill-remove" @onclick="async () => { _skills.Remove(skill); await NotifyDataChanged(); }">
                             <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="18" y1="6" x2="6" y2="18" />
                                 <line x1="6" y1="6" x2="18" y2="18" />
@@ -174,6 +180,7 @@
     // ── Models ──
     public class ResumeEntry
     {
+        public Guid Id { get; set; }
         public string Organization { get; set; } = "";
         public string Period { get; set; } = "";
         public string Title { get; set; } = "";
@@ -186,38 +193,127 @@
     }
 
     // ── Only parameter — toggled by Profile.razor ──
-    [Parameter] public bool IsEditing { get; set; }
+    [Parameter] public bool IsEditing { get; set; } = true;
+    [Parameter] public EventCallback OnDataChanged { get; set; }
 
     // ── Internal state — component owns this, no broken param binding ──
-    private string _name = "CLINT VILLANUEVA";
-    private string _headline = "Aspiring Full-Stack Developer";
-    private string _phone = "+63 912 345 6789";
-    private string _email = "clint@example.com";
-    private string _location = "Cebu City, Philippines";
-    private string _about = "Passionate computer science student seeking internship opportunities in web development. Experienced with .NET, Blazor, and modern web technologies. Eager to contribute to real-world projects and grow as a professional developer.";
+    private string _name = "";
+    private string _headline = "";
+    private string _phone = "";
+    private string _email = "";
+    private string _location = "";
+    private string _about = "";
 
-    private List<ResumeEntry> _education = new()
+    private async Task NotifyDataChanged()
     {
-        new ResumeEntry
+        if (OnDataChanged.HasDelegate)
         {
-            Organization = "University of Cebu",
-            Period       = "2022-2026",
-            Title        = "Bachelor of Science in Computer Science",
-            Description  = "Relevant coursework: Data Structures, Web Development, Database Systems, Software Engineering."
+            await OnDataChanged.InvokeAsync();
         }
-    };
+    }
 
+    private List<ResumeEntry> _education = new();
     private List<ResumeEntry> _experience = new();
+    private List<SkillItem> _skills = new();
 
-    private List<SkillItem> _skills = new()
+    // ── Load resume content from API ──
+    public async Task LoadResumeContent(ResumeContentDto content)
     {
-        new SkillItem { Name = "C#" },
-        new SkillItem { Name = ".NET / Blazor" },
-        new SkillItem { Name = "PostgreSQL" },
-        new SkillItem { Name = "HTML / CSS" },
-        new SkillItem { Name = "JavaScript" },
-        new SkillItem { Name = "Git" },
-    };
+        _name = content.FullName ?? "";
+        _phone = content.Phone ?? "";
+        _email = content.Email ?? "";
+        _location = content.Location ?? "";
+        _headline = content.Headline ?? "";
+        _about = content.AboutMe ?? "";
+
+        _education.Clear();
+        foreach (var edu in content.Education)
+        {
+            _education.Add(new ResumeEntry
+            {
+                Id = edu.Id,
+                Organization = edu.Institution,
+                Period = $"{edu.StartYear}-{edu.EndYear}",
+                Title = edu.Degree + (string.IsNullOrEmpty(edu.Field) ? "" : $" in {edu.Field}"),
+                Description = edu.Description ?? ""
+            });
+        }
+
+        _experience.Clear();
+        foreach (var exp in content.WorkExperience)
+        {
+            _experience.Add(new ResumeEntry
+            {
+                Id = exp.Id,
+                Organization = exp.Company,
+                Period = FormatDateRange(exp.StartDate, exp.EndDate, exp.IsCurrent),
+                Title = exp.Position,
+                Description = exp.Description ?? ""
+            });
+        }
+
+        _skills.Clear();
+        foreach (var skill in content.Skills)
+        {
+            _skills.Add(new SkillItem { Name = skill });
+        }
+
+        StateHasChanged();
+    }
+
+    private string FormatDateRange(DateTime? start, DateTime? end, bool isCurrent)
+    {
+        if (!start.HasValue) return "";
+        var startStr = start.Value.ToString("MMM yyyy");
+        if (isCurrent) return $"{startStr} - Present";
+        if (!end.HasValue) return startStr;
+        return $"{startStr} - {end.Value.ToString("MMM yyyy")}";
+    }
+
+    // ── Save resume data ──
+    public async Task SaveResumeData()
+    {
+        var educationList = _education
+            .Where(e => !string.IsNullOrWhiteSpace(e.Organization) || !string.IsNullOrWhiteSpace(e.Title))
+            .Select(e => new
+            {
+                e.Organization,
+                e.Period,
+                e.Title,
+                e.Description
+            })
+            .ToList();
+
+        var experienceList = _experience
+            .Where(e => !string.IsNullOrWhiteSpace(e.Organization) || !string.IsNullOrWhiteSpace(e.Title))
+            .Select(e => new
+            {
+                e.Organization,
+                e.Period,
+                e.Title,
+                e.Description
+            })
+            .ToList();
+
+        var skillsList = _skills
+            .Where(s => !string.IsNullOrWhiteSpace(s.Name))
+            .Select(s => s.Name)
+            .ToList();
+
+        var educationJson = JsonSerializer.Serialize(educationList);
+        var experienceJson = JsonSerializer.Serialize(experienceList);
+        var skillsJson = JsonSerializer.Serialize(skillsList);
+
+        var command = new UpdateResumeCommand(
+            _headline,
+            _about,
+            educationJson,
+            experienceJson,
+            skillsJson
+        );
+
+        await ProfileApi.UpdateResume(command);
+    }
 
     // ── Read-only props for Profile.razor to read via @ref ──
     public bool HasName => !string.IsNullOrWhiteSpace(_name);

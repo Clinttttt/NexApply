@@ -14,6 +14,7 @@ public class AppDbContext : DbContext
     public DbSet<JobListing> JobListings => Set<JobListing>();
     public DbSet<Application> Applications => Set<Application>();
     public DbSet<SavedJob> SavedJobs => Set<SavedJob>();
+    public DbSet<Resume> Resumes => Set<Resume>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -141,6 +142,25 @@ public class AppDbContext : DbContext
              .WithMany(j => j.SavedByStudents)
              .HasForeignKey(s => s.JobListingId)
              .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Resume (simplified JSON storage)
+        modelBuilder.Entity<Resume>(e =>
+        {
+            e.HasKey(r => r.Id);
+            e.Property(r => r.Headline).HasMaxLength(200);
+            e.Property(r => r.AboutMe).HasColumnType("text");
+            e.Property(r => r.EducationJson).HasColumnType("text").IsRequired();
+            e.Property(r => r.WorkExperienceJson).HasColumnType("text").IsRequired();
+            e.Property(r => r.SkillsJson).HasColumnType("text").IsRequired();
+            e.Property(r => r.CreatedAt).IsRequired();
+
+            e.HasOne(r => r.StudentProfile)
+             .WithOne(s => s.Resume)
+             .HasForeignKey<Resume>(r => r.StudentProfileId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasIndex(r => r.StudentProfileId).IsUnique();
         });
     }
 }

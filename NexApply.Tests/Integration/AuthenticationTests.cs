@@ -9,6 +9,7 @@ using NexApply.Api.Entities;
 using NexApply.Api.Entities.Enums;
 using NexApply.Api.Features.Auth;
 using NexApply.Api.Features.Auth.Login;
+using NexApply.Contracts.Auth;
 
 namespace NexApply.Tests.Integration;
 

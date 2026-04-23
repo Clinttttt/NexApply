@@ -271,7 +271,11 @@
     border-bottom: 1.5px solid transparent;
     padding: 1px 2px;
     min-width: 80px;
+    flex: 1;
+    max-width: 60%;
     transition: border-color var(--transition-fast);
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
     .rdoc-entry-org:focus {
@@ -285,8 +289,9 @@
 .rdoc-entry-sep {
     color: var(--color-slate-400);
     font-size: var(--text-base);
-    padding: 0 2px;
+    padding: 0 6px;
     user-select: none;
+    flex-shrink: 0;
 }
 
 .rdoc-entry-period {
@@ -299,6 +304,7 @@
     border-bottom: 1.5px solid transparent;
     padding: 1px 2px;
     width: 90px;
+    flex-shrink: 0;
     transition: border-color var(--transition-fast);
 }
 

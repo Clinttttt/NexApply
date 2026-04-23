@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Components.Server.Circuits;
 using NexApply.Client.Interfaces;
 using NexApply.Client.Securities;
 using NexApply.Client.Services.Auth;
+using NexApply.Client.Services.Profile;
+using NexApply.Client.Extensions;
+using NexApply.Client.Utilities;
 
 namespace NexApply.Client
 {
@@ -12,6 +15,8 @@ namespace NexApply.Client
         public static IServiceCollection AddClient(this IServiceCollection service, IConfiguration configuration)
         {
             service.AddScoped<IAuthApiService, AuthApiService>();
+            service.AddScoped<IProfileApiService, ProfileApiService>();
+            service.AddScoped<CurrentUserService>();
             service.AddHttpContextAccessor();
             service.AddControllers();
 
@@ -49,6 +54,8 @@ namespace NexApply.Client
             {
                 client.BaseAddress = new Uri(configuration["ApiBaseUrl"]!);
             });
+
+            service.AddApiHttpClient<IProfileApiService, ProfileApiService>(configuration);
 
     
             return service;

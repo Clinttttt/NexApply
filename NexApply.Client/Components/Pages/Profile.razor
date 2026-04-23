@@ -1,6 +1,15 @@
 @page "/resume&profile"
 @rendermode InteractiveServer
 @inject IJSRuntime JS
+@inject IProfileApiService ProfileApi
+@inject NavigationManager Navigation
+@inject PersistentComponentState ApplicationState
+@inject CurrentUserService CurrentUser
+@using NexApply.Contracts.Profile.Commands
+@using NexApply.Contracts.Profile.Dtos
+@using NexApply.Client.Interfaces
+@using NexApply.Client.Utilities
+@implements IDisposable
 
 <PageTitle>Resume & Profile — NexApply</PageTitle>
 
@@ -41,6 +50,33 @@
         </PageHeader>
 
         <div class="profile-body">
+            @if (IsLoading)
+            {
+                <div style="display: flex; justify-content: center; align-items: center; min-height: 400px; color: #64748B;">
+                    <div style="text-align: center;">
+                        <svg class="spin-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 12px;">
+                            <path d="M21 12a9 9 0 11-6.219-8.56" />
+                        </svg>
+                        <div>Loading profile...</div>
+                    </div>
+                </div>
+            }
+            else if (LoadError != null)
+            {
+                <div style="display: flex; justify-content: center; align-items: center; min-height: 400px; color: #DC2626;">
+                    <div style="text-align: center;">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 12px;">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                        <div>@LoadError</div>
+                        <button class="btn-primary" style="margin-top: 16px;" @onclick="LoadProfileData">Retry</button>
+                    </div>
+                </div>
+            }
+            else
+            {
             <div class="profile-grid">
 
                 <!-- ═══ LEFT COLUMN ═══ -->
@@ -99,7 +135,9 @@
                                     </span>
                                     <div>
                                         <div class="info-label">Phone</div>
-                                        <div class="info-value @(string.IsNullOrEmpty(Phone) ? "info-empty" : "")">@(string.IsNullOrEmpty(Phone) ? "Not set" : Phone)</div>
+                                        <div class="info-value @(string.IsNullOrEmpty(Phone) ? "info-empty" : "")">
+                                            @(string.IsNullOrEmpty(Phone) ? "Add phone number" : Phone)
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="info-row">
@@ -108,7 +146,9 @@
                                     </span>
                                     <div>
                                         <div class="info-label">Location</div>
-                                        <div class="info-value @(string.IsNullOrEmpty(Location) ? "info-empty" : "")">@(string.IsNullOrEmpty(Location) ? "Not set" : Location)</div>
+                                        <div class="info-value @(string.IsNullOrEmpty(Location) ? "info-empty" : "")">
+                                            @(string.IsNullOrEmpty(Location) ? "Add your location" : Location)
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="info-row">
@@ -123,7 +163,7 @@
                                         }
                                         else
                                         {
-                                            <div class="info-value info-empty">Not set</div>
+                                            <div class="info-value info-empty">Add LinkedIn profile</div>
                                         }
                                     </div>
                                 </div>
@@ -139,7 +179,7 @@
                                         }
                                         else
                                         {
-                                            <div class="info-value info-empty">Not set</div>
+                                            <div class="info-value info-empty">Add GitHub profile</div>
                                         }
                                     </div>
                                 </div>
@@ -154,7 +194,8 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Email</label>
-                                <input class="form-input" type="email" @bind="Email" @bind:event="oninput" />
+                                <input class="form-input" type="email" value="@Email" disabled title="Email cannot be changed" style="opacity: 0.6; cursor: not-allowed;" />
+                                <small style="color: #64748B; font-size: 11px; margin-top: 4px; display: block;">Email is linked to your account and cannot be changed here</small>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Phone</label>
@@ -347,8 +388,7 @@
                         }
 
                         <!-- ══ UPLOAD MODE: display the file as-is ══ -->
-                        @if (ResumeMode == "upload")
-                        {
+                        <div style="display: @(ResumeMode == "upload" ? "block" : "none")">
                             @if (string.IsNullOrEmpty(UploadedFileDataUrl))
                             {
                                 <div class="resume-upload-zone" @onclick="TriggerFileUpload">
@@ -388,20 +428,19 @@
                                     }
                                 </div>
                             }
-                        }
+                        </div>
 
                         <!-- ══ BUILD MODE: ResumeDocument component ══ -->
-                        @if (ResumeMode == "build")
-                        {
-                            <ResumeDocument @ref="_resumeDoc" IsEditing="IsEditingResume" />
-                        }
-                        <!-- end build mode -->
+                        <div style="display: @(ResumeMode == "build" ? "block" : "none")">
+                            <ResumeDocument @ref="_resumeDoc" IsEditing="IsEditingResume" OnDataChanged="HandleResumeDataChanged" />
+                        </div>
 
                     </div>
 
                 </div>
 
             </div>
+            }
         </div>
 
     </main>
@@ -409,17 +448,140 @@
 
 @code {
 
+    /* ─── Persistent State ─── */
+    private PersistingComponentStateSubscription _persistingSubscription;
+
+    /* ─── Loading State ─── */
+    private bool IsLoading = true;
+    private string? LoadError = null;
+    private bool _resumeContentLoaded = false;
+
     /* ─── Profile ─── */
     private bool IsEditingProfile = false;
-    private string FullName = "Clint Villanueva";
-    private string Email = "clint@example.com";
-    private string Phone = "+63 912 345 6789";
-    private string Location = "Cebu City, Philippines";
-    private string LinkedIn = "clintvillanueva";
-    private string GitHub = "clintvillanueva";
+    private string FullName = "";
+    private string Email = "";
+    private string Phone = "";
+    private string Location = "";
+    private string LinkedIn = "";
+    private string GitHub = "";
 
     private string _snapFullName = "", _snapEmail = "", _snapPhone = "",
                    _snapLocation = "", _snapLinkedIn = "", _snapGitHub = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _persistingSubscription = ApplicationState.RegisterOnPersisting(PersistState);
+
+        // Get email from authenticated user
+        Email = await CurrentUser.GetEmailAsync();
+
+        // Try to restore state first
+        if (!ApplicationState.TryTakeFromJson<StudentProfileDto>("profileData", out var restoredProfile))
+        {            
+            await LoadProfileData();
+        }
+        else
+        {
+            // Restore from persisted state
+            FullName = restoredProfile?.FullName ?? "";
+            Phone = restoredProfile?.Phone ?? "";
+            Location = restoredProfile?.Location ?? "";
+            LinkedIn = restoredProfile?.LinkedIn ?? "";
+            GitHub = restoredProfile?.GitHub ?? "";
+
+            if (!string.IsNullOrEmpty(restoredProfile?.ResumeFilePath))
+            {
+                ResumeMode = "upload";
+                UploadedFileName = restoredProfile.ResumeFilePath;
+            }
+
+            IsLoading = false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_resumeContentLoaded)
+        {
+            await LoadResumeContent();
+            _resumeContentLoaded = true;
+        }
+    }
+
+    private Task PersistState()
+    {
+        var profileData = new StudentProfileDto
+        {
+            FullName = FullName,
+            Phone = Phone,
+            Location = Location,
+            LinkedIn = LinkedIn,
+            GitHub = GitHub,
+            ResumeFilePath = UploadedFileName
+        };
+
+        ApplicationState.PersistAsJson("profileData", profileData);
+        ApplicationState.PersistAsJson("resumeMode", ResumeMode);
+        ApplicationState.PersistAsJson("isEditingProfile", IsEditingProfile);
+        ApplicationState.PersistAsJson("isEditingResume", IsEditingResume);
+
+        return Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        _persistingSubscription.Dispose();
+    }
+
+    private async Task LoadProfileData()
+    {
+        IsLoading = true;
+        LoadError = null;
+        StateHasChanged();
+
+        var profileResult = await ProfileApi.GetStudentProfile();
+        if (profileResult.IsSuccess && profileResult.Value != null)
+        {
+            var profile = profileResult.Value;
+            FullName = profile.FullName;
+            Phone = profile.Phone ?? "";
+            Location = profile.Location ?? "";
+            LinkedIn = profile.LinkedIn ?? "";
+            GitHub = profile.GitHub ?? "";
+
+            // Check if user has uploaded resume
+            if (!string.IsNullOrEmpty(profile.ResumeFilePath))
+            {
+                ResumeMode = "upload";
+                // Load the uploaded resume file path
+                UploadedFileName = profile.ResumeFilePath;
+            }
+        }
+        else
+        {
+            LoadError = profileResult.Error ?? "Failed to load profile";
+        }
+
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadResumeContent()
+    {
+        if (_resumeDoc == null) return;
+
+        var resumeResult = await ProfileApi.GetResumeContent();
+        if (resumeResult.IsSuccess && resumeResult.Value != null)
+        {
+            await _resumeDoc.LoadResumeContent(resumeResult.Value);
+            StateHasChanged(); // Update profile strength after loading
+        }
+    }
+
+    private void HandleResumeDataChanged()
+    {
+        StateHasChanged(); // Recalculate profile strength when resume data changes
+    }
 
     private void StartEditProfile()
     {
@@ -435,12 +597,45 @@
         IsEditingProfile = false;
     }
 
-    private void SaveProfile() => IsEditingProfile = false;
+    private async Task SaveProfile()
+    {
+        var command = new UpdateStudentProfileCommand(
+            FullName,
+            Phone,
+            Location,
+            null, // University
+            null, // Course
+            null, // GraduationYear
+            LinkedIn,
+            GitHub,
+            null  // Portfolio
+        );
+
+        var result = await ProfileApi.UpdateStudentProfile(command);
+        if (result.IsSuccess)
+        {
+            IsEditingProfile = false;
+            StateHasChanged();
+        }
+        else
+        {
+            // Show error message
+            Console.WriteLine($"Failed to save profile: {result.Error}");
+        }
+    }
 
     /* ─── Resume Edit/Lock ─── */
-    private bool IsEditingResume = true; // starts editable
+    private bool IsEditingResume = false;
 
-    private void ToggleResumeEdit() => IsEditingResume = !IsEditingResume;
+    private async Task ToggleResumeEdit()
+    {
+        if (IsEditingResume && _resumeDoc != null)
+        {
+            // Switching from Edit to Lock - save all resume data
+            await _resumeDoc.SaveResumeData();
+        }
+        IsEditingResume = !IsEditingResume;
+    }
 
     // ── @ref to ResumeDocument so we can read its computed state ──
     private ResumeDocument? _resumeDoc;
@@ -451,7 +646,7 @@
                                  && !string.IsNullOrWhiteSpace(Phone)
                                  && !string.IsNullOrWhiteSpace(Location);
 
-    private bool HasResume => !string.IsNullOrEmpty(UploadedFileDataUrl) || (_resumeDoc?.HasName ?? false);
+    private bool HasResume => !string.IsNullOrEmpty(UploadedFileDataUrl) || !string.IsNullOrEmpty(UploadedFileName) || (_resumeDoc?.HasName ?? false);
     private bool HasEducation => _resumeDoc?.HasEducation ?? false;
     private bool HasEnoughSkills => _resumeDoc?.HasEnoughSkills ?? false;
     private bool HasAbout => _resumeDoc?.HasAbout ?? false;
@@ -471,15 +666,14 @@
     }
 
     /* ─── Resume Mode ─── */
-    // "upload" = show the uploaded file as-is | "build" = use the template editor
-    private string ResumeMode = "upload";
+    private string ResumeMode = "build"; // Default to build mode
 
     /* ─── File Upload (Upload Mode) ─── */
     private bool IsUploadingResume = false;
     private string UploadMessage = "";
     private bool UploadSuccess = false;
-    private string UploadedFileDataUrl = ""; // base64 data URL to display
-    private string UploadedFileType = "";    // "pdf" | "image" | "docx"
+    private string UploadedFileDataUrl = "";
+    private string UploadedFileType = "";
     private string UploadedFileName = "";
 
     private async Task TriggerFileUpload()
@@ -513,6 +707,23 @@
             return;
         }
 
+        // Check if user has existing resume data (education, work experience, or skills)
+        bool hasExistingResumeData = (_resumeDoc?.HasEducation ?? false) || 
+                                     (_resumeDoc?.HasEnoughSkills ?? false) ||
+                                     (_resumeDoc?.HasAbout ?? false);
+
+        if (hasExistingResumeData)
+        {
+            // Show confirmation dialog
+            bool confirmed = await JS.InvokeAsync<bool>("confirm", 
+                "You already have resume data in the template builder. Uploading a file will replace it. Do you want to continue?");
+            
+            if (!confirmed)
+            {
+                return; // User cancelled
+            }
+        }
+
         IsUploadingResume = true;
         UploadMessage = "";
         StateHasChanged();
@@ -524,7 +735,6 @@
             await stream.CopyToAsync(ms);
             var fileBytes = ms.ToArray();
 
-            // Determine file type and build a data URL for display
             string mimeType;
             if (ext == ".pdf")
             {
@@ -541,21 +751,30 @@
                 mimeType = "image/png";
                 UploadedFileType = "image";
             }
-            else // .docx
+            else
             {
                 mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
                 UploadedFileType = "docx";
             }
 
-            var base64 = Convert.ToBase64String(fileBytes);
-            UploadedFileDataUrl = $"data:{mimeType};base64,{base64}";
-            UploadedFileName = file.Name;
+            // Upload to API
+            var command = new UploadResumeCommand(file.Name, mimeType, fileBytes);
+            var result = await ProfileApi.UploadResume(command);
 
-            // Switch to upload mode so they see the file straight away
-            ResumeMode = "upload";
-
-            UploadSuccess = true;
-            UploadMessage = $"'{file.Name}' uploaded successfully!";
+            if (result.IsSuccess && result.Value != null)
+            {
+                var base64 = Convert.ToBase64String(fileBytes);
+                UploadedFileDataUrl = $"data:{mimeType};base64,{base64}";
+                UploadedFileName = file.Name;
+                ResumeMode = "upload";
+                UploadSuccess = true;
+                UploadMessage = $"'{file.Name}' uploaded successfully!";
+            }
+            else
+            {
+                UploadSuccess = false;
+                UploadMessage = result.Error ?? "Failed to upload resume";
+            }
         }
         catch (Exception ex)
         {

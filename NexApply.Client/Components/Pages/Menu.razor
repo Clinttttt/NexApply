@@ -1,13 +1,11 @@
 @page "/menu"
 
 <div class="app-shell">
-
     <Sidebar />
 
-    <!-- ── Main Content ── -->
     <main class="main-content">
 
-        <!-- Top Bar -->
+        <!-- ─── Topbar ─── -->
         <header class="topbar">
             <div class="topbar-left">
                 <h1 class="page-title">Dashboard</h1>
@@ -21,7 +19,7 @@
                     </svg>
                     <input class="search-input" type="text" placeholder="Search jobs, companies…" />
                 </div>
-                <button class="notif-btn">
+                <button class="notif-btn" aria-label="Notifications">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
                         <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"
                               stroke="currentColor" stroke-width="2" stroke-linecap="round" />
@@ -31,234 +29,380 @@
             </div>
         </header>
 
-        <!-- Stat Cards -->
-        <section class="stats-grid">
+        <div class="page-body">
 
-            <!-- Applications -->
-            <div class="stat-card stat-card--highlight">
-                <div class="stat-header">
-                    <span class="stat-label">Applications</span>
-                    <span class="stat-icon-wrap blue">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                                  stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            <!-- ─── Activity Banner ─── -->
+            <div class="activity-banner">
+
+                <!-- Left: Pipeline numbers -->
+                <div class="banner-pipeline">
+                    <div class="bp-item">
+                        <span class="bp-num">3</span>
+                        <span class="bp-label">Applied</span>
+                    </div>
+                    <div class="bp-arrow">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6" />
                         </svg>
-                    </span>
-                </div>
-                <span class="stat-value">3</span>
-                <div class="stat-footer">
-                    <span class="stat-trend up">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-                            <path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+                    </div>
+                    <div class="bp-item">
+                        <span class="bp-num bp-num--amber">1</span>
+                        <span class="bp-label">Under Review</span>
+                    </div>
+                    <div class="bp-arrow">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6" />
                         </svg>
-                        +1 this week
-                    </span>
-                    <a href="#" class="stat-view-btn stat-view-btn--blue">View</a>
+                    </div>
+                    <div class="bp-item">
+                        <span class="bp-num bp-num--green">1</span>
+                        <span class="bp-label">Shortlisted</span>
+                    </div>
+                    <div class="bp-arrow">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6" />
+                        </svg>
+                    </div>
+                    <div class="bp-item bp-item--dim">
+                        <span class="bp-num bp-num--dim">0</span>
+                        <span class="bp-label">Interview</span>
+                    </div>
                 </div>
+
+                <div class="banner-divider"></div>
+
+                <!-- Right: Match highlight + quick CTA -->
+                <div class="banner-right">
+                    <div class="banner-match">
+                        <div class="banner-match-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="banner-match-count">12 new matches</span>
+                            <span class="banner-match-sub">based on your resume</span>
+                        </div>
+                    </div>
+                    <a href="/browse-jobs" class="banner-cta">
+                        Browse Jobs
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                            <polyline points="12 5 19 12 12 19" />
+                        </svg>
+                    </a>
+                </div>
+
             </div>
 
-            <!-- Under Review -->
-            <div class="stat-card stat-card--highlight">
-                <div class="stat-header">
-                    <span class="stat-label">Under Review</span>
-                    <span class="stat-icon-wrap amber">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
-                            <polyline points="12,6 12,12 16,14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                        </svg>
-                    </span>
+            <!-- ─── Lower Grid ─── -->
+            <div class="lower-grid">
+
+                <!-- COLUMN LEFT: Recent Applications -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-header-left">
+                            <h2 class="panel-title">Recent Applications</h2>
+                            <span class="panel-badge">3</span>
+                        </div>
+                        <a href="/my-applications" class="panel-link">View all →</a>
+                    </div>
+
+                    <div class="app-list">
+
+                        <a href="#" class="app-item">
+                            <div class="app-stage-bar app-stage-bar--amber"></div>
+                            <div class="app-logo app-logo--blue">SF</div>
+                            <div class="app-detail">
+                                <span class="app-title">Frontend Developer Intern</span>
+                                <span class="app-meta">SoftForge Inc. · Remote</span>
+                            </div>
+                            <div class="app-right">
+                                <span class="app-status app-status--amber">Under Review</span>
+                                <span class="app-date">Apr 5</span>
+                            </div>
+                        </a>
+
+                        <a href="#" class="app-item">
+                            <div class="app-stage-bar app-stage-bar--slate"></div>
+                            <div class="app-logo app-logo--slate">TP</div>
+                            <div class="app-detail">
+                                <span class="app-title">Junior .NET Developer</span>
+                                <span class="app-meta">TechSpark PH · On-site</span>
+                            </div>
+                            <div class="app-right">
+                                <span class="app-status app-status--slate">Submitted</span>
+                                <span class="app-date">Apr 3</span>
+                            </div>
+                        </a>
+
+                        <a href="#" class="app-item app-item--featured">
+                            <div class="app-stage-bar app-stage-bar--green"></div>
+                            <div class="app-logo app-logo--green">NT</div>
+                            <div class="app-detail">
+                                <span class="app-title">Backend Intern</span>
+                                <span class="app-meta">NexaTech Solutions · Hybrid</span>
+                            </div>
+                            <div class="app-right">
+                                <span class="app-status app-status--green">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                    Shortlisted
+                                </span>
+                                <span class="app-date">Mar 28</span>
+                            </div>
+                        </a>
+
+                    </div>
+
+                    <!-- Timeline hint -->
+                    <div class="app-timeline-hint">
+                        <div class="timeline-track">
+                            <div class="timeline-seg timeline-seg--filled" title="Applied"></div>
+                            <div class="timeline-seg timeline-seg--filled timeline-seg--amber" title="Under Review"></div>
+                            <div class="timeline-seg timeline-seg--filled timeline-seg--green" title="Shortlisted"></div>
+                            <div class="timeline-seg" title="Interview"></div>
+                            <div class="timeline-seg" title="Offer"></div>
+                        </div>
+                        <span class="timeline-label">1 of 5 stages reached · Backend Intern</span>
+                    </div>
                 </div>
-                <span class="stat-value">1</span>
-                <div class="stat-footer">
-                    <span class="stat-trend neutral">No change</span>
-                    <a href="#" class="stat-view-btn stat-view-btn--amber">View</a>
+
+                <!-- COLUMN RIGHT: Top Matches -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-header-left">
+                            <h2 class="panel-title">Top Job Matches</h2>
+                            <span class="panel-badge">12</span>
+                        </div>
+                        <a href="/browse-jobs" class="panel-link">See all →</a>
+                    </div>
+
+                    <div class="match-list">
+
+                        <a href="#" class="match-item">
+                            <div class="match-score-ring match-score-ring--high">
+                                <svg viewBox="0 0 36 36" class="ring-svg">
+                                    <circle class="ring-bg" cx="18" cy="18" r="15.5" />
+                                    <circle class="ring-fill ring-fill--high" cx="18" cy="18" r="15.5"
+                                            stroke-dasharray="@(Math.Round(91 * 0.974, 1)) 100" />
+                                </svg>
+                                <span class="ring-value">91</span>
+                            </div>
+                            <div class="match-body">
+                                <div class="match-top-row">
+                                    <div>
+                                        <span class="match-title">Full-Stack Developer Intern</span>
+                                        <span class="match-company">CodeBridge Co. · Makati</span>
+                                    </div>
+                                    <span class="match-type-badge">Full-time</span>
+                                </div>
+                                <div class="match-skills">
+                                    <span class="skill-tag">React</span>
+                                    <span class="skill-tag">C#</span>
+                                    <span class="skill-tag">ASP.NET</span>
+                                </div>
+                            </div>
+                            <svg class="match-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6" />
+                            </svg>
+                        </a>
+
+                        <a href="#" class="match-item">
+                            <div class="match-score-ring match-score-ring--mid">
+                                <svg viewBox="0 0 36 36" class="ring-svg">
+                                    <circle class="ring-bg" cx="18" cy="18" r="15.5" />
+                                    <circle class="ring-fill ring-fill--mid" cx="18" cy="18" r="15.5"
+                                            stroke-dasharray="@(Math.Round(84 * 0.974, 1)) 100" />
+                                </svg>
+                                <span class="ring-value">84</span>
+                            </div>
+                            <div class="match-body">
+                                <div class="match-top-row">
+                                    <div>
+                                        <span class="match-title">C# Backend Intern</span>
+                                        <span class="match-company">SkyNet Systems · BGC</span>
+                                    </div>
+                                    <span class="match-type-badge match-type-badge--intern">Internship</span>
+                                </div>
+                                <div class="match-skills">
+                                    <span class="skill-tag">.NET</span>
+                                    <span class="skill-tag">SQL</span>
+                                    <span class="skill-tag">Docker</span>
+                                </div>
+                            </div>
+                            <svg class="match-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6" />
+                            </svg>
+                        </a>
+
+                        <a href="#" class="match-item">
+                            <div class="match-score-ring match-score-ring--fair">
+                                <svg viewBox="0 0 36 36" class="ring-svg">
+                                    <circle class="ring-bg" cx="18" cy="18" r="15.5" />
+                                    <circle class="ring-fill ring-fill--fair" cx="18" cy="18" r="15.5"
+                                            stroke-dasharray="@(Math.Round(77 * 0.974, 1)) 100" />
+                                </svg>
+                                <span class="ring-value">77</span>
+                            </div>
+                            <div class="match-body">
+                                <div class="match-top-row">
+                                    <div>
+                                        <span class="match-title">Junior Software Engineer</span>
+                                        <span class="match-company">Luminary Labs · Remote</span>
+                                    </div>
+                                    <span class="match-type-badge match-type-badge--remote">Remote</span>
+                                </div>
+                                <div class="match-skills">
+                                    <span class="skill-tag">Blazor</span>
+                                    <span class="skill-tag">PostgreSQL</span>
+                                    <span class="skill-tag">Azure</span>
+                                </div>
+                            </div>
+                            <svg class="match-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6" />
+                            </svg>
+                        </a>
+
+                    </div>
                 </div>
+
             </div>
 
-            <!-- Job Matches -->
-            <div class="stat-card stat-card--highlight">
-                <div class="stat-header">
-                    <span class="stat-label">Job Matches</span>
-                    <span class="stat-icon-wrap green">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26 12,2"
-                                     stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                        </svg>
-                    </span>
+            <!-- ─── Bottom Row: Resume Strength + Quick Actions ─── -->
+            <div class="bottom-row">
+
+                <!-- Resume Strength -->
+                <div class="panel panel--compact">
+                    <div class="panel-header">
+                        <div class="panel-header-left">
+                            <h2 class="panel-title">Resume Strength</h2>
+                        </div>
+                        <a href="/resume" class="panel-link">Edit →</a>
+                    </div>
+                    <div class="resume-strength-body">
+                        <div class="rs-arc-wrap">
+                            <svg viewBox="0 0 100 60" class="rs-arc-svg">
+                                <path class="rs-arc-bg"
+                                      d="M 10 55 A 40 40 0 0 1 90 55"
+                                      fill="none" stroke-width="8" stroke-linecap="round" />
+                                <path class="rs-arc-fill"
+                                      d="M 10 55 A 40 40 0 0 1 90 55"
+                                      fill="none" stroke-width="8" stroke-linecap="round"
+                                      stroke-dasharray="125" stroke-dashoffset="37" />
+                            </svg>
+                            <div class="rs-arc-label">
+                                <span class="rs-value">72</span>
+                                <span class="rs-unit">/ 100</span>
+                            </div>
+                        </div>
+                        <div class="rs-checklist">
+                            <div class="rs-item rs-item--done">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                Work Experience
+                            </div>
+                            <div class="rs-item rs-item--done">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                Skills Listed
+                            </div>
+                            <div class="rs-item">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <line x1="12" y1="8" x2="12" y2="12" />
+                                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                                </svg>
+                                Add a portfolio link
+                            </div>
+                            <div class="rs-item">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <line x1="12" y1="8" x2="12" y2="12" />
+                                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                                </svg>
+                                Upload latest resume
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <span class="stat-value">12</span>
-                <div class="stat-footer">
-                    <span class="stat-trend up">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-                            <path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
-                        </svg>
-                        Resume matched
-                    </span>
-                    <a href="#" class="stat-view-btn stat-view-btn--green">View</a>
+
+                <!-- Quick Actions -->
+                <div class="panel panel--compact quick-actions-panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Quick Actions</h2>
+                    </div>
+                    <div class="quick-actions">
+                        <a href="/browse-jobs" class="qa-item qa-item--primary">
+                            <div class="qa-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8" />
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                                </svg>
+                            </div>
+                            <div class="qa-text">
+                                <span class="qa-title">Browse Jobs</span>
+                                <span class="qa-sub">24 new listings today</span>
+                            </div>
+                            <svg class="qa-arrow" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6" />
+                            </svg>
+                        </a>
+                        <a href="/my-applications" class="qa-item">
+                            <div class="qa-icon qa-icon--slate">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                            </div>
+                            <div class="qa-text">
+                                <span class="qa-title">Track Applications</span>
+                                <span class="qa-sub">1 awaiting update</span>
+                            </div>
+                            <svg class="qa-arrow" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6" />
+                            </svg>
+                        </a>
+                        <a href="/resume" class="qa-item">
+                            <div class="qa-icon qa-icon--slate">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                </svg>
+                            </div>
+                            <div class="qa-text">
+                                <span class="qa-title">Update Resume</span>
+                                <span class="qa-sub">Boost your match score</span>
+                            </div>
+                            <svg class="qa-arrow" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6" />
+                            </svg>
+                        </a>
+                    </div>
                 </div>
+
             </div>
 
-            <!-- Shortlisted — replaces Profile Views -->
-            <div class="stat-card stat-card--highlight">
-                <div class="stat-header">
-                    <span class="stat-label">Shortlisted</span>
-                    <span class="stat-icon-wrap blue">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                            <path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                            <polyline points="22,4 12,14.01 9,11.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                    </span>
-                </div>
-                <span class="stat-value">1</span>
-                <div class="stat-footer">
-                    <span class="stat-trend up">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-                            <path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
-                        </svg>
-                        NexaTech Solutions
-                    </span>
-                    <a href="#" class="stat-view-btn stat-view-btn--blue">View</a>
-                </div>
-            </div>
-
-        </section>
-
-        <!-- Lower Grid -->
-        <section class="lower-grid">
-
-            <!-- Recent Applications -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-header-left">
-                        <h2 class="card-title">Recent Applications</h2>
-                        <span class="card-count-badge">3 total</span>
-                    </div>
-                    <a href="#" class="card-link">View all →</a>
-                </div>
-
-                <div class="app-list">
-
-                    <div class="app-row">
-                        <div class="app-info">
-                            <span class="app-job-title">Frontend Developer Intern</span>
-                            <span class="app-company">SoftForge Inc. · Remote</span>
-                        </div>
-                        <div class="app-right">
-                            <span class="status-chip review">Under Review</span>
-                            <span class="app-date">Apr 5</span>
-                        </div>
-                    </div>
-
-                    <div class="app-row">
-                        <div class="app-info">
-                            <span class="app-job-title">Junior .NET Developer</span>
-                            <span class="app-company">TechSpark PH · On-site</span>
-                        </div>
-                        <div class="app-right">
-                            <span class="status-chip submitted">Submitted</span>
-                            <span class="app-date">Apr 3</span>
-                        </div>
-                    </div>
-
-                    <div class="app-row app-row--featured">
-                        <div class="app-info">
-                            <span class="app-job-title">Backend Intern</span>
-                            <span class="app-company">NexaTech Solutions · Hybrid</span>
-                        </div>
-                        <div class="app-right">
-                            <span class="status-chip shortlisted">✓ Shortlisted</span>
-                            <span class="app-date">Mar 28</span>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
-            <!-- Top Matches -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-header-left">
-                        <h2 class="card-title">Top Job Matches</h2>
-                        <span class="card-count-badge">12 found</span>
-                    </div>
-                    <a href="#" class="card-link">See all →</a>
-                </div>
-
-                <div class="match-list">
-
-                    <div class="match-row">
-                        <div class="match-body">
-                            <div class="match-top">
-                                <div class="match-info">
-                                    <span class="match-title">Full-Stack Developer Intern</span>
-                                    <span class="match-company">CodeBridge Co. · Makati</span>
-                                </div>
-                                <span class="score-label score-excellent">91%</span>
-                            </div>
-                            <div class="match-score-wrap">
-                                <div class="score-bar-bg">
-                                    <div class="score-bar score-bar--excellent" style="width:91%"></div>
-                                </div>
-                            </div>
-                            <div class="match-tags">
-                                <span class="match-tag">React</span>
-                                <span class="match-tag">C#</span>
-                                <span class="match-tag">Full-time</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="match-row">
-                        <div class="match-body">
-                            <div class="match-top">
-                                <div class="match-info">
-                                    <span class="match-title">C# Backend Intern</span>
-                                    <span class="match-company">SkyNet Systems · BGC</span>
-                                </div>
-                                <span class="score-label score-good">84%</span>
-                            </div>
-                            <div class="match-score-wrap">
-                                <div class="score-bar-bg">
-                                    <div class="score-bar score-bar--good" style="width:84%"></div>
-                                </div>
-                            </div>
-                            <div class="match-tags">
-                                <span class="match-tag">.NET</span>
-                                <span class="match-tag">SQL</span>
-                                <span class="match-tag">Internship</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="match-row">
-                        <div class="match-body">
-                            <div class="match-top">
-                                <div class="match-info">
-                                    <span class="match-title">Junior Software Engineer</span>
-                                    <span class="match-company">Luminary Labs · Remote</span>
-                                </div>
-                                <span class="score-label score-fair">77%</span>
-                            </div>
-                            <div class="match-score-wrap">
-                                <div class="score-bar-bg">
-                                    <div class="score-bar score-bar--fair" style="width:77%"></div>
-                                </div>
-                            </div>
-                            <div class="match-tags">
-                                <span class="match-tag">Blazor</span>
-                                <span class="match-tag">PostgreSQL</span>
-                                <span class="match-tag">Remote</span>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
-        </section>
-
+        </div>
     </main>
-
 </div>
 
 @code {
