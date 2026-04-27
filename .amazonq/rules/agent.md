@@ -2,11 +2,11 @@
 
 ## Stack
 - **API:** .NET 9 Web API (Minimal API)
-- **Frontend:** Blazor Server 10
+- **Frontend:** React 18 + TypeScript
 - **Database:** PostgreSQL via EF Core
 - **Contracts:** Shared layer for DTOs, Commands, Queries, Result<T>
 - **Architecture:** Vertical Slice Architecture (VSA) + DDD
-- **Auth:** JWT Bearer token in Authorization header
+- **Auth:** JWT Bearer token in Authorization header (stored in httpOnly cookies)
 - **Validation:** FluentValidation + MediatR pipeline behavior
 - **CQRS:** MediatR
 
@@ -17,13 +17,13 @@
 ```
 NexApply/
 ├── NexApply.Api/          ← Backend (Handlers, Endpoints, Validators, Entities, DbContext)
-├── NexApply.Client/       ← Frontend (Blazor Server, Pages, Components, Services)
+├── NexApply.Client/       ← Frontend (React + TypeScript, Components, Hooks, Services)
 ├── NexApply.Contracts/    ← Shared (DTOs, Commands, Queries, Result<T>, Enums)
 └── NexApply.Tests/        ← Tests (Integration, Unit)
 ```
 
 ### Dependencies
-- **Client** → references **Contracts** (NOT Api)
+- **Client** → TypeScript types generated from **Contracts** (NOT Api)
 - **Api** → references **Contracts**
 - **Tests** → references **Api**
 

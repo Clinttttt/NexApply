@@ -20,7 +20,7 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // User
+  
         modelBuilder.Entity<User>(e =>
         {
             e.HasKey(u => u.Id);
@@ -30,19 +30,36 @@ public class AppDbContext : DbContext
             e.Property(u => u.PasswordHash).IsRequired();
             e.Property(u => u.Role).HasConversion<string>().IsRequired().HasMaxLength(20);
             e.Property(u => u.RefreshToken).HasMaxLength(500);
+            e.Property(u => u.EmailVerificationCode).HasMaxLength(10);
+            e.Property(u => u.PasswordResetCode).HasMaxLength(10);
             e.Property(u => u.CreatedAt).IsRequired();
         });
 
-        // CompanyProfile
+
         modelBuilder.Entity<CompanyProfile>(e =>
         {
             e.HasKey(c => c.Id);
             e.Property(c => c.CompanyName).IsRequired().HasMaxLength(200);
+            e.Property(c => c.Tagline).HasMaxLength(200);
             e.Property(c => c.Description).HasColumnType("text");
+            e.Property(c => c.Mission).HasColumnType("text");
             e.Property(c => c.Website).HasMaxLength(500);
-            e.Property(c => c.LogoUrl).HasMaxLength(500);
+            e.Property(c => c.LogoUrl).HasColumnType("text");
             e.Property(c => c.Industry).HasMaxLength(100);
             e.Property(c => c.Location).HasMaxLength(200);
+            e.Property(c => c.CompanySize).HasMaxLength(50);
+            e.Property(c => c.Founded).HasMaxLength(50);
+            e.Property(c => c.PerksAndBenefits).HasColumnType("text");
+            e.Property(c => c.WorkCulture).HasMaxLength(500);
+            e.Property(c => c.ContactEmail).HasMaxLength(256);
+            e.Property(c => c.ContactPhone).HasMaxLength(50);
+            e.Property(c => c.LinkedInUrl).HasMaxLength(500);
+            e.Property(c => c.TwitterUrl).HasMaxLength(500);
+            e.Property(c => c.FacebookUrl).HasMaxLength(500);
+            e.Property(c => c.GitHubUrl).HasMaxLength(500);
+            e.Property(c => c.HiringManagerName).HasMaxLength(200);
+            e.Property(c => c.HiringManagerTitle).HasMaxLength(200);
+            e.Property(c => c.HiringManagerEmail).HasMaxLength(256);
             e.Property(c => c.CreatedAt).IsRequired();
 
             e.HasOne(c => c.User)
@@ -51,7 +68,7 @@ public class AppDbContext : DbContext
              .OnDelete(DeleteBehavior.Cascade);
         });
 
-        // StudentProfile
+
         modelBuilder.Entity<StudentProfile>(e =>
         {
             e.HasKey(s => s.Id);
@@ -73,7 +90,7 @@ public class AppDbContext : DbContext
              .OnDelete(DeleteBehavior.Cascade);
         });
 
-        // JobListing
+
         modelBuilder.Entity<JobListing>(e =>
         {
             e.HasKey(j => j.Id);
@@ -84,16 +101,16 @@ public class AppDbContext : DbContext
             e.Property(j => j.RequiredSkills).IsRequired().HasColumnType("text");
             e.Property(j => j.Benefits).HasColumnType("text");
             e.Property(j => j.Location).IsRequired().HasMaxLength(200);
-            e.Property(j => j.JobType).HasConversion<string>().IsRequired().HasMaxLength(20);
-            e.Property(j => j.WorkSetup).HasConversion<string>().IsRequired().HasMaxLength(20);
+            e.Property(j => j.JobType).IsRequired();
+            e.Property(j => j.WorkSetup).IsRequired();
+            e.Property(j => j.Status).IsRequired();
             e.Property(j => j.SalaryMin).HasColumnType("decimal(18,2)");
             e.Property(j => j.SalaryMax).HasColumnType("decimal(18,2)");
             e.Property(j => j.ExperienceLevel).HasMaxLength(50);
-            e.Property(j => j.Status).HasConversion<string>().IsRequired().HasMaxLength(20);
             e.Property(j => j.CreatedAt).IsRequired();
 
             e.HasOne(j => j.Company)
-             .WithMany(c => c.JobListings)
+             .WithMany()
              .HasForeignKey(j => j.CompanyId)
              .OnDelete(DeleteBehavior.Cascade);
 
@@ -101,13 +118,13 @@ public class AppDbContext : DbContext
             e.HasIndex(j => j.Status);
         });
 
-        // Application
+  
         modelBuilder.Entity<Application>(e =>
         {
             e.HasKey(a => a.Id);
             e.Property(a => a.CoverLetter).HasColumnType("text");
             e.Property(a => a.ResumeUrl).HasMaxLength(500);
-            e.Property(a => a.Status).HasConversion<string>().IsRequired().HasMaxLength(20);
+            e.Property(a => a.Status).IsRequired();
             e.Property(a => a.RecruiterNotes).HasColumnType("text");
             e.Property(a => a.CreatedAt).IsRequired();
 
@@ -125,7 +142,7 @@ public class AppDbContext : DbContext
              .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // SavedJob
+    
         modelBuilder.Entity<SavedJob>(e =>
         {
             e.HasKey(s => s.Id);
@@ -144,7 +161,7 @@ public class AppDbContext : DbContext
              .OnDelete(DeleteBehavior.Cascade);
         });
 
-        // Resume (simplified JSON storage)
+  
         modelBuilder.Entity<Resume>(e =>
         {
             e.HasKey(r => r.Id);

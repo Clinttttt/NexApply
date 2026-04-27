@@ -14,10 +14,14 @@ using NexApply.Api.Data;
 using NexApply.Api.Features.Auth;
 using NexApply.Api.Features.Auth.Login;
 using NexApply.Api.Features.Auth.LoginWithEmail;
+using NexApply.Api.Features.CompanyProfile;
+using NexApply.Api.Features.JobListings;
 using NexApply.Api.Features.Profile;
 using NexApply.Api.Services;
 using System.Xml.Linq;
 
+// Load environment variables from .env file
+DotNetEnv.Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -149,6 +153,8 @@ app.MapControllers();
 
 app.MapAuthEndpoints();
 app.MapProfileEndpoints();
+app.MapJobListingsEndpoints();
+app.MapCompanyProfileEndpoints();
 
 app.Run();
 

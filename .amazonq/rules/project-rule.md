@@ -23,7 +23,7 @@
 - **Result<T>** — unified response wrapper
 - **Shared Enums** — enums used across Client and Api (e.g., `UserRole`)
 - **Dependencies:** MediatR.Contracts only
-- **Referenced by:** NexApply.Client, NexApply.Api
+- **Referenced by:** NexApply.Web (React), NexApply.Api
 
 ### NexApply.Api (Backend)
 - **Handlers** — implement `IRequestHandler<TCommand, Result<T>>`
@@ -34,11 +34,16 @@
 - **DbContext** — EF Core database context
 - **Dependencies:** NexApply.Contracts, MediatR, FluentValidation, EF Core, Npgsql
 
-### NexApply.Client (Frontend)
-- **Pages/Components** — Blazor Server UI
+### NexApply.Web (Frontend - CURRENT)
+- **Pages/Components** — React + TypeScript UI
 - **Services** — HTTP clients calling Api endpoints
 - **Dependencies:** NexApply.Contracts (NOT NexApply.Api)
 - **Never reference NexApply.Api** — use Contracts for shared types
+- **Build Tool:** Vite
+
+### NexApply.Client (Frontend - DEPRECATED)
+- **Old Blazor Server project** — no longer in use
+- **Replaced by:** NexApply.Web (React + TypeScript)
 
 ## Domain Layer (DDD)
 - **Entities** — rich domain models with behavior, identity, and invariants

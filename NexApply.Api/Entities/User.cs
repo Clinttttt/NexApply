@@ -14,6 +14,8 @@ public class User : BaseEntity
     public bool IsEmailVerified { get; private set; } = false;
     public string? EmailVerificationCode { get; private set; }
     public DateTime? EmailVerificationCodeExpiry { get; private set; }
+    public string? PasswordResetCode { get; private set; }
+    public DateTime? PasswordResetCodeExpiry { get; private set; }
 
     // Navigation properties
     public CompanyProfile? CompanyProfile { get; private set; }
@@ -93,6 +95,27 @@ public class User : BaseEntity
         IsEmailVerified = true;
         EmailVerificationCode = null;
         EmailVerificationCodeExpiry = null;
+        MarkAsUpdated();
+    }
+
+    public void ChangePassword(string newPasswordHash)
+    {
+        PasswordHash = newPasswordHash;
+        MarkAsUpdated();
+    }
+
+    public void SetPasswordResetCode(string code, DateTime expiry)
+    {
+        PasswordResetCode = code;
+        PasswordResetCodeExpiry = expiry;
+        MarkAsUpdated();
+    }
+
+    public void ResetPassword(string newPasswordHash)
+    {
+        PasswordHash = newPasswordHash;
+        PasswordResetCode = null;
+        PasswordResetCodeExpiry = null;
         MarkAsUpdated();
     }
 }

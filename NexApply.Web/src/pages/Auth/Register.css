@@ -1,0 +1,729 @@
+/* ═══════════════════════════════════════════════════════════════
+   REGISTER PAGE
+   ═══════════════════════════════════════════════════════════════ */
+
+.register-page {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ─── Left Panel ─── */
+.register-left {
+  position: relative;
+  background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.register-left-content {
+  position: relative;
+  z-index: 2;
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.register-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  font-family: 'Fraunces', serif;
+  margin-bottom: 64px;
+}
+
+.register-hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 520px;
+}
+
+.register-eyebrow {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+  width: fit-content;
+  animation: eyebrow-pulse 2s ease-in-out infinite;
+}
+
+.register-title {
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0 0 16px 0;
+  font-family: 'Fraunces', serif;
+}
+
+.register-subtitle {
+  font-size: 16px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+}
+
+.register-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  font-family: 'Fraunces', serif;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.register-testimonial-ticker {
+  margin-top: 48px;
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.ticker-track {
+  display: flex;
+  gap: 48px;
+  animation: ticker-scroll 30s linear infinite;
+}
+
+.ticker-item {
+  flex-shrink: 0;
+  min-width: 320px;
+}
+
+.ticker-quote {
+  font-size: 14px;
+  font-style: italic;
+  margin-bottom: 8px;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.ticker-author {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.register-decorative-grid {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  z-index: 1;
+}
+
+/* ─── Right Panel ─── */
+.register-right {
+  background: #F8FAFC;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 32px;
+}
+
+.register-form-container {
+  width: 100%;
+  max-width: 440px;
+  background: white;
+  border-radius: 16px;
+  padding: 40px;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
+}
+
+.register-back {
+  margin-bottom: 24px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #64748B;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.back-link:hover {
+  color: #1D4ED8;
+}
+
+.register-header {
+  margin-bottom: 24px;
+}
+
+.register-header h2 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0 0 8px 0;
+  font-family: 'Fraunces', serif;
+}
+
+.register-header p {
+  font-size: 14px;
+  color: #64748B;
+  margin: 0;
+}
+
+/* ─── Role Switcher ─── */
+.role-switcher {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 4px;
+  background: #F1F5F9;
+  border-radius: 10px;
+  margin-bottom: 24px;
+}
+
+.role-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #64748B;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.role-btn:hover {
+  color: #1D4ED8;
+  background: rgba(29, 78, 216, 0.05);
+}
+
+.role-btn.active {
+  color: #1D4ED8;
+  background: white;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+}
+
+.role-btn svg {
+  flex-shrink: 0;
+}
+
+/* ─── Google Button ─── */
+.google-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #0F172A;
+  background: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-bottom: 20px;
+}
+
+.google-btn:hover {
+  background: #F8FAFC;
+  border-color: #CBD5E1;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+/* ─── Divider ─── */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 20px 0;
+  color: #94A3B8;
+  font-size: 12px;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #E2E8F0;
+}
+
+/* ─── Error Message ─── */
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #FEE2E2;
+  border: 1px solid #FCA5A5;
+  border-radius: 8px;
+  color: #DC2626;
+  font-size: 13px;
+  margin-bottom: 20px;
+  animation: error-slide-in 0.2s ease;
+}
+
+.error-message svg {
+  flex-shrink: 0;
+}
+
+/* ─── Form ─── */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #0F172A;
+  margin-bottom: 8px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #0F172A;
+  background: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #1D4ED8;
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.1);
+}
+
+.form-group input:disabled {
+  background: #F1F5F9;
+  color: #94A3B8;
+  cursor: not-allowed;
+}
+
+.form-group input::placeholder {
+  color: #94A3B8;
+}
+
+/* ─── Username Input with @ Prefix ─── */
+.username-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.username-prefix {
+  position: absolute;
+  left: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748B;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.username-input {
+  padding-left: 32px !important;
+}
+
+/* ─── Password Input with Toggle ─── */
+.password-input-wrapper {
+  position: relative;
+}
+
+.password-input-wrapper input {
+  padding-right: 48px;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #94A3B8;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+}
+
+.toggle-password:hover {
+  color: #1D4ED8;
+}
+
+/* ─── Password Strength ─── */
+.password-strength {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.strength-bars {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.strength-bar {
+  height: 4px;
+  flex: 1;
+  background: #E2E8F0;
+  border-radius: 2px;
+  transition: background-color 0.2s ease;
+}
+
+.strength-label {
+  font-size: 12px;
+  font-weight: 500;
+  min-width: 50px;
+  text-align: right;
+}
+
+/* ─── Checkbox ─── */
+.form-group-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.form-group-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  cursor: pointer;
+  accent-color: #1D4ED8;
+}
+
+.form-group-checkbox label {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.form-group-checkbox label a {
+  color: #1D4ED8;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.form-group-checkbox label a:hover {
+  text-decoration: underline;
+}
+
+/* ─── Submit Button ─── */
+.submit-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  background: #1D4ED8;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: #1E40AF;
+  box-shadow: 0 2px 8px rgba(29, 78, 216, 0.3);
+}
+
+.submit-btn:disabled {
+  background: #94A3B8;
+  cursor: not-allowed;
+}
+
+.spinner {
+  animation: spin 0.8s linear infinite;
+}
+
+/* ─── Footer ─── */
+.register-footer {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 13px;
+  color: #64748B;
+}
+
+.register-footer a {
+  color: #1D4ED8;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.register-footer a:hover {
+  text-decoration: underline;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   EMAIL VERIFICATION STEP
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Verification Steps (Left Panel) ─── */
+.verification-steps {
+  margin-top: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.verification-step {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.step-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.step-content {
+  flex: 1;
+  padding-top: 4px;
+}
+
+.step-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.step-desc {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.verification-footer {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  text-align: center;
+}
+
+.verification-footer p {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0 12px 0;
+}
+
+.resend-btn {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.resend-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ─── Verification UI (Right Panel) ─── */
+.email-sent-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 24px;
+  background: #EFF6FF;
+  border-radius: 50%;
+  color: #1D4ED8;
+}
+
+.verification-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0F172A;
+  text-align: center;
+  margin: 0 0 12px 0;
+  font-family: 'Fraunces', serif;
+}
+
+.verification-message {
+  font-size: 14px;
+  color: #64748B;
+  text-align: center;
+  line-height: 1.6;
+  margin: 0 0 32px 0;
+}
+
+.verification-message strong {
+  color: #1D4ED8;
+  font-weight: 600;
+}
+
+.verification-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn-resend {
+  width: 100%;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  background: #1D4ED8;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-resend:hover {
+  background: #1E40AF;
+  box-shadow: 0 2px 8px rgba(29, 78, 216, 0.3);
+}
+
+.btn-back-login {
+  width: 100%;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1D4ED8;
+  background: #EFF6FF;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+  text-decoration: none;
+  display: block;
+}
+
+.btn-back-login:hover {
+  background: #DBEAFE;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes eyebrow-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes error-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1024px) {
+  .register-page {
+    grid-template-columns: 1fr;
+  }
+
+  .register-left {
+    display: none;
+  }
+
+  .register-right {
+    padding: 24px;
+  }
+
+  .register-form-container {
+    max-width: 480px;
+  }
+}
+
+@media (max-width: 640px) {
+  .register-right {
+    padding: 16px;
+  }
+
+  .register-form-container {
+    padding: 32px 24px;
+  }
+
+  .register-header h2 {
+    font-size: 22px;
+  }
+
+  .register-stats {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}

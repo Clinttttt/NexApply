@@ -46,7 +46,7 @@ public class RegisterHandler(AppDbContext context, IEmailService emailService) :
         }
         else
         {
-            var companyProfile = CompanyProfile.Create(user.Id, request.FullName);
+            var companyProfile = Entities.CompanyProfile.Create(user.Id, request.FullName);
             context.CompanyProfiles.Add(companyProfile);
         }
 

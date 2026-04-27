@@ -22,7 +22,7 @@ public class JobListing : BaseEntity
     public JobListingStatus Status { get; private set; } = JobListingStatus.Active;
 
     // Navigation properties
-    public CompanyProfile Company { get; private set; } = null!;
+    public User Company { get; private set; } = null!;
     public ICollection<Application> Applications { get; private set; } = [];
     public ICollection<SavedJob> SavedByStudents { get; private set; } = [];
 
@@ -35,9 +35,15 @@ public class JobListing : BaseEntity
         string responsibilities,
         string qualifications,
         string requiredSkills,
+        string? benefits,
         string location,
         JobType jobType,
-        WorkSetup workSetup)
+        WorkSetup workSetup,
+        decimal? salaryMin,
+        decimal? salaryMax,
+        string? experienceLevel,
+        int openings,
+        DateTime? deadline)
     {
         return new JobListing
         {
@@ -47,9 +53,15 @@ public class JobListing : BaseEntity
             Responsibilities = responsibilities,
             Qualifications = qualifications,
             RequiredSkills = requiredSkills,
+            Benefits = benefits,
             Location = location,
             JobType = jobType,
-            WorkSetup = workSetup
+            WorkSetup = workSetup,
+            SalaryMin = salaryMin,
+            SalaryMax = salaryMax,
+            ExperienceLevel = experienceLevel,
+            Openings = openings,
+            Deadline = deadline
         };
     }
 

@@ -1,0 +1,408 @@
+/* =========================================
+   RecruiterDashboard.css
+   Page-scoped styles — recruiter dashboard
+   Uses variables from app.css only.
+   No duplication of global utility classes.
+   ========================================= */
+
+
+/* ── Shell ──────────────────────────────── */
+
+.rec-shell {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background-color: var(--color-slate-50);
+}
+
+
+/* ── Main Content ─────────────────────── */
+
+.rec-main {
+    flex: 1;
+    margin-left: 248px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    min-height: 100vh;
+}
+
+/* Body */
+.rec-body {
+    padding: 16px 32px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+
+/* ── Quick Actions Grid ──────────────── */
+
+.rec-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.rec-action-card {
+    background-color: var(--color-white);
+    border: 1px solid var(--color-slate-200);
+    border-radius: var(--radius-xl);
+    padding: 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-decoration: none;
+    transition: box-shadow var(--transition-base), border-color var(--transition-base), background-color var(--transition-base);
+    cursor: pointer;
+}
+
+    .rec-action-card:hover {
+        box-shadow: var(--shadow-md);
+        border-color: var(--color-slate-300);
+        background-color: var(--color-slate-50);
+    }
+
+    .rec-action-card:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+    }
+
+.rec-action-card--primary {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+    .rec-action-card--primary:hover {
+        background-color: var(--color-primary-light);
+        border-color: var(--color-primary-light);
+        box-shadow: var(--shadow-primary);
+    }
+
+    .rec-action-card--primary .rec-action-icon {
+        color: rgba(255, 255, 255, 0.85);
+        background-color: rgba(255, 255, 255, 0.15);
+        border-radius: var(--radius-md);
+        padding: 6px;
+    }
+
+    .rec-action-card--primary .rec-action-label {
+        color: var(--color-white);
+    }
+
+    .rec-action-card--primary .rec-action-sub {
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+.rec-action-icon {
+    color: var(--color-slate-500);
+    display: flex;
+    width: 32px;
+    height: 32px;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-slate-100);
+    border-radius: var(--radius-md);
+}
+
+.rec-action-label {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    color: var(--color-slate-900);
+}
+
+.rec-action-sub {
+    font-size: var(--text-base);
+    color: var(--color-slate-500);
+}
+
+
+/* ── Section Titles ──────────────────── */
+
+.rec-section-title {
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    color: var(--color-slate-900);
+    margin: 0;
+}
+
+
+/* ── Lower Grid ──────────────────────── */
+
+.rec-lower-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.rec-panel {
+    background-color: var(--color-white);
+    border: 1px solid var(--color-slate-200);
+    border-radius: var(--radius-xl);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.rec-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.rec-panel-link {
+    font-size: var(--text-md);
+    font-weight: 500;
+    color: var(--color-slate-500);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+    .rec-panel-link:hover {
+        color: var(--color-primary);
+    }
+
+    .rec-panel-link:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+        border-radius: var(--radius-sm);
+    }
+
+
+/* ── Applicant List ──────────────────── */
+
+.rec-applicant-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.rec-applicant-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius-lg);
+    background-color: var(--color-slate-50);
+    border: 1px solid var(--color-slate-100);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+    .rec-applicant-row:hover {
+        background-color: var(--color-primary-bg);
+        border-color: var(--color-primary-border);
+    }
+
+.rec-applicant-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-slate-300) 0%, var(--color-slate-400) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: var(--color-white);
+    flex-shrink: 0;
+}
+
+.rec-applicant-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.rec-applicant-name {
+    font-size: var(--text-md);
+    font-weight: 600;
+    color: var(--color-slate-900);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rec-applicant-role {
+    font-size: var(--text-base);
+    color: var(--color-slate-500);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rec-applicant-date {
+    font-size: var(--text-sm);
+    color: var(--color-slate-400);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Status Badges */
+.rec-status-badge {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.rec-status-badge--submitted {
+    color: var(--color-slate-600);
+    background-color: var(--color-slate-100);
+}
+
+.rec-status-badge--review {
+    color: var(--color-amber-700);
+    background-color: var(--color-amber-100);
+}
+
+.rec-status-badge--shortlisted {
+    color: var(--color-green-700);
+    background-color: var(--color-green-100);
+}
+
+.rec-status-badge--interview {
+    color: var(--color-green-700);
+    background-color: var(--color-green-100);
+}
+
+.rec-status-badge--declined {
+    color: var(--color-red-700);
+    background-color: var(--color-red-100);
+}
+
+
+/* ── Active Listings ─────────────────── */
+
+.rec-listing-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.rec-listing-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: var(--radius-lg);
+    background-color: var(--color-slate-50);
+    border: 1px solid var(--color-slate-100);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+    .rec-listing-row:hover {
+        background-color: var(--color-primary-bg);
+        border-color: var(--color-primary-border);
+    }
+
+.rec-listing-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.rec-listing-title {
+    font-size: var(--text-md);
+    font-weight: 600;
+    color: var(--color-slate-900);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rec-listing-meta {
+    display: flex;
+    gap: 6px;
+}
+
+.rec-tag {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: var(--radius-full);
+}
+
+.rec-tag--blue {
+    color: var(--color-primary);
+    background-color: var(--color-primary-bg);
+}
+
+.rec-tag--green {
+    color: var(--color-primary);
+    background-color: var(--color-primary-bg);
+}
+
+.rec-tag--slate {
+    color: var(--color-slate-600);
+    background-color: var(--color-slate-100);
+}
+
+.rec-listing-stats {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.rec-listing-stat {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--text-md);
+    font-weight: 600;
+    color: var(--color-slate-700);
+}
+
+    .rec-listing-stat svg {
+        color: var(--color-slate-400);
+    }
+
+.rec-listing-date {
+    font-size: var(--text-xs);
+    color: var(--color-slate-400);
+}
+
+
+/* ── Responsive ──────────────────────── */
+
+@media (max-width: 1200px) {
+    .rec-actions-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 1024px) {
+    .rec-main {
+        margin-left: 0;
+    }
+
+    .rec-lower-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .rec-body {
+        padding: 16px;
+        gap: 16px;
+    }
+
+    .rec-actions-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}

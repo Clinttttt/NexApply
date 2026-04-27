@@ -12,7 +12,8 @@ namespace NexApply.Api.Features.Auth.Refresh
             {
                 var result = await mediator.Send(command);
                 return ResultExtensions.ToIResult(result);
-            });
+            })
+            .WithTags("Auth");
         }
     }
 }

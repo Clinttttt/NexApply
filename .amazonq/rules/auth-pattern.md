@@ -1,66 +1,80 @@
 # NexApply — Authentication Pattern
 
 ## Overview
-Blazor Server authentication using cookie-based JWT tokens with automatic refresh. Tokens are stored in HTTP-only cookies and synchronized to Blazor circuit state for API calls.
+React + TypeScript authentication using httpOnly cookie-based JWT tokens with automatic refresh. Tokens are stored in httpOnly cookies and managed by axios interceptors.
 
 ## Token Flow
-1. User logs in via AuthService
-2. JavaScript interop calls API endpoint and stores tokens in HTTP-only cookies
-3. TokenCircuitHandler captures AccessToken from cookie claims on circuit connection
-4. TokenService holds AccessToken in memory for the circuit lifetime
-5. AuthorizationDelegatingHandler attaches Bearer token to outgoing API requests
-6. RefreshTokenDelegatingHandler intercepts 401 responses and refreshes tokens automatically
+1. User logs in via authService
+2. API sets AccessToken and RefreshToken in httpOnly cookies
+3. Axios automatically sends cookies with every request (withCredentials: true)
+4. AuthContext fetches current user on app mount
+5. Axios interceptor catches 401 responses and refreshes tokens automatically
+6. Original request is retried with new token
 
 ## Components
 
-### AuthService
-Handles login, register, logout, email verification. Uses JavaScript interop to call API endpoints and store tokens in cookies. Never stores tokens directly in C# code. Always navigates with forceLoad: true after login to refresh the circuit.
+### authService
+Handles login, register, logout, email verification. Calls API endpoints using axios. Never stores tokens directly in JavaScript code. Tokens are managed by browser cookies.
 
-### AuthStateProvider
-Reads AccessToken claim from HttpContext.User and parses JWT to create ClaimsPrincipal. Notifies Blazor when authentication state changes. Returns anonymous user if token is missing or invalid.
+### AuthContext
+Provides authentication state to the entire app. Fetches current user on mount. Exposes user, isAuthenticated, isLoading, login, logout methods. Uses React Context API.
 
-### TokenService
-In-memory token storage scoped to the circuit. Holds AccessToken and RefreshToken for the current user session. Tokens are cleared when circuit disconnects.
+### axios interceptor
+Intercepts 401 Unauthorized responses. Calls refresh endpoint with cookies. Retries original request if refresh succeeds. Redirects to login if refresh fails. Prevents concurrent refresh attempts.
 
-### TokenCircuitHandler
-Runs on circuit connection. Reads AccessToken from HttpContext.User claims and stores in TokenService. Ensures token is available for API calls during the circuit lifetime.
-
-### AuthorizationDelegatingHandler
-Attaches Bearer token to outgoing HTTP requests. Reads AccessToken from HttpContext.User claims. Only attaches token if user is authenticated and token exists. Logs warning if user is authenticated but token is missing.
-
-### RefreshTokenDelegatingHandler
-Intercepts 401 Unauthorized responses. Uses SemaphoreSlim to prevent concurrent refresh attempts. Reads RefreshToken from cookie, calls refresh endpoint, updates TokenService with new token, retries original request. Returns original 401 response if refresh fails.
+### ProtectedRoute
+Wrapper component for protected routes. Checks if user is authenticated. Redirects to login if not authenticated. Shows loading spinner while checking auth state.
 
 ## Key Rules
-- Tokens are stored in HTTP-only cookies, never in localStorage or sessionStorage
-- AccessToken is read from HttpContext.User claims, not from cookies directly
-- TokenService is scoped per circuit, not singleton
-- Always use IHttpContextAccessor to access HttpContext
-- Never instantiate HttpClient directly, always use IHttpClientFactory
-- RefreshTokenDelegatingHandler must be registered before AuthorizationDelegatingHandler in the pipeline
-- Always check if user is authenticated before reading token claims
-- Use !string.IsNullOrEmpty(token) to validate token exists before attaching to request
-- JavaScript interop handles cookie storage, C# code only reads from HttpContext
-- Always navigate with forceLoad: true after login to refresh circuit and load new claims
+- Tokens are stored in httpOnly cookies, never in localStorage or sessionStorage
+- Axios sends cookies automatically with withCredentials: true
+- Never manually read or write tokens in JavaScript code
+- AuthContext is the single source of truth for auth state
+- Always use axios instance with interceptors configured
+- Refresh token endpoint is called automatically on 401 responses
+- Use ProtectedRoute component to guard authenticated routes
+- Check isLoading before rendering protected content
 
-## Registration Order
-```
-builder.Services.AddHttpClient("ApiClient")
-    .AddHttpMessageHandler<RefreshTokenDelegatingHandler>()
-    .AddHttpMessageHandler<AuthorizationDelegatingHandler>();
-```
+## Axios Configuration
+```typescript
+const apiClient = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  withCredentials: true, // Send cookies with requests
+});
 
-RefreshTokenDelegatingHandler runs first to handle token refresh, then AuthorizationDelegatingHandler attaches the token.
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        await axios.post('/api/auth/refresh', {}, { withCredentials: true });
+        return apiClient(originalRequest);
+      } catch (refreshError) {
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+```
 
 ## Error Handling
-- AuthorizationDelegatingHandler catches exceptions and logs errors, never throws
-- RefreshTokenDelegatingHandler returns original 401 response if refresh fails
-- AuthStateProvider returns anonymous user if token parsing fails
-- AuthService returns false or error message on failure, never throws
+- Axios interceptor catches 401 and attempts refresh
+- If refresh fails, redirect to login page
+- AuthContext returns null user if fetch fails
+- ProtectedRoute redirects to login if not authenticated
+- Services return Result<T> with error messages
 
 ## Security Notes
-- Tokens are HTTP-only cookies, not accessible via JavaScript
+- Tokens are httpOnly cookies, not accessible via JavaScript
 - AccessToken is short-lived, RefreshToken is long-lived
-- RefreshToken is only sent to refresh endpoint, never to other API endpoints
-- SemaphoreSlim prevents race conditions during concurrent refresh attempts
-- Always validate token exists before using it
+- RefreshToken is only sent to refresh endpoint
+- _retry flag prevents infinite refresh loops
+- Always validate user exists before accessing user properties
+- Use HTTPS in production to prevent cookie theft

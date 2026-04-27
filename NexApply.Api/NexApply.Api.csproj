@@ -7,6 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Features\JobListings\ApproveJobListing\**" />
+    <Content Remove="Features\JobListings\ApproveJobListing\**" />
+    <EmbeddedResource Remove="Features\JobListings\ApproveJobListing\**" />
+    <None Remove="Features\JobListings\ApproveJobListing\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DotNetEnv" Version="3.1.1" />
     <PackageReference Include="FluentValidation" Version="12.1.1" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <PackageReference Include="Google.Apis.Auth" Version="1.73.0" />
@@ -35,7 +43,6 @@
     <Folder Include="Features\JobListings\CreateJobListing\" />
     <Folder Include="Features\JobListings\EditJobListing\" />
     <Folder Include="Features\JobListings\DeleteJobListing\" />
-    <Folder Include="Features\JobListings\ApproveJobListing\" />
     <Folder Include="Features\JobListings\BrowseJobListings\" />
     <Folder Include="Features\ResumeMatching\Match\" />
     <Folder Include="Features\ResumeMatching\Parse\" />

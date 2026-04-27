@@ -12,7 +12,8 @@ namespace NexApply.Api.Features.Auth.LoginWithEmail
             {
                 var result = await mediator.Send(request);
                 return ResultExtensions.ToIResult(result);
-            });
+            })
+                   .WithTags("Auth");
         }
     }
 }

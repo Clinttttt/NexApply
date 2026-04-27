@@ -44,10 +44,8 @@ namespace NexApply.Api.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("StudentId")
                         .HasColumnType("uuid");
@@ -78,21 +76,74 @@ namespace NexApply.Api.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("CompanySize")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("ContactEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("ContactPhone")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
+                    b.Property<string>("FacebookUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Founded")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("GitHubUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("HiringManagerEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("HiringManagerName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("HiringManagerTitle")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<string>("Industry")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<string>("LinkedInUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("Location")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
                     b.Property<string>("LogoUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Mission")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PerksAndBenefits")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Tagline")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("TwitterUrl")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
@@ -103,6 +154,10 @@ namespace NexApply.Api.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Website")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("WorkCulture")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
@@ -140,10 +195,8 @@ namespace NexApply.Api.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<string>("JobType")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                    b.Property<int>("JobType")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Location")
                         .IsRequired()
@@ -171,10 +224,8 @@ namespace NexApply.Api.Migrations
                     b.Property<decimal?>("SalaryMin")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -184,10 +235,8 @@ namespace NexApply.Api.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("WorkSetup")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                    b.Property<int>("WorkSetup")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -351,7 +400,8 @@ namespace NexApply.Api.Migrations
                         .HasColumnType("character varying(256)");
 
                     b.Property<string>("EmailVerificationCode")
-                        .HasColumnType("text");
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
 
                     b.Property<DateTime?>("EmailVerificationCodeExpiry")
                         .HasColumnType("timestamp with time zone");
@@ -365,6 +415,13 @@ namespace NexApply.Api.Migrations
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("PasswordResetCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<DateTime?>("PasswordResetCodeExpiry")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("RefreshToken")
                         .HasMaxLength(500)
@@ -426,8 +483,8 @@ namespace NexApply.Api.Migrations
 
             modelBuilder.Entity("NexApply.Api.Entities.JobListing", b =>
                 {
-                    b.HasOne("NexApply.Api.Entities.CompanyProfile", "Company")
-                        .WithMany("JobListings")
+                    b.HasOne("NexApply.Api.Entities.User", "Company")
+                        .WithMany()
                         .HasForeignKey("CompanyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -474,11 +531,6 @@ namespace NexApply.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("NexApply.Api.Entities.CompanyProfile", b =>
-                {
-                    b.Navigation("JobListings");
                 });
 
             modelBuilder.Entity("NexApply.Api.Entities.JobListing", b =>

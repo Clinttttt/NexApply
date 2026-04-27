@@ -16,6 +16,7 @@ namespace NexApply.Client
         {
             service.AddScoped<IAuthApiService, AuthApiService>();
             service.AddScoped<IProfileApiService, ProfileApiService>();
+            service.AddScoped<ICompanyProfileApiService, Services.CompanyProfile.CompanyProfileApiService>();
             service.AddScoped<CurrentUserService>();
             service.AddHttpContextAccessor();
             service.AddControllers();
@@ -56,6 +57,7 @@ namespace NexApply.Client
             });
 
             service.AddApiHttpClient<IProfileApiService, ProfileApiService>(configuration);
+            service.AddApiHttpClient<ICompanyProfileApiService, Services.CompanyProfile.CompanyProfileApiService>(configuration);
 
     
             return service;

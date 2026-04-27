@@ -4,6 +4,7 @@
 
 /* Import shared pipeline styles */
 @import url('css/pipeline.css');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:wght@600;700&display=swap');
 
 :root {
     /* ---- Color Palette ---- */

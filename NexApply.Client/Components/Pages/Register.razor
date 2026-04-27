@@ -120,7 +120,7 @@
                             <input id="reg-name"
                                    class="field-input field-input--prefixed"
                                    type="text"
-                                   placeholder='@(ActiveRole == "Student" ? "Juan dela Cruz" : "Acme Corp")'
+                                   placeholder='@(ActiveRole == "Student" ? "Juan Cruz" : "Acme Corp")'
                                    @bind="DisplayName"
                                    @bind:event="oninput"
                                    autocomplete="name" />
@@ -142,7 +142,7 @@
                             <input id="reg-username"
                                    class="field-input field-input--at-prefixed"
                                    type="text"
-                                   placeholder="juandelacruz"
+                                   placeholder="juancruz"
                                    @bind="Username"
                                    @bind:event="oninput"
                                    autocomplete="username" />
@@ -163,7 +163,7 @@
                             <input id="reg-email"
                                    class="field-input field-input--prefixed"
                                    type="email"
-                                   placeholder="you@email.com"
+                                   placeholder="you@example.com"
                                    @bind="Email"
                                    @bind:event="oninput"
                                    autocomplete="email" />
@@ -184,7 +184,7 @@
                             <input id="reg-password"
                                    class="field-input field-input--prefixed"
                                    type="@(ShowPassword ? "text" : "password")"
-                                   placeholder="Min. 8 characters"
+                                   placeholder="Min. 8 chars"
                                    @bind="Password"
                                    @bind:event="oninput"
                                    autocomplete="new-password" />
@@ -238,7 +238,7 @@
                             <input id="reg-confirm"
                                    class='field-input field-input--prefixed @(!string.IsNullOrEmpty(ConfirmPassword) && ConfirmPassword != Password ? "field-input--error" : "")'
                                    type="@(ShowConfirmPassword ? "text" : "password")"
-                                   placeholder="Re-enter your password"
+                                   placeholder="Re-enter password"
                                    @bind="ConfirmPassword"
                                    @bind:event="oninput"
                                    autocomplete="new-password" />

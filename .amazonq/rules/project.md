@@ -19,10 +19,14 @@ FullTime, PartTime, Internship, Freelance, Remote
 
 ---
 
-## Client (Blazor Server)
+## Client (React + TypeScript)
+
+**IMPORTANT:** NexApply has migrated from Blazor Server to React + TypeScript.
+- **NexApply.Client/** — DEPRECATED (Old Blazor Server project)
+- **NexApply.Web/** — CURRENT (React + TypeScript + Vite)
 
 ### Student Pages
-- **Dashboard (Menu)** — stats overview, recent applications, top job matches with resume score
+- **Dashboard** — stats overview, recent applications, top job matches with resume score
 - **Browse Jobs** — 3-column layout (filters, job list, detail panel), skill picker, resume matching, save jobs
 - **My Applications** — track application status with pipeline visualization, filter by stage/type
 - **Resume & Profile** — upload resume (PDF/DOCX/image) or build from scratch, profile strength tracker

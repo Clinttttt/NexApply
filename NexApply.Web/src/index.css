@@ -1,0 +1,529 @@
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:wght@600;700&display=swap');
+
+@import "tailwindcss";
+
+/* =========================================
+   NexApply — Global Design System
+   ========================================= */
+
+:root {
+    /* ---- Color Palette ---- */
+    --color-white: #FFFFFF;
+    --color-primary: #1D4ED8;
+    --color-primary-light: #3B82F6;
+    --color-primary-lighter: #60A5FA;
+    --color-primary-bg: #EFF6FF;
+    --color-primary-bg-light: #DBEAFE;
+    --color-primary-border: #BFDBFE;
+    
+    /* Slate Grays */
+    --color-slate-900: #0F172A;
+    --color-slate-800: #1E293B;
+    --color-slate-700: #334155;
+    --color-slate-600: #475569;
+    --color-slate-500: #64748B;
+    --color-slate-400: #94A3B8;
+    --color-slate-300: #CBD5E1;
+    --color-slate-200: #E2E8F0;
+    --color-slate-100: #F1F5F9;
+    --color-slate-50: #F8FAFC;
+    
+    /* Accent Colors */
+    --color-amber-700: #D97706;
+    --color-amber-600: #F59E0B;
+    --color-amber-100: #FEF3C7;
+    --color-amber-50: #FDE68A;
+    
+    --color-green-700: #047857;
+    --color-green-600: #059669;
+    --color-green-500: #10B981;
+    --color-green-100: #D1FAE5;
+    --color-green-50: #A7F3D0;
+    
+    --color-red-700: #B91C1C;
+    --color-red-600: #DC2626;
+    --color-red-100: #FEE2E2;
+    --color-red-50: #FEF2F2;
+    
+    /* ---- Typography ---- */
+    --font-primary: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-display: 'Fraunces', serif;
+    
+    --text-xs: 10px;
+    --text-sm: 11px;
+    --text-base: 12px;
+    --text-md: 13px;
+    --text-lg: 13.5px;
+    --text-xl: 14px;
+    --text-2xl: 15px;
+    --text-3xl: 16px;
+    --text-4xl: 18px;
+    --text-5xl: 24px;
+    --text-6xl: 26px;
+    --text-7xl: 28px;
+    --text-8xl: 32px;
+    --text-9xl: 36px;
+    
+    /* ---- Spacing ---- */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-7: 28px;
+    --space-8: 32px;
+    
+    /* ---- Border Radius ---- */
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 10px;
+    --radius-xl: 12px;
+    --radius-2xl: 14px;
+    --radius-full: 9999px;
+    
+    /* ---- Shadows ---- */
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+    --shadow-md: 0 2px 8px rgba(15, 23, 42, 0.08);
+    --shadow-lg: 0 4px 20px rgba(15, 23, 42, 0.08);
+    --shadow-primary: 0 2px 8px rgba(29, 78, 216, 0.3);
+    
+    /* ---- Transitions ---- */
+    --transition-fast: 0.12s ease;
+    --transition-base: 0.15s ease;
+    --transition-slow: 0.2s ease;
+}
+
+/* ---- Global Resets ---- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-primary);
+    color: var(--color-slate-900);
+    background-color: var(--color-white);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---- Global Scrollbar Hiding ---- */
+* {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+*::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+    display: none;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* ---- Utility Classes ---- */
+.text-primary { color: var(--color-primary); }
+.text-slate-900 { color: var(--color-slate-900); }
+.text-slate-600 { color: var(--color-slate-600); }
+.text-slate-500 { color: var(--color-slate-500); }
+.text-slate-400 { color: var(--color-slate-400); }
+
+.bg-white { background-color: var(--color-white); }
+.bg-primary { background-color: var(--color-primary); }
+.bg-slate-50 { background-color: var(--color-slate-50); }
+
+.font-display { font-family: var(--font-display); }
+
+.rounded-sm { border-radius: var(--radius-sm); }
+.rounded-md { border-radius: var(--radius-md); }
+.rounded-lg { border-radius: var(--radius-lg); }
+.rounded-xl { border-radius: var(--radius-xl); }
+.rounded-full { border-radius: var(--radius-full); }
+
+/* ---- App Shell Layout ---- */
+.app-shell {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.main-content {
+    flex: 1;
+    margin-left: 248px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    background-color: var(--color-slate-50);
+}
+
+/* =========================================
+   Resume Preview Area
+   ========================================= */
+
+.resume-preview-area {
+    background: var(--color-white);
+    border: 1px solid var(--color-slate-200);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    margin-top: var(--space-4);
+}
+
+.resume-preview-img {
+    width: 100%;
+    height: auto;
+    display: block;
+    max-height: 800px;
+    object-fit: contain;
+    background: var(--color-slate-50);
+}
+
+.resume-preview-pdf {
+    width: 100%;
+    height: 800px;
+    display: block;
+    border: none;
+}
+
+.pdf-fallback {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-8);
+    gap: var(--space-3);
+    text-align: center;
+    color: var(--color-slate-500);
+}
+
+.pdf-fallback p {
+    font-size: var(--text-lg);
+    margin: 0;
+}
+
+.pdf-download-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-primary);
+    color: var(--color-white);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    font-size: var(--text-md);
+    font-weight: 500;
+    transition: background var(--transition-base);
+}
+
+.pdf-download-link:hover {
+    background: var(--color-primary-light);
+}
+
+.resume-preview-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-slate-50);
+    border-top: 1px solid var(--color-slate-200);
+    font-size: var(--text-md);
+}
+
+.preview-bar-left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--color-slate-600);
+}
+
+.preview-bar-filename {
+    font-weight: 500;
+    color: var(--color-slate-900);
+}
+
+.preview-bar-size {
+    color: var(--color-slate-400);
+    font-size: var(--text-base);
+}
+
+.preview-bar-hint {
+    font-size: var(--text-base);
+    color: var(--color-slate-400);
+    font-style: italic;
+}
+
+/* =========================================
+   Global Modal Styles (for portals)
+   ========================================= */
+
+.modal-backdrop {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: rgba(15, 23, 42, 0.7) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 99999 !important;
+    padding: 24px !important;
+}
+
+.modal {
+    background: white !important;
+    border-radius: 12px !important;
+    width: 100% !important;
+    max-width: 500px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    max-height: 90vh !important;
+    overflow: hidden !important;
+    position: relative !important;
+    z-index: 100000 !important;
+}
+
+/* =========================================
+   Pipeline/Progress Track Styles
+   ========================================= */
+
+/* ── Progress Track Base ── */
+.progress-track,
+.pipeline-track {
+    display: flex;
+    align-items: center;
+}
+
+/* ── Step Base ── */
+.progress-step,
+.pipeline-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+/* ── Step Node/Dot ── */
+.step-node,
+.pipeline-step-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--color-slate-200);
+    border: 2px solid var(--color-slate-200);
+    transition: all var(--transition-base);
+}
+
+/* ── Step Label ── */
+.step-label,
+.pipeline-step-label {
+    font-size: var(--text-xs);
+    color: var(--color-slate-400);
+    white-space: nowrap;
+    font-weight: 500;
+    text-align: center;
+}
+
+/* =========================================
+   STATE RULES
+   ========================================= */
+
+/* Done → Blue (default for all completed steps) */
+.step--done .step-node,
+.pipeline-step.done .pipeline-step-dot {
+    background-color: #1D4ED8;
+    border-color: #1D4ED8;
+}
+
+.step--done .step-label,
+.pipeline-step.done .pipeline-step-label {
+    color: #1D4ED8;
+}
+
+/* Active → Amber (default for active steps) */
+.step--active .step-node,
+.pipeline-step.active .pipeline-step-dot {
+    background-color: #FFFFFF;
+    border-color: #D97706;
+    box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2);
+    width: 12px;
+    height: 12px;
+}
+
+.step--active .step-label,
+.pipeline-step.active .pipeline-step-label {
+    color: #D97706;
+    font-weight: 600;
+}
+
+/* Inactive → Gray */
+.pipeline-step.inactive .pipeline-step-dot {
+    background: #F1F5F9;
+    border-color: #E2E8F0;
+}
+
+.pipeline-step.inactive .pipeline-step-label {
+    color: #94A3B8;
+}
+
+/* =========================================
+   SPECIFIC STEP OVERRIDES
+   ========================================= */
+
+/* Under Review (done) → Filled amber circle */
+.step--review.step--done .step-node {
+    background-color: #D97706;
+    border-color: #D97706;
+}
+
+.step--review.step--done .step-label {
+    color: #D97706;
+}
+
+/* Under Review (active) → White center with amber border + glow */
+.step--review.step--active .step-node,
+.pipeline-step.active.pipeline-step--review .pipeline-step-dot {
+    background-color: #FFFFFF;
+    border-color: #D97706;
+    box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2);
+    width: 12px;
+    height: 12px;
+}
+
+.step--review.step--active .step-label,
+.pipeline-step.active.pipeline-step--review .pipeline-step-label {
+    color: #D97706;
+    font-weight: 600;
+}
+
+/* Shortlisted (done or active) → Blue */
+.step--shortlisted.step--done .step-node,
+.pipeline-step.done.pipeline-step--shortlisted .pipeline-step-dot {
+    background-color: #1D4ED8;
+    border-color: #1D4ED8;
+}
+
+.step--shortlisted.step--done .step-label,
+.pipeline-step.done.pipeline-step--shortlisted .pipeline-step-label {
+    color: #1D4ED8;
+}
+
+.step--shortlisted.step--active .step-node,
+.pipeline-step.active.pipeline-step--shortlisted .pipeline-step-dot {
+    background-color: #FFFFFF;
+    border-color: #1D4ED8;
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.2);
+    width: 12px;
+    height: 12px;
+}
+
+.step--shortlisted.step--active .step-label,
+.pipeline-step.active.pipeline-step--shortlisted .pipeline-step-label {
+    color: #1D4ED8;
+    font-weight: 600;
+}
+
+/* For Interview (active) → White center with green border + glow */
+.step--interview.step--active .step-node,
+.pipeline-step.active.pipeline-step--interview .pipeline-step-dot {
+    background-color: #FFFFFF;
+    border-color: #059669;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.2);
+    width: 12px;
+    height: 12px;
+}
+
+.step--interview.step--active .step-label,
+.pipeline-step.active.pipeline-step--interview .pipeline-step-label {
+    color: #059669;
+    font-weight: 600;
+}
+
+/* Declined (done) → Filled red circle */
+.step--declined.step--done .step-node,
+.pipeline-step.done.pipeline-step--declined .pipeline-step-dot {
+    background-color: #DC2626;
+    border-color: #DC2626;
+}
+
+.step--declined.step--done .step-label,
+.pipeline-step.done.pipeline-step--declined .pipeline-step-label {
+    color: #DC2626;
+}
+
+/* Declined (active) → White center with red border + glow */
+.step--declined.step--active .step-node,
+.pipeline-step.active.pipeline-step--declined .pipeline-step-dot {
+    background-color: #FFFFFF;
+    border-color: #DC2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+    width: 12px;
+    height: 12px;
+}
+
+.step--declined.step--active .step-label,
+.pipeline-step.active.pipeline-step--declined .pipeline-step-label {
+    color: #DC2626;
+    font-weight: 600;
+}
+
+/* =========================================
+   CONNECTOR LINES
+   ========================================= */
+
+.step-line,
+.pipeline-connector {
+    flex: 1;
+    height: 2px;
+    background-color: var(--color-slate-200);
+    margin-bottom: 14px;
+    min-width: 20px;
+}
+
+.step-line.line--done,
+.pipeline-connector.done {
+    background-color: #BFDBFE;
+}
+
+/* ── Pipeline-specific spacing ── */
+.pipeline-connector {
+    margin-bottom: 28px;
+}
+
+/* ── Pipeline step count ── */
+.pipeline-step-count {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0F172A;
+}
+
+.pipeline-step.inactive .pipeline-step-count {
+    color: #CBD5E1;
+}
+
+/* =========================================
+   Animations
+   ========================================= */
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.spin-icon {
+    animation: spin 1s linear infinite;
+}

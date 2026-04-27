@@ -221,7 +221,7 @@
 
 .field-prefix {
     position: absolute;
-    left: 11px;
+    left: 14px;
     top: 50%;
     transform: translateY(-50%);
     display: flex;
@@ -229,15 +229,17 @@
     color: var(--color-slate-400);
     pointer-events: none;
     flex-shrink: 0;
+    z-index: 1;
 }
 
 .field-suffix {
     position: absolute;
-    right: 11px;
+    right: 14px;
     top: 50%;
     transform: translateY(-50%);
     display: flex;
     align-items: center;
+    z-index: 1;
 }
 
 .field-input {
@@ -249,9 +251,11 @@
     background: var(--color-white);
     border: 1px solid var(--color-slate-200);
     border-radius: var(--radius-md);
-    padding: 0 12px;
+    padding: 0 44px 0 44px;
     outline: none;
     transition: border-color var(--transition-base), box-shadow var(--transition-base);
+    position: relative;
+    z-index: 0;
 }
 
     .field-input::placeholder {
@@ -264,8 +268,9 @@
     }
 
 .field-input--prefixed {
-    padding-left: 36px;
-    padding-right: 36px;
+    padding-left: 44px !important;
+    padding-right: 44px !important;
+    text-indent: 0 !important;
 }
 
 .eye-toggle {
@@ -452,14 +457,15 @@
 }
 
 .field-at-prefix {
-    left: 36px !important;
+    left: 44px !important;
     color: var(--color-slate-500) !important;
     font-weight: 500;
     pointer-events: none;
 }
 
 .field-input--at-prefixed {
-    padding-left: 50px !important;
+    padding-left: 60px !important;
+    text-indent: 0 !important;
 }
 
 .strength-wrap {
