@@ -15,6 +15,8 @@ public class AppDbContext : DbContext
     public DbSet<Application> Applications => Set<Application>();
     public DbSet<SavedJob> SavedJobs => Set<SavedJob>();
     public DbSet<Resume> Resumes => Set<Resume>();
+    public DbSet<Interview> Interviews => Set<Interview>();
+    public DbSet<InterviewPanelist> InterviewPanelists => Set<InterviewPanelist>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -178,6 +180,43 @@ public class AppDbContext : DbContext
              .OnDelete(DeleteBehavior.Cascade);
 
             e.HasIndex(r => r.StudentProfileId).IsUnique();
+        });
+
+        modelBuilder.Entity<Interview>(e =>
+        {
+            e.HasKey(i => i.Id);
+            e.Property(i => i.ScheduledAt).IsRequired();
+            e.Property(i => i.DurationMinutes).IsRequired();
+            e.Property(i => i.Format).IsRequired();
+            e.Property(i => i.Status).IsRequired();
+            e.Property(i => i.Location).HasMaxLength(500);
+            e.Property(i => i.MeetingLink).HasMaxLength(1000);
+            e.Property(i => i.Notes).HasColumnType("text");
+            e.Property(i => i.Feedback).HasColumnType("text");
+            e.Property(i => i.Recommendation).HasMaxLength(100);
+            e.Property(i => i.CreatedAt).IsRequired();
+
+            e.HasOne(i => i.Application)
+             .WithMany()
+             .HasForeignKey(i => i.ApplicationId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasIndex(i => i.ScheduledAt);
+            e.HasIndex(i => i.Status);
+        });
+
+        modelBuilder.Entity<InterviewPanelist>(e =>
+        {
+            e.HasKey(p => p.Id);
+            e.Property(p => p.Name).IsRequired().HasMaxLength(200);
+            e.Property(p => p.Title).HasMaxLength(200);
+            e.Property(p => p.Email).HasMaxLength(256);
+            e.Property(p => p.CreatedAt).IsRequired();
+
+            e.HasOne(p => p.Interview)
+             .WithMany(i => i.Panelists)
+             .HasForeignKey(p => p.InterviewId)
+             .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

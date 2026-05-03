@@ -1,43 +1,35 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {CompanySidebar} from '../../components/CompanySidebar';
 import {CompanyHeader} from '../../components/CompanyHeader';
+import { companyDashboardService, type CompanyDashboardDto } from '../../services/companyDashboardService';
 import './CompanyDashboard.css';
 
-// ── Types ────────────────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────
 
-interface Applicant {
-  initials: string;
-  name: string;
-  role: string;
-  statusLabel: string;
-  statusModifier: 'submitted' | 'review' | 'shortlisted' | 'interview' | 'declined';
-  date: string;
-}
+const getStatusModifier = (status: string): 'submitted' | 'review' | 'shortlisted' | 'interview' | 'declined' => {
+  const statusMap: Record<string, 'submitted' | 'review' | 'shortlisted' | 'interview' | 'declined'> = {
+    'Submitted': 'submitted',
+    'UnderReview': 'review',
+    'Shortlisted': 'shortlisted',
+    'ForInterview': 'interview',
+    'Declined': 'declined'
+  };
+  return statusMap[status] || 'submitted';
+};
 
-interface JobListing {
-  title: string;
-  typeLabel: string;
-  typeModifier: 'blue' | 'green';
-  locationLabel: string;
-  applicantCount: number;
-  postedDate: string;
-}
+const getTypeModifier = (jobType: string): 'blue' | 'green' => {
+  return jobType === 'Internship' ? 'blue' : 'green';
+};
 
-// ── Static data ──────────────────────────────────────────
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};
 
-const RECENT_APPLICANTS: Applicant[] = [
-  { initials: 'KR', name: 'Kira Reyes',      role: 'Full-Stack Developer Intern', statusLabel: 'Under Review', statusModifier: 'review',      date: 'Apr 9' },
-  { initials: 'MG', name: 'Marco Guerrero',  role: 'React Frontend Developer',    statusLabel: 'Shortlisted',  statusModifier: 'shortlisted', date: 'Apr 8' },
-  { initials: 'SC', name: 'Sofia Cruz',      role: 'API Developer (.NET)',         statusLabel: 'For Interview',statusModifier: 'interview',   date: 'Apr 7' },
-  { initials: 'JT', name: 'James Tan',       role: '.NET Core Developer',          statusLabel: 'Submitted',    statusModifier: 'submitted',   date: 'Apr 7' },
-];
-
-const ACTIVE_LISTINGS: JobListing[] = [
-  { title: 'Full-Stack Developer Intern', typeLabel: 'Internship', typeModifier: 'blue',  locationLabel: 'Remote',  applicantCount: 14, postedDate: 'Apr 7' },
-  { title: 'React Frontend Developer',    typeLabel: 'Internship', typeModifier: 'blue',  locationLabel: 'Remote',  applicantCount: 9,  postedDate: 'Apr 3' },
-  { title: 'API Developer (.NET)',         typeLabel: 'Full-time',  typeModifier: 'green', locationLabel: 'Hybrid',  applicantCount: 21, postedDate: 'Apr 2' },
-  { title: '.NET Core Developer',         typeLabel: 'Full-time',  typeModifier: 'green', locationLabel: 'On-site', applicantCount: 43, postedDate: 'Apr 4' },
-];
+const getInitials = (name: string): string => {
+  return name.split(' ').map(n => n[0]).join('').toUpperCase();
+};
 
 // ── Sub-components ───────────────────────────────────────
 
@@ -87,6 +79,28 @@ const IconPersonSm = () => (
 // ── Main component ───────────────────────────────────────
 
 const RecruiterDashboard: React.FC = () => {
+  const [dashboard, setDashboard] = useState<CompanyDashboardDto | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      setIsLoading(true);
+      setError(null);
+      const result = await companyDashboardService.getDashboard();
+      
+      if (result.isSuccess && result.value) {
+        setDashboard(result.value);
+      } else {
+        setError(result.error || 'Failed to load dashboard');
+      }
+      
+      setIsLoading(false);
+    };
+
+    fetchDashboard();
+  }, []);
+
   return (
     <div className="rec-shell">
       <CompanySidebar />
@@ -112,19 +126,19 @@ const RecruiterDashboard: React.FC = () => {
             <Link to="/company-applicants" className="rec-action-card" role="button">
               <span className="rec-action-icon" aria-hidden="true"><IconPeople /></span>
               <span className="rec-action-label">Review Applicants</span>
-              <span className="rec-action-sub">12 awaiting review</span>
+              <span className="rec-action-sub">{dashboard?.awaitingReview || 0} awaiting review</span>
             </Link>
 
             <Link to="/company-interviews" className="rec-action-card" role="button">
               <span className="rec-action-icon" aria-hidden="true"><IconCalendar /></span>
               <span className="rec-action-label">Schedule Interview</span>
-              <span className="rec-action-sub">6 upcoming</span>
+              <span className="rec-action-sub">{dashboard?.upcomingInterviews || 0} upcoming</span>
             </Link>
 
             <Link to="/company-messages" className="rec-action-card" role="button">
               <span className="rec-action-icon" aria-hidden="true"><IconMessage /></span>
               <span className="rec-action-label">Messages</span>
-              <span className="rec-action-sub">3 unread</span>
+              <span className="rec-action-sub">{dashboard?.unreadMessages || 0} unread</span>
             </Link>
 
           </div>
@@ -139,23 +153,33 @@ const RecruiterDashboard: React.FC = () => {
                 <Link to="/recruiter/applicants" className="rec-panel-link">View all</Link>
               </div>
 
-              <ul className="rec-applicant-list" role="list">
-                {RECENT_APPLICANTS.map((applicant) => (
-                  <li key={applicant.name} className="rec-applicant-row">
-                    <div className="rec-applicant-avatar" aria-hidden="true">
-                      {applicant.initials}
-                    </div>
-                    <div className="rec-applicant-info">
-                      <span className="rec-applicant-name">{applicant.name}</span>
-                      <span className="rec-applicant-role">{applicant.role}</span>
-                    </div>
-                    <span className={`rec-status-badge rec-status-badge--${applicant.statusModifier}`}>
-                      {applicant.statusLabel}
-                    </span>
-                    <span className="rec-applicant-date">{applicant.date}</span>
-                  </li>
-                ))}
-              </ul>
+              {isLoading ? (
+                <div style={{ padding: '20px', textAlign: 'center', color: '#64748B' }}>Loading...</div>
+              ) : error ? (
+                <div style={{ padding: '20px', textAlign: 'center', color: '#DC2626' }}>{error}</div>
+              ) : !dashboard?.recentApplicants || dashboard.recentApplicants.length === 0 ? (
+                <div style={{ padding: '40px 20px', textAlign: 'center', color: '#64748B' }}>
+                  <div style={{ fontSize: '14px' }}>No Recent Applications</div>
+                </div>
+              ) : (
+                <ul className="rec-applicant-list" role="list">
+                  {dashboard.recentApplicants.map((applicant) => (
+                    <li key={applicant.applicationId} className="rec-applicant-row">
+                      <div className="rec-applicant-avatar" aria-hidden="true">
+                        {getInitials(applicant.studentName)}
+                      </div>
+                      <div className="rec-applicant-info">
+                        <span className="rec-applicant-name">{applicant.studentName}</span>
+                        <span className="rec-applicant-role">{applicant.jobTitle}</span>
+                      </div>
+                      <span className={`rec-status-badge rec-status-badge--${getStatusModifier(applicant.status)}`}>
+                        {applicant.status}
+                      </span>
+                      <span className="rec-applicant-date">{formatDate(applicant.appliedAt)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </section>
 
             {/* Active Job Listings */}
@@ -165,26 +189,36 @@ const RecruiterDashboard: React.FC = () => {
                 <Link to="/recruiter/manage-jobs" className="rec-panel-link">Manage all</Link>
               </div>
 
-              <ul className="rec-listing-list" role="list">
-                {ACTIVE_LISTINGS.map((job) => (
-                  <li key={job.title} className="rec-listing-row">
-                    <div className="rec-listing-info">
-                      <span className="rec-listing-title">{job.title}</span>
-                      <div className="rec-listing-meta">
-                        <span className={`rec-tag rec-tag--${job.typeModifier}`}>{job.typeLabel}</span>
-                        <span className="rec-tag rec-tag--slate">{job.locationLabel}</span>
+              {isLoading ? (
+                <div style={{ padding: '20px', textAlign: 'center', color: '#64748B' }}>Loading...</div>
+              ) : error ? (
+                <div style={{ padding: '20px', textAlign: 'center', color: '#DC2626' }}>{error}</div>
+              ) : !dashboard?.activeListings || dashboard.activeListings.length === 0 ? (
+                <div style={{ padding: '40px 20px', textAlign: 'center', color: '#64748B' }}>
+                  <div style={{ fontSize: '14px' }}>No Active Listings</div>
+                </div>
+              ) : (
+                <ul className="rec-listing-list" role="list">
+                  {dashboard.activeListings.map((job) => (
+                    <li key={job.jobListingId} className="rec-listing-row">
+                      <div className="rec-listing-info">
+                        <span className="rec-listing-title">{job.title}</span>
+                        <div className="rec-listing-meta">
+                          <span className={`rec-tag rec-tag--${getTypeModifier(job.jobType)}`}>{job.jobType}</span>
+                          <span className="rec-tag rec-tag--slate">{job.workSetup}</span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="rec-listing-stats">
-                      <span className="rec-listing-stat">
-                        <IconPersonSm />
-                        <span>{job.applicantCount}</span>
-                      </span>
-                      <span className="rec-listing-date">Posted {job.postedDate}</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                      <div className="rec-listing-stats">
+                        <span className="rec-listing-stat">
+                          <IconPersonSm />
+                          <span>{job.applicantCount}</span>
+                        </span>
+                        <span className="rec-listing-date">Posted {formatDate(job.postedAt)}</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </section>
 
           </div>

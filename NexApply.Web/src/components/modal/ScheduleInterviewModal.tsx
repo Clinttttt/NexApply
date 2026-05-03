@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './ScheduleInterviewModal.css';
+import { jobListingService } from '../../services/jobListingService';
 
 interface InterviewData {
   candidateName: string;
@@ -50,6 +51,23 @@ export const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({
 
   const [interviewTime, setInterviewTime] = useState(initialTime || '10:00');
   const [interviewerName, setInterviewerName] = useState(initialInterviewerName || '');
+  const [jobListings, setJobListings] = useState<Array<{ id: string; title: string }>>([]);
+  const [isLoadingJobs, setIsLoadingJobs] = useState(false);
+
+  useEffect(() => {
+    if (isVisible && !isRescheduleMode) {
+      fetchJobListings();
+    }
+  }, [isVisible, isRescheduleMode]);
+
+  const fetchJobListings = async () => {
+    setIsLoadingJobs(true);
+    const result = await jobListingService.getCompanyJobListings();
+    if (result.isSuccess && result.value) {
+      setJobListings(result.value.map(j => ({ id: j.id, title: j.title })));
+    }
+    setIsLoadingJobs(false);
+  };
 
   const handleConfirm = () => {
     if (!interview.candidateName || !interview.jobTitle || !interview.format) return;
@@ -142,12 +160,14 @@ export const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({
                 className="sched-select"
                 value={interview.jobTitle}
                 onChange={(e) => setInterview({ ...interview, jobTitle: e.target.value })}
+                disabled={isLoadingJobs}
               >
                 <option value="">Select position…</option>
-                <option>Full-Stack Developer Intern</option>
-                <option>React Frontend Developer</option>
-                <option>API Developer (.NET)</option>
-                <option>.NET Core Developer</option>
+                {jobListings.map((job) => (
+                  <option key={job.id} value={job.id}>
+                    {job.title}
+                  </option>
+                ))}
               </select>
             </div>
           </div>

@@ -1,39 +1,14 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import './CompanyApplicants.css'
 import {CompanySidebar} from '../../components/CompanySidebar';
 import {CompanyHeader} from '../../components/CompanyHeader';
 import { ScheduleInterviewModal } from '../../components/modal/ScheduleInterviewModal';
+import { companyApplicantsService, type ApplicantDto } from '../../services/companyApplicantsService';
+import { jobListingService, type JobListingSummaryDto } from '../../services/jobListingService';
 
 // ─────────────────────────────────────────
 //  INTERFACES
 // ─────────────────────────────────────────
-
-interface JobItem {
-  id: number
-  title: string
-  type: string
-  location: string
-  requiredSkills: string[]
-}
-
-interface ApplicantItem {
-  id: number
-  jobId: number
-  name: string
-  email: string
-  stage: string
-  matchScore: number
-  appliedDate: Date
-  education: string
-  experience: string
-  location: string
-  portfolio: string
-  phone: string
-  linkedIn: string
-  gitHub: string
-  notes: string
-  skills: string[]
-}
 
 interface StageStyle {
   cssClass: string
@@ -45,31 +20,11 @@ interface StageStyle {
 
 const STAGES: Record<string, StageStyle> = {
   'Submitted':    { cssClass: 'submitted' },
-  'Under Review': { cssClass: 'review' },
+  'UnderReview': { cssClass: 'review' },
   'Shortlisted':  { cssClass: 'shortlisted' },
-  'For Interview':{ cssClass: 'interview' },
+  'ForInterview':{ cssClass: 'interview' },
   'Declined':     { cssClass: 'declined' },
 }
-
-const JOBS: JobItem[] = [
-  { id: 1, title: 'Full-Stack Developer Intern', type: 'Internship', location: 'Remote',  requiredSkills: ['React', 'ASP.NET Core', 'SQL', 'Git'] },
-  { id: 2, title: 'React Frontend Developer',    type: 'Internship', location: 'Remote',  requiredSkills: ['React', 'TypeScript', 'TailwindCSS', 'Figma'] },
-  { id: 3, title: 'API Developer (.NET)',         type: 'FullTime',   location: 'Hybrid',  requiredSkills: ['ASP.NET Core', 'PostgreSQL', 'Docker', 'Redis'] },
-  { id: 4, title: '.NET Core Developer',         type: 'FullTime',   location: 'On-site', requiredSkills: ['C#', '.NET Core', 'EF Core', 'Azure'] },
-]
-
-const INITIAL_APPLICANTS: ApplicantItem[] = [
-  { id:1,  jobId:1, name:'Kira Reyes',      email:'kira.reyes@email.com',    stage:'Under Review', matchScore:91, appliedDate:new Date(2025,3,9),  education:'B.S. Computer Science, UP Diliman',    experience:'2 years (internships)', location:'Quezon City, PH',   portfolio:'kirareyes.dev',  phone:'+63 912 345 6789', linkedIn:'https://linkedin.com/in/kirareyes',      gitHub:'https://github.com/kirareyes',      notes:'', skills:['React','ASP.NET Core','SQL','TypeScript','Git'] },
-  { id:2,  jobId:1, name:'Marco Guerrero',  email:'marco.g@email.com',       stage:'Shortlisted',  matchScore:85, appliedDate:new Date(2025,3,8),  education:'B.S. Information Technology, DLSU',    experience:'1 year',               location:'Manila, PH',        portfolio:'',               phone:'+63 917 234 5678', linkedIn:'https://linkedin.com/in/marcoguerrero',  gitHub:'',                                  notes:'Strong portfolio. Good culture fit.', skills:['React','SQL','Git','Node.js'] },
-  { id:3,  jobId:1, name:'Sofia Cruz',      email:'sofia.cruz@email.com',    stage:'For Interview',matchScore:78, appliedDate:new Date(2025,3,7),  education:'B.S. Computer Engineering, Ateneo',    experience:'3 years',              location:'Pasig, PH',         portfolio:'sofiadev.io',    phone:'+63 918 345 6789', linkedIn:'https://linkedin.com/in/sofiacruz',      gitHub:'https://github.com/sofiacruz',      notes:'', skills:['ASP.NET Core','SQL','Docker','Git'] },
-  { id:4,  jobId:1, name:'James Tan',       email:'james.tan@email.com',     stage:'Submitted',    matchScore:62, appliedDate:new Date(2025,3,7),  education:'B.S. Computer Science, UST',           experience:'Fresh graduate',       location:'Mandaluyong, PH',   portfolio:'',               phone:'',                 linkedIn:'',                                       gitHub:'https://github.com/jamestan',       notes:'', skills:['React','HTML','CSS','Git'] },
-  { id:5,  jobId:2, name:'Ana Villanueva',  email:'ana.v@email.com',         stage:'Under Review', matchScore:88, appliedDate:new Date(2025,3,6),  education:'B.S. Computer Science, UP Manila',     experience:'2 years',              location:'Taguig, PH',        portfolio:'anadev.ph',      phone:'+63 919 456 7890', linkedIn:'https://linkedin.com/in/anavillanueva',  gitHub:'https://github.com/anavillanueva',  notes:'', skills:['React','TypeScript','TailwindCSS','Figma','CSS'] },
-  { id:6,  jobId:2, name:'Luis Santos',     email:'luis.santos@email.com',   stage:'Shortlisted',  matchScore:74, appliedDate:new Date(2025,3,5),  education:'B.S. IT, FEU',                         experience:'1.5 years',            location:'Makati, PH',        portfolio:'',               phone:'+63 920 567 8901', linkedIn:'https://linkedin.com/in/luissantos',     gitHub:'',                                  notes:'Needs TypeScript training.', skills:['React','Figma','CSS','JavaScript'] },
-  { id:7,  jobId:3, name:'Rachel Ong',      email:'rachel.ong@email.com',    stage:'Submitted',    matchScore:95, appliedDate:new Date(2025,3,4),  education:'B.S. Computer Science, DLSU',          experience:'4 years',              location:'BGC, PH',           portfolio:'racheldev.com',  phone:'+63 921 678 9012', linkedIn:'https://linkedin.com/in/rachelong',      gitHub:'https://github.com/rachelong',      notes:'Exceptional profile.', skills:['ASP.NET Core','PostgreSQL','Docker','Redis','Kubernetes'] },
-  { id:8,  jobId:3, name:'Mark David',      email:'mark.david@email.com',    stage:'Declined',     matchScore:44, appliedDate:new Date(2025,3,3),  education:'B.S. IT, Mapua',                       experience:'6 months',             location:'Caloocan, PH',      portfolio:'',               phone:'+63 922 789 0123', linkedIn:'',                                       gitHub:'',                                  notes:'Insufficient experience for senior role.', skills:['ASP.NET Core','SQL'] },
-  { id:9,  jobId:4, name:'Claire Bautista', email:'claire.b@email.com',      stage:'For Interview',matchScore:89, appliedDate:new Date(2025,3,2),  education:'B.S. Computer Science, Ateneo',        experience:'5 years',              location:'Pasig, PH',         portfolio:'',               phone:'+63 923 890 1234', linkedIn:'https://linkedin.com/in/clairebautista',gitHub:'https://github.com/clairebautista',  notes:'', skills:['C#','.NET Core','EF Core','Azure','Docker'] },
-  { id:10, jobId:4, name:'Jeric Lim',       email:'jeric.lim@email.com',     stage:'Under Review', matchScore:71, appliedDate:new Date(2025,3,1),  education:'B.S. IT, PLM',                         experience:'3 years',              location:'Manila, PH',        portfolio:'jericlim.dev',   phone:'+63 924 901 2345', linkedIn:'https://linkedin.com/in/jericlim',       gitHub:'https://github.com/jericlim',       notes:'', skills:['C#','.NET Core','SQL','Git'] },
-]
 
 // ─────────────────────────────────────────
 //  HELPERS
@@ -81,11 +36,10 @@ const getInitials = (name: string) =>
 const getMatchClass = (score: number) =>
   score >= 80 ? 'high' : score >= 60 ? 'mid' : 'low'
 
-const getAvatarColor = (id: number) =>
-  ['blue', 'green', 'amber', 'slate', 'purple'][id % 5]
-
-const formatType = (type: string) =>
-  type === 'FullTime' ? 'Full-Time' : type === 'PartTime' ? 'Part-Time' : type
+const getAvatarColor = (id: string) => {
+  const hashCode = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  return ['blue', 'green', 'amber', 'slate', 'purple'][hashCode % 5]
+}
 
 const formatDate = (d: Date) =>
   d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
@@ -97,55 +51,81 @@ const formatDate = (d: Date) =>
 export default function CompanyApplicants() {
 
   // ── State ──────────────────────────────
-  const [applicants, setApplicants]           = useState<ApplicantItem[]>(INITIAL_APPLICANTS)
-  const [selectedJobId, setSelectedJobId]     = useState<number | null>(null)
+  const [jobs, setJobs]                       = useState<JobListingSummaryDto[]>([])
+  const [applicants, setApplicants]           = useState<ApplicantDto[]>([])
+  const [selectedJobId, setSelectedJobId]     = useState<string | null>(null)
   const [searchQuery, setSearchQuery]         = useState('')
-  const [sortBy, setSortBy]                   = useState('newest')
+  const [sortBy, setSortBy]                   = useState('Newest')
   const [activeStageFilter, setActiveStageFilter] = useState('')
   const [bulkStageTarget, setBulkStageTarget] = useState('')
-  const [expandedId, setExpandedId]           = useState<number | null>(null)
-  const [selectedIds, setSelectedIds]         = useState<Set<number>>(new Set())
+  const [expandedId, setExpandedId]           = useState<string | null>(null)
+  const [selectedIds, setSelectedIds]         = useState<Set<string>>(new Set())
   const [showListingsDrop, setShowListingsDrop] = useState(false)
 
   // Modals
   const [showResumeModal, setShowResumeModal]             = useState(false)
-  const [resumeApplicant, setResumeApplicant]             = useState<ApplicantItem | null>(null)
+  const [resumeApplicant, setResumeApplicant]             = useState<ApplicantDto | null>(null)
   const [showStageModal, setShowStageModal]               = useState(false)
-  const [stageApplicant, setStageApplicant]               = useState<ApplicantItem | null>(null)
+  const [stageApplicant, setStageApplicant]               = useState<ApplicantDto | null>(null)
   const [showScheduleModal, setShowScheduleModal]         = useState(false)
-  const [scheduleApplicant, setScheduleApplicant]         = useState<ApplicantItem | null>(null)
+  const [scheduleApplicant, setScheduleApplicant]         = useState<ApplicantDto | null>(null)
 
-  const activeJob = JOBS.find(j => j.id === selectedJobId) ?? null
+  const activeJob = jobs.find(j => j.id === selectedJobId) ?? null
+
+  // ── Load Jobs ────────────────────────────
+  useEffect(() => {
+    const loadJobs = async () => {
+      const result = await jobListingService.getCompanyJobListings()
+      if (result.isSuccess && result.value) {
+        setJobs(result.value)
+      }
+    }
+    loadJobs()
+  }, [])
+
+  // ── Load Data ────────────────────────────
+  useEffect(() => {
+    const loadApplicants = async () => {
+      const result = await companyApplicantsService.getApplicants({
+        status: activeStageFilter || undefined,
+        jobListingId: selectedJobId || undefined,
+        searchTerm: searchQuery || undefined,
+        sortBy: sortBy
+      })
+
+      if (result.isSuccess && result.value) {
+        setApplicants(result.value)
+      }
+    }
+
+    loadApplicants()
+  }, [activeStageFilter, selectedJobId, searchQuery, sortBy])
 
   // ── Filtered + Sorted ──────────────────
   const filteredApplicants = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase()
-    let result = applicants.filter(a =>
-      (selectedJobId === null || a.jobId === selectedJobId) &&
-      (activeStageFilter === '' || a.stage === activeStageFilter) &&
-      (q === '' || a.name.toLowerCase().includes(q) ||
-        a.email.toLowerCase().includes(q) ||
-        a.skills.some(s => s.toLowerCase().includes(q)))
-    )
-    if (sortBy === 'name')    result = [...result].sort((a, b) => a.name.localeCompare(b.name))
-    if (sortBy === 'oldest')  result = [...result].sort((a, b) => a.appliedDate.getTime() - b.appliedDate.getTime())
-    if (sortBy === 'newest')  result = [...result].sort((a, b) => b.appliedDate.getTime() - a.appliedDate.getTime())
-    if (sortBy === 'match')   result = [...result].sort((a, b) => b.matchScore - a.matchScore)
-    return result
-  }, [applicants, selectedJobId, activeStageFilter, searchQuery, sortBy])
+    return applicants
+  }, [applicants])
 
   // ── Stage update helper ─────────────────
-  const updateStage = (id: number, stage: string) =>
-    setApplicants(prev => prev.map(a => a.id === id ? { ...a, stage } : a))
+  const updateStage = async (id: string, stage: string) => {
+    const result = await companyApplicantsService.updateApplicationStatus(id, stage)
+    if (result.isSuccess) {
+      setApplicants(prev => prev.map(a => a.applicationId === id ? { ...a, status: stage } : a))
+    }
+  }
 
-  const updateNotes = (id: number, notes: string) =>
-    setApplicants(prev => prev.map(a => a.id === id ? { ...a, notes } : a))
+  const updateNotes = async (id: string, notes: string) => {
+    const result = await companyApplicantsService.updateApplicationNotes(id, notes)
+    if (result.isSuccess) {
+      setApplicants(prev => prev.map(a => a.applicationId === id ? { ...a, recruiterNotes: notes } : a))
+    }
+  }
 
   // ── Handlers ───────────────────────────
-  const toggleExpand = (id: number) =>
+  const toggleExpand = (id: string) =>
     setExpandedId(prev => prev === id ? null : id)
 
-  const toggleSelect = (id: number) =>
+  const toggleSelect = (id: string) =>
     setSelectedIds(prev => {
       const next = new Set(prev)
       next.has(id) ? next.delete(id) : next.add(id)
@@ -153,42 +133,44 @@ export default function CompanyApplicants() {
     })
 
   const toggleSelectAll = (checked: boolean) =>
-    setSelectedIds(checked ? new Set(filteredApplicants.map(a => a.id)) : new Set())
+    setSelectedIds(checked ? new Set(filteredApplicants.map(a => a.applicationId)) : new Set())
 
   const clearSelection = () => { setSelectedIds(new Set()); setBulkStageTarget('') }
 
-  const applyBulkStage = (stage: string) => {
+  const applyBulkStage = async (stage: string) => {
     if (!stage) return
-    setApplicants(prev => prev.map(a => selectedIds.has(a.id) ? { ...a, stage } : a))
+    for (const id of selectedIds) {
+      await updateStage(id, stage)
+    }
     clearSelection()
   }
 
-  const quickStage = (app: ApplicantItem, stage: string) =>
-    updateStage(app.id, app.stage === stage ? 'Submitted' : stage)
+  const quickStage = async (app: ApplicantDto, stage: string) =>
+    await updateStage(app.applicationId, app.status === stage ? 'Submitted' : stage)
 
-  const selectJobFromDropdown = (id: number | null) => {
+  const selectJobFromDropdown = (id: string | null) => {
     setSelectedJobId(id)
     setExpandedId(null)
     setShowListingsDrop(false)
   }
 
   // Resume modal
-  const openResumeModal  = (app: ApplicantItem) => { setResumeApplicant(app); setShowResumeModal(true) }
+  const openResumeModal  = (app: ApplicantDto) => { setResumeApplicant(app); setShowResumeModal(true) }
   const closeResumeModal = () => { setShowResumeModal(false); setResumeApplicant(null) }
 
   // Stage action modal
-  const openStageModal  = (app: ApplicantItem) => { setStageApplicant(app); setShowStageModal(true) }
+  const openStageModal  = (app: ApplicantDto) => { setStageApplicant(app); setShowStageModal(true) }
   const closeStageModal = () => { setShowStageModal(false); setStageApplicant(null) }
 
-  const moveToStage = (stage: string) => {
+  const moveToStage = async (stage: string) => {
     if (!stageApplicant) return
-    updateStage(stageApplicant.id, stage)
+    await updateStage(stageApplicant.applicationId, stage)
     closeStageModal()
   }
 
-  const moveToInterviewAndSchedule = () => {
+  const moveToInterviewAndSchedule = async () => {
     if (!stageApplicant) return
-    updateStage(stageApplicant.id, 'For Interview')
+    await updateStage(stageApplicant.applicationId, 'ForInterview')
     const app = stageApplicant
     closeStageModal()
     setScheduleApplicant(app)
@@ -196,7 +178,7 @@ export default function CompanyApplicants() {
   }
 
   // Schedule modal
-  const openScheduleModal  = (app: ApplicantItem) => { setScheduleApplicant(app); setShowScheduleModal(true) }
+  const openScheduleModal  = (app: ApplicantDto) => { setScheduleApplicant(app); setShowScheduleModal(true) }
   const closeScheduleModal = () => { setShowScheduleModal(false); setScheduleApplicant(null) }
 
   // ── Render ─────────────────────────────
@@ -217,14 +199,14 @@ export default function CompanyApplicants() {
                 onClick={() => setActiveStageFilter('')}
               >
                 <span className="psb-count">
-                  {applicants.filter(a => selectedJobId === null || a.jobId === selectedJobId).length}
+                  {applicants.filter(a => selectedJobId === null || a.jobListingId === selectedJobId).length}
                 </span>
                 <span className="psb-label">All</span>
               </button>
 
               {Object.entries(STAGES).map(([stage, style]) => {
                 const count = applicants.filter(a =>
-                  a.stage === stage && (selectedJobId === null || a.jobId === selectedJobId)
+                  a.status === stage && (selectedJobId === null || a.jobListingId === selectedJobId)
                 ).length
                 return (
                   <>
@@ -268,8 +250,8 @@ export default function CompanyApplicants() {
                       <span className="ldi-title">All Listings</span>
                       <span className="ldi-count">{applicants.length}</span>
                     </button>
-                    {JOBS.map(job => {
-                      const appCount = applicants.filter(a => a.jobId === job.id).length
+                    {jobs.map(job => {
+                      const appCount = applicants.filter(a => a.jobListingId === job.id).length
                       return (
                         <button
                           key={job.id}
@@ -279,7 +261,7 @@ export default function CompanyApplicants() {
                           <div className="ldi-inner">
                             <span className="ldi-title">{job.title}</span>
                             <div className="ldi-meta">
-                              <span className="ldi-badge">{formatType(job.type)}</span>
+                              <span className="ldi-badge">{job.jobType}</span>
                               <span className="ldi-loc">{job.location}</span>
                             </div>
                           </div>
@@ -389,35 +371,37 @@ export default function CompanyApplicants() {
 
                 {/* Table Rows */}
                 {filteredApplicants.map(app => {
-                  const isSelected = selectedIds.has(app.id)
-                  const isExpanded = expandedId === app.id
-                  const job = JOBS.find(j => j.id === app.jobId) ?? null
-                  const missing = job ? job.requiredSkills.filter(r => !app.skills.map(s => s.toLowerCase()).includes(r.toLowerCase())) : []
+                  const isSelected = selectedIds.has(app.applicationId)
+                  const isExpanded = expandedId === app.applicationId
+                  const job = jobs.find(j => j.id === app.jobListingId) ?? null
+                  const requiredSkills = job?.requiredSkills ? (typeof job.requiredSkills === 'string' ? job.requiredSkills.split(',').map(s => s.trim()) : job.requiredSkills) : []
+                  const missing = requiredSkills.filter(r => !app.skills.map(s => s.toLowerCase()).includes(r.toLowerCase()))
+                  const appliedDate = new Date(app.appliedAt)
 
                   return (
                     <div
-                      key={app.id}
+                      key={app.applicationId}
                       className={`table-row-wrap ${isExpanded ? 'row-expanded' : ''} ${isSelected ? 'row-selected' : ''}`}
                     >
                       {/* Main Row */}
-                      <div className="table-row" onClick={() => toggleExpand(app.id)}>
+                      <div className="table-row" onClick={() => toggleExpand(app.applicationId)}>
 
                         <div className="td td--check" onClick={e => e.stopPropagation()}>
                           <input
                             type="checkbox"
                             className="row-check"
                             checked={isSelected}
-                            onChange={() => toggleSelect(app.id)}
-                            aria-label={`Select ${app.name}`}
+                            onChange={() => toggleSelect(app.applicationId)}
+                            aria-label={`Select ${app.studentName}`}
                           />
                         </div>
 
                         <div className="td td--applicant">
-                          <div className={`applicant-avatar applicant-avatar--${getAvatarColor(app.id)}`}>
-                            {getInitials(app.name)}
+                          <div className={`applicant-avatar applicant-avatar--${getAvatarColor(app.studentId)}`}>
+                            {getInitials(app.studentName)}
                           </div>
                           <div className="applicant-info">
-                            <span className="applicant-name">{app.name}</span>
+                            <span className="applicant-name">{app.studentName}</span>
                             <span className="applicant-email">{app.email}</span>
                           </div>
                         </div>
@@ -425,23 +409,23 @@ export default function CompanyApplicants() {
                         <div className="td td--job">
                           {job && (
                             <>
-                              <span className="position-title">{job.title}</span>
-                              <span className="position-type">{formatType(job.type)}</span>
+                              <span className="position-title">{app.jobTitle}</span>
+                              <span className="position-type">{app.jobType}</span>
                             </>
                           )}
                         </div>
 
                         <div className="td td--match">
-                          <div className={`match-score match-score--${getMatchClass(app.matchScore)}`}>
+                          <div className={`match-score match-score--${getMatchClass(app.matchScore ?? 0)}`}>
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                               <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
                             </svg>
-                            {app.matchScore}%
+                            {app.matchScore ?? 0}%
                           </div>
                         </div>
 
                         <div className="td td--stage" onClick={e => e.stopPropagation()}>
-                          {app.stage === 'For Interview' && (
+                          {app.status === 'ForInterview' && (
                             <button className="stage-badge stage-badge--interview" onClick={() => openScheduleModal(app)}>
                               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
@@ -450,15 +434,15 @@ export default function CompanyApplicants() {
                               For Interview
                             </button>
                           )}
-                          {app.stage === 'Submitted' && (
-                            <button className="stage-badge stage-badge--submitted" onClick={() => updateStage(app.id, 'Under Review')}>
+                          {app.status === 'Submitted' && (
+                            <button className="stage-badge stage-badge--submitted" onClick={() => updateStage(app.applicationId, 'UnderReview')}>
                               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
                               </svg>
                               Submitted
                             </button>
                           )}
-                          {app.stage === 'Under Review' && (
+                          {app.status === 'UnderReview' && (
                             <button className="stage-badge stage-badge--review" onClick={() => openStageModal(app)}>
                               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
@@ -466,15 +450,15 @@ export default function CompanyApplicants() {
                               Under Review
                             </button>
                           )}
-                          {app.stage === 'Shortlisted' && (
-                            <button className="stage-badge stage-badge--shortlisted" onClick={() => updateStage(app.id, 'For Interview')}>
+                          {app.status === 'Shortlisted' && (
+                            <button className="stage-badge stage-badge--shortlisted" onClick={() => updateStage(app.applicationId, 'ForInterview')}>
                               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                               </svg>
                               Shortlisted
                             </button>
                           )}
-                          {app.stage === 'Declined' && (
+                          {app.status === 'Declined' && (
                             <span className="stage-badge stage-badge--declined stage-badge--disabled">
                               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
@@ -485,19 +469,19 @@ export default function CompanyApplicants() {
                         </div>
 
                         <div className="td td--date">
-                          <span className="applied-date">{formatDate(app.appliedDate)}</span>
-                          <span className="applied-year">{app.appliedDate.getFullYear()}</span>
+                          <span className="applied-date">{formatDate(appliedDate)}</span>
+                          <span className="applied-year">{appliedDate.getFullYear()}</span>
                         </div>
 
                         <div className="td td--actions" onClick={e => e.stopPropagation()}>
-                          <a href={`/recruiter/applicants/${app.id}/resume`} className="row-action row-action--resume" title="View Resume">
+                          <a href={`/recruiter/applicants/${app.applicationId}/resume`} className="row-action row-action--resume" title="View Resume">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                               <polyline points="14 2 14 8 20 8" />
                             </svg>
                             Resume
                           </a>
-                          <button className="row-action row-action--message" title={`Message ${app.name}`} onClick={() => {}}>
+                          <button className="row-action row-action--message" title={`Message ${app.studentName}`} onClick={() => {}}>
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                             </svg>
@@ -505,7 +489,7 @@ export default function CompanyApplicants() {
                           </button>
                           <button
                             className="row-action row-action--expand"
-                            onClick={() => toggleExpand(app.id)}
+                            onClick={() => toggleExpand(app.applicationId)}
                             aria-label={`${isExpanded ? 'Collapse' : 'Expand'} applicant details`}
                           >
                             <svg className={`chevron ${isExpanded ? 'rotated' : ''}`} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -534,7 +518,7 @@ export default function CompanyApplicants() {
                                 <span className="about-key">Phone</span>
                                 <span className="about-val">{app.phone || <span className="about-val--empty">Not provided</span>}</span>
                                 <span className="about-key">Location</span>
-                                <span className="about-val">{app.location}</span>
+                                <span className="about-val">{app.location || <span className="about-val--empty">Not provided</span>}</span>
                                 <span className="about-key">Portfolio</span>
                                 <span className="about-val">
                                   {app.portfolio
@@ -579,7 +563,7 @@ export default function CompanyApplicants() {
                               </span>
                               <div className="detail-skills">
                                 {app.skills.map(skill => {
-                                  const matched = job?.requiredSkills.map(s => s.toLowerCase()).includes(skill.toLowerCase()) ?? false
+                                  const matched = requiredSkills.map(s => s.toLowerCase()).includes(skill.toLowerCase()) ?? false
                                   return (
                                     <span key={skill} className={`skill-chip ${matched ? 'skill-chip--matched' : ''}`}>
                                       {matched && (
@@ -613,13 +597,13 @@ export default function CompanyApplicants() {
                               <textarea
                                 className="notes-textarea"
                                 placeholder="Add private notes about this candidate..."
-                                value={app.notes}
-                                onChange={e => updateNotes(app.id, e.target.value)}
+                                value={app.recruiterNotes || ''}
+                                onChange={e => updateNotes(app.applicationId, e.target.value)}
                                 rows={4}
                               />
                               <div className="detail-quick-actions">
                                 <button
-                                  className={`qbtn qbtn--shortlist ${app.stage === 'Shortlisted' ? 'active' : ''}`}
+                                  className={`qbtn qbtn--shortlist ${app.status === 'Shortlisted' ? 'active' : ''}`}
                                   onClick={() => quickStage(app, 'Shortlisted')}
                                 >
                                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -628,8 +612,8 @@ export default function CompanyApplicants() {
                                   Shortlist
                                 </button>
                                 <button
-                                  className={`qbtn qbtn--interview ${app.stage === 'For Interview' ? 'active' : ''}`}
-                                  onClick={() => quickStage(app, 'For Interview')}
+                                  className={`qbtn qbtn--interview ${app.status === 'ForInterview' ? 'active' : ''}`}
+                                  onClick={() => quickStage(app, 'ForInterview')}
                                 >
                                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
@@ -638,7 +622,7 @@ export default function CompanyApplicants() {
                                   Schedule Interview
                                 </button>
                                 <button
-                                  className={`qbtn qbtn--decline ${app.stage === 'Declined' ? 'active' : ''}`}
+                                  className={`qbtn qbtn--decline ${app.status === 'Declined' ? 'active' : ''}`}
                                   onClick={() => quickStage(app, 'Declined')}
                                 >
                                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -647,8 +631,8 @@ export default function CompanyApplicants() {
                                   </svg>
                                   Decline
                                 </button>
-                                {app.stage === 'For Interview' && (
-                                  <button className="qbtn qbtn--return" onClick={() => updateStage(app.id, 'Shortlisted')}>
+                                {app.status === 'ForInterview' && (
+                                  <button className="qbtn qbtn--return" onClick={() => updateStage(app.applicationId, 'Shortlisted')}>
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                       <polyline points="15 18 9 12 15 6" />
                                     </svg>
@@ -676,7 +660,7 @@ export default function CompanyApplicants() {
           <div className="modal-content modal-content--resume" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <div className="modal-title-block">
-                <h2 className="modal-title">{resumeApplicant.name}'s Resume</h2>
+                <h2 className="modal-title">{resumeApplicant.studentName}'s Resume</h2>
                 <p className="modal-subtitle">{resumeApplicant.email}</p>
               </div>
               <button className="modal-close" onClick={closeResumeModal} aria-label="Close modal">
@@ -688,14 +672,6 @@ export default function CompanyApplicants() {
             <div className="modal-body modal-body--resume">
               <div className="resume-viewer">
                 <div className="resume-section">
-                  <h3 className="resume-section-title">Education</h3>
-                  <p className="resume-text">{resumeApplicant.education}</p>
-                </div>
-                <div className="resume-section">
-                  <h3 className="resume-section-title">Experience</h3>
-                  <p className="resume-text">{resumeApplicant.experience}</p>
-                </div>
-                <div className="resume-section">
                   <h3 className="resume-section-title">Skills</h3>
                   <div className="resume-skills">
                     {resumeApplicant.skills.map(s => <span key={s} className="skill-chip">{s}</span>)}
@@ -705,6 +681,12 @@ export default function CompanyApplicants() {
                   <div className="resume-section">
                     <h3 className="resume-section-title">Portfolio</h3>
                     <a href={resumeApplicant.portfolio} target="_blank" rel="noreferrer" className="detail-link">{resumeApplicant.portfolio}</a>
+                  </div>
+                )}
+                {resumeApplicant.resumeUrl && (
+                  <div className="resume-section">
+                    <h3 className="resume-section-title">Resume Document</h3>
+                    <a href={resumeApplicant.resumeUrl} target="_blank" rel="noreferrer" className="detail-link">View Full Resume</a>
                   </div>
                 )}
               </div>
@@ -729,8 +711,8 @@ export default function CompanyApplicants() {
           <div className="modal-content modal-content--stage-action" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <div className="modal-title-block">
-                <h2 className="modal-title">Move {stageApplicant.name}</h2>
-                <p className="modal-subtitle">Current stage: Under Review</p>
+                <h2 className="modal-title">Move {stageApplicant.studentName}</h2>
+                <p className="modal-subtitle">Current stage: {stageApplicant.status}</p>
               </div>
               <button className="modal-close" onClick={closeStageModal} aria-label="Close modal">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -779,21 +761,21 @@ export default function CompanyApplicants() {
         </div>
       )}
 
-     {/* ══ Schedule Interview Modal (reusable) ══ */}
-<ScheduleInterviewModal
-  isVisible={showScheduleModal}
-  interview={scheduleApplicant ? {
-    candidateName: scheduleApplicant.name,
-    jobTitle: activeJob?.title ?? '',
-    scheduledAt: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
-    durationMins: 60,
-    format: '',
-    location: '',
-    notes: '',
-  } : undefined}
-  onClose={closeScheduleModal}
-  onConfirm={(_result) => closeScheduleModal()}
-/>
+      {/* ══ Schedule Interview Modal (reusable) ══ */}
+      <ScheduleInterviewModal
+        isVisible={showScheduleModal}
+        interview={scheduleApplicant ? {
+          candidateName: scheduleApplicant.studentName,
+          jobTitle: activeJob?.title ?? scheduleApplicant.jobTitle,
+          scheduledAt: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+          durationMins: 60,
+          format: '',
+          location: '',
+          notes: '',
+        } : undefined}
+        onClose={closeScheduleModal}
+        onConfirm={(_result) => closeScheduleModal()}
+      />
 
     </div>
   )

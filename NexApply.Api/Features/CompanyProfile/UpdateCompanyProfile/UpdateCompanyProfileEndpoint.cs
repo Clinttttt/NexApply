@@ -15,7 +15,7 @@ public static class UpdateCompanyProfileEndpoint
             return result.ToIResult();
         })
         .RequireAuthorization(policy => policy.RequireRole("Company"))
-        .WithTags("Company Profile");
+        .WithTags("Company");
         
         return app;
     }

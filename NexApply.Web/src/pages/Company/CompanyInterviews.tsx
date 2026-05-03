@@ -1,8 +1,9 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import './CompanyInterviews.css'
 import {CompanySidebar} from '../../components/CompanySidebar';
 import {CompanyHeader} from '../../components/CompanyHeader';
 import { ScheduleInterviewModal } from '../../components/modal/ScheduleInterviewModal';
+import { companyInterviewsService } from '../../services/companyInterviewsService';
 
 // ─────────────────────────────────────────
 //  INTERFACES
@@ -95,7 +96,9 @@ const statusCss = (status: string) =>
 export default function CompanyInterviews() {
 
   // ── State ──────────────────────────────
-  const [interviews, setInterviews]         = useState<InterviewItem[]>(INITIAL_INTERVIEWS)
+  const [interviews, setInterviews]         = useState<InterviewItem[]>([])
+  const [isLoading, setIsLoading]           = useState(true)
+  const [error, setError]                   = useState<string | null>(null)
   const [searchQuery, setSearchQuery]       = useState('')
   const [statusFilter, setStatusFilter]     = useState('')
   const [formatFilter, setFormatFilter]     = useState('')
@@ -107,6 +110,41 @@ export default function CompanyInterviews() {
   const [showScheduleModal, setShowScheduleModal] = useState(false)
   const [isRescheduleMode, setIsRescheduleMode]   = useState(false)
   const [rescheduleTarget, setRescheduleTarget]   = useState<InterviewItem | null>(null)
+
+  // ── Fetch Interviews ───────────────────
+  useEffect(() => {
+    const fetchInterviews = async () => {
+      setIsLoading(true)
+      setError(null)
+      const result = await companyInterviewsService.getInterviews()
+      
+      if (result.isSuccess && result.value) {
+        const mappedInterviews: InterviewItem[] = result.value.interviews.map((iv, idx) => ({
+          id: idx + 1,
+          candidateName: iv.candidateName,
+          jobTitle: iv.jobTitle,
+          scheduledAt: new Date(iv.scheduledAt),
+          durationMins: iv.durationMinutes,
+          format: iv.format,
+          status: iv.status,
+          location: iv.location || '',
+          meetingLink: iv.meetingLink || '',
+          interviewers: iv.interviewers,
+          notes: iv.notes || '',
+          feedback: iv.feedback || '',
+          rating: iv.rating || 0,
+          recommendation: iv.recommendation || ''
+        }))
+        setInterviews(mappedInterviews)
+      } else {
+        setError(result.error || 'Failed to load interviews')
+      }
+      
+      setIsLoading(false)
+    }
+
+    fetchInterviews()
+  }, [])
 
   // ── Computed counts ────────────────────
   const todayCount     = interviews.filter(i => isSameDay(i.scheduledAt, today) && i.status === 'Scheduled').length
@@ -189,43 +227,52 @@ export default function CompanyInterviews() {
     setRescheduleTarget(null)
   }
 
-  const handleConfirmSchedule = (result: any) => {
+  const handleConfirmSchedule = async (result: any) => {
     const { interview: form, interviewTime, interviewerName } = result
     const [hours, mins] = interviewTime.split(':').map(Number)
     const scheduledAt = new Date(form.scheduledAt)
     scheduledAt.setHours(hours, mins, 0, 0)
 
-    if (isRescheduleMode && rescheduleTarget) {
-      updateInterview(rescheduleTarget.id, {
-        candidateName: form.candidateName,
-        jobTitle: form.jobTitle,
-        scheduledAt,
-        durationMins: form.durationMins,
-        format: form.format,
-        location: form.location,
-        notes: form.notes,
-        interviewers: interviewerName ? [interviewerName.trim()] : rescheduleTarget.interviewers,
-      })
-    } else {
+    // Prepare command
+    const command = {
+      applicationId: null,
+      studentId: null,
+      jobListingId: null,
+      scheduledAt: scheduledAt.toISOString(),
+      durationMinutes: form.durationMins,
+      format: form.format,
+      location: form.location || null,
+      meetingLink: form.location || null,
+      notes: form.notes || null,
+      interviewerNames: interviewerName ? [interviewerName.trim()] : []
+    }
+
+    // Call API
+    const apiResult = await companyInterviewsService.scheduleInterview(command)
+
+    if (apiResult.isSuccess && apiResult.value) {
+      // Add to local state
       const newId = interviews.length > 0 ? Math.max(...interviews.map(i => i.id)) + 1 : 1
       setInterviews(prev => [...prev, {
         id: newId,
-        candidateName: form.candidateName,
-        jobTitle: form.jobTitle,
-        scheduledAt,
-        durationMins: form.durationMins,
-        format: form.format,
-        status: 'Scheduled',
-        location: form.location,
-        meetingLink: '',
-        interviewers: interviewerName ? [interviewerName.trim()] : ['Anna Vidal'],
-        notes: form.notes,
+        candidateName: apiResult.value!.candidateName,
+        jobTitle: apiResult.value!.jobTitle,
+        scheduledAt: new Date(apiResult.value!.scheduledAt),
+        durationMins: apiResult.value!.durationMinutes,
+        format: apiResult.value!.format,
+        status: apiResult.value!.status,
+        location: apiResult.value!.location || '',
+        meetingLink: apiResult.value!.meetingLink || '',
+        interviewers: apiResult.value!.interviewers,
+        notes: apiResult.value!.notes || '',
         feedback: '',
         rating: 0,
         recommendation: '',
       }])
+      closeScheduleModal()
+    } else {
+      alert(apiResult.error || 'Failed to schedule interview')
     }
-    closeScheduleModal()
   }
 
   const selectCalendarDay = (date: Date | null) => {
@@ -279,6 +326,18 @@ export default function CompanyInterviews() {
             </div>
           </div>
 
+          {/* Loading State */}
+          {isLoading ? (
+            <div style={{ padding: '60px 20px', textAlign: 'center', color: '#64748B' }}>
+              <div style={{ fontSize: '14px' }}>Loading interviews...</div>
+            </div>
+          ) : error ? (
+            <div style={{ padding: '60px 20px', textAlign: 'center', color: '#DC2626' }}>
+              <div style={{ fontSize: '14px', marginBottom: '12px' }}>{error}</div>
+              <button className="btn-secondary" onClick={() => window.location.reload()}>Retry</button>
+            </div>
+          ) : (
+            <>
           {/* ══ Main Layout ══ */}
           <div className="interviews-layout">
 
@@ -635,6 +694,8 @@ export default function CompanyInterviews() {
               )}
             </div>
           </div>
+          </>
+          )}
         </div>
       </div>
 
@@ -654,7 +715,7 @@ export default function CompanyInterviews() {
         interviewTime={rescheduleTarget
           ? `${String(rescheduleTarget.scheduledAt.getHours()).padStart(2,'0')}:${String(rescheduleTarget.scheduledAt.getMinutes()).padStart(2,'0')}`
           : '10:00'}
-        interviewerName={rescheduleTarget?.interviewers[0] ?? ''}
+        interviewerName={rescheduleTarget?.interviewers?.[0] ?? ''}
         onClose={closeScheduleModal}
         onConfirm={handleConfirmSchedule}
       />

@@ -86,7 +86,7 @@ export default function Register() {
         // Registration successful, tokens are already stored
         window.location.href = '/dashboard';
       } else {
-        setErrorMessage(result.errorMessage || 'Registration failed. Please try again.');
+        setErrorMessage(result.error || 'Registration failed. Please try again.');
       }
     } catch (error) {
       setErrorMessage('An unexpected error occurred');
