@@ -1,6 +1,7 @@
 using NexApply.Api.Features.JobListings.CreateJobListing;
 using NexApply.Api.Features.JobListings.GetCompanyJobListings;
 using NexApply.Api.Features.JobListings.GetJobListingDetails;
+using NexApply.Api.Features.JobListings.GetStudentBrowseJobs;
 using NexApply.Api.Features.JobListings.UpdateJobListing;
 using NexApply.Api.Features.JobListings.UpdateJobListingStatus;
 
@@ -15,5 +16,6 @@ public static class JobListingsEndpoints
         app.MapUpdateJobListing();
         app.MapUpdateJobListingStatus();
         app.MapGetCompanyJobListings();
+        app.MapGetStudentBrowseJobs();
     }
 }

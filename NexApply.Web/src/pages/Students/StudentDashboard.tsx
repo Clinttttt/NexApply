@@ -1,38 +1,188 @@
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Sidebar } from '../../components/Sidebar';
 import { PageHeader } from '../../components/PageHeader';
+import {
+  studentDashboardService,
+  type StudentDashboardApplicationDto,
+  type StudentDashboardDto,
+  type StudentDashboardJobMatchDto
+} from '../../services/studentDashboardService';
 import './StudentDashboard.css';
 
+const emptyDashboard: StudentDashboardDto = {
+  studentName: 'Student',
+  appliedCount: 0,
+  underReviewCount: 0,
+  shortlistedCount: 0,
+  interviewCount: 0,
+  newMatchesCount: 0,
+  newListingsTodayCount: 0,
+  awaitingUpdateCount: 0,
+  resumeStrength: {
+    score: 0,
+    hasWorkExperience: false,
+    hasSkills: false,
+    hasPortfolio: false,
+    hasLatestResume: false
+  },
+  recentApplications: [],
+  topJobMatches: []
+};
+
+const formatShortDate = (value: string) =>
+  new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(new Date(value));
+
+const getFirstName = (fullName: string) => fullName.trim().split(/\s+/)[0] || 'there';
+
+const getStatusClass = (status: string) => {
+  if (status === 'Shortlisted') return 'app-status--green';
+  if (status === 'Under Review') return 'app-status--amber';
+  return 'app-status--slate';
+};
+
+const getStageClass = (status: string) => {
+  if (status === 'Shortlisted') return 'app-stage-bar--green';
+  if (status === 'Under Review') return 'app-stage-bar--amber';
+  return 'app-stage-bar--slate';
+};
+
+const getLogoClass = (index: number, status?: string) => {
+  if (status === 'Shortlisted') return 'app-logo--green';
+  if (status === 'Under Review') return 'app-logo--blue';
+  return index % 2 === 0 ? 'app-logo--slate' : 'app-logo--blue';
+};
+
+const getRingClass = (score: number) => {
+  if (score >= 90) return 'high';
+  if (score >= 80) return 'mid';
+  return 'fair';
+};
+
+const getMatchBadgeClass = (match: StudentDashboardJobMatchDto) => {
+  if (match.jobType === 'Internship') return 'match-type-badge--intern';
+  if (match.workSetup === 'Remote') return 'match-type-badge--remote';
+  return '';
+};
+
+const getTimelineStage = (applications: StudentDashboardApplicationDto[]) => {
+  const featured = applications.find(application => application.status === 'Shortlisted')
+    ?? applications.find(application => application.status === 'Under Review')
+    ?? applications[0];
+
+  if (!featured) {
+    return { reached: 0, label: 'No applications yet' };
+  }
+
+  const stageMap: Record<string, number> = {
+    Submitted: 1,
+    'Under Review': 2,
+    Shortlisted: 3,
+    Interview: 4,
+    Declined: 1
+  };
+
+  return {
+    reached: stageMap[featured.status] ?? 1,
+    label: `${stageMap[featured.status] ?? 1} of 5 stages reached - ${featured.title}`
+  };
+};
+
+function LoadingPanel({ label }: { label: string }) {
+  return (
+    <div className="dashboard-state">
+      <svg className="dashboard-spin" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+        <path d="M21 12a9 9 0 11-6.219-8.56" />
+      </svg>
+      {label}
+    </div>
+  );
+}
+
+function EmptyPanel({ label }: { label: string }) {
+  return <div className="dashboard-state dashboard-state--empty">{label}</div>;
+}
+
 export function Dashboard() {
+  const [dashboard, setDashboard] = useState<StudentDashboardDto>(emptyDashboard);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    const loadDashboard = async () => {
+      setIsLoading(true);
+      setLoadError(null);
+
+      const result = await studentDashboardService.getDashboard();
+
+      if (result.isSuccess && result.value) {
+        setDashboard(result.value);
+      } else {
+        setLoadError(result.error || 'Failed to load dashboard');
+      }
+
+      setIsLoading(false);
+    };
+
+    loadDashboard();
+  }, []);
+
+  const visibleMatches = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return dashboard.topJobMatches;
+
+    return dashboard.topJobMatches.filter(match =>
+      match.title.toLowerCase().includes(query)
+      || match.company.toLowerCase().includes(query)
+      || match.matchedSkills.some(skill => skill.toLowerCase().includes(query))
+    );
+  }, [dashboard.topJobMatches, searchQuery]);
+
+  const timeline = getTimelineStage(dashboard.recentApplications);
+  const resumeOffset = 125 - (125 * Math.min(dashboard.resumeStrength.score, 100) / 100);
+  const hasNotification = dashboard.awaitingUpdateCount > 0;
+
   return (
     <div className="app-shell">
       <Sidebar />
 
       <main className="main-content">
-        <PageHeader title="Dashboard" subtitle="Welcome back, Clint — here's your job hunt at a glance.">
+        <PageHeader title="Dashboard" subtitle={`Welcome back, ${getFirstName(dashboard.studentName)} - here's your job hunt at a glance.`}>
           <div className="search-wrap">
             <svg className="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none">
               <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" />
               <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
-            <input className="search-input" type="text" placeholder="Search jobs, companies…" />
+            <input
+              className="search-input"
+              type="text"
+              placeholder="Search jobs, companies..."
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+            />
           </div>
-          <button className="notif-btn" aria-label="Notifications">
+          <Link to="/notifications" className="notif-btn" aria-label="Notifications">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
               <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"
                     stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
-            <span className="notif-indicator"></span>
-          </button>
+            {hasNotification && <span className="notif-indicator"></span>}
+          </Link>
         </PageHeader>
 
         <div className="page-body">
-          {/* Activity Banner */}
+          {loadError && (
+            <div className="dashboard-error">
+              <span>{loadError}</span>
+              <button type="button" onClick={() => window.location.reload()}>Retry</button>
+            </div>
+          )}
+
           <div className="activity-banner">
-            {/* Left: Pipeline numbers */}
             <div className="banner-pipeline">
               <div className="bp-item">
-                <span className="bp-num">3</span>
+                <span className="bp-num">{dashboard.appliedCount}</span>
                 <span className="bp-label">Applied</span>
               </div>
               <div className="bp-arrow">
@@ -41,7 +191,7 @@ export function Dashboard() {
                 </svg>
               </div>
               <div className="bp-item">
-                <span className="bp-num bp-num--amber">1</span>
+                <span className="bp-num bp-num--amber">{dashboard.underReviewCount}</span>
                 <span className="bp-label">Under Review</span>
               </div>
               <div className="bp-arrow">
@@ -50,7 +200,7 @@ export function Dashboard() {
                 </svg>
               </div>
               <div className="bp-item">
-                <span className="bp-num bp-num--green">1</span>
+                <span className="bp-num bp-num--green">{dashboard.shortlistedCount}</span>
                 <span className="bp-label">Shortlisted</span>
               </div>
               <div className="bp-arrow">
@@ -58,15 +208,14 @@ export function Dashboard() {
                   <polyline points="9 18 15 12 9 6" />
                 </svg>
               </div>
-              <div className="bp-item bp-item--dim">
-                <span className="bp-num bp-num--dim">0</span>
+              <div className={`bp-item ${dashboard.interviewCount === 0 ? 'bp-item--dim' : ''}`}>
+                <span className={`bp-num ${dashboard.interviewCount === 0 ? 'bp-num--dim' : ''}`}>{dashboard.interviewCount}</span>
                 <span className="bp-label">Interview</span>
               </div>
             </div>
 
             <div className="banner-divider"></div>
 
-            {/* Right: Match highlight + quick CTA */}
             <div className="banner-right">
               <div className="banner-match">
                 <div className="banner-match-icon">
@@ -76,7 +225,7 @@ export function Dashboard() {
                   </svg>
                 </div>
                 <div>
-                  <span className="banner-match-count">12 new matches</span>
+                  <span className="banner-match-count">{dashboard.newMatchesCount} new matches</span>
                   <span className="banner-match-sub">based on your resume</span>
                 </div>
               </div>
@@ -91,188 +240,128 @@ export function Dashboard() {
             </div>
           </div>
 
-          {/* Lower Grid */}
           <div className="lower-grid">
-            {/* COLUMN LEFT: Recent Applications */}
             <div className="panel">
               <div className="panel-header">
                 <div className="panel-header-left">
                   <h2 className="panel-title">Recent Applications</h2>
-                  <span className="panel-badge">3</span>
+                  <span className="panel-badge">{dashboard.recentApplications.length}</span>
                 </div>
-                <Link to="/my-applications" className="panel-link">View all →</Link>
+                <Link to="/my-applications" className="panel-link">View all {'->'}</Link>
               </div>
 
-              <div className="app-list">
-                <Link to="#" className="app-item">
-                  <div className="app-stage-bar app-stage-bar--amber"></div>
-                  <div className="app-logo app-logo--blue">SF</div>
-                  <div className="app-detail">
-                    <span className="app-title">Frontend Developer Intern</span>
-                    <span className="app-meta">SoftForge Inc. · Remote</span>
+              {isLoading ? (
+                <LoadingPanel label="Loading applications..." />
+              ) : dashboard.recentApplications.length === 0 ? (
+                <EmptyPanel label="No applications yet. Start by browsing jobs that match your resume." />
+              ) : (
+                <>
+                  <div className="app-list">
+                    {dashboard.recentApplications.map((application, index) => (
+                      <Link
+                        key={application.applicationId}
+                        to="/my-applications"
+                        className={`app-item ${application.status === 'Shortlisted' ? 'app-item--featured' : ''}`}
+                      >
+                        <div className={`app-stage-bar ${getStageClass(application.status)}`}></div>
+                        <div className={`app-logo ${getLogoClass(index, application.status)}`}>{application.logoText}</div>
+                        <div className="app-detail">
+                          <span className="app-title">{application.title}</span>
+                          <span className="app-meta">{application.company} - {application.workSetup}</span>
+                        </div>
+                        <div className="app-right">
+                          <span className={`app-status ${getStatusClass(application.status)}`}>
+                            {application.status === 'Shortlisted' && (
+                              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24"
+                                   fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            )}
+                            {application.status}
+                          </span>
+                          <span className="app-date">{formatShortDate(application.appliedAt)}</span>
+                        </div>
+                      </Link>
+                    ))}
                   </div>
-                  <div className="app-right">
-                    <span className="app-status app-status--amber">Under Review</span>
-                    <span className="app-date">Apr 5</span>
-                  </div>
-                </Link>
 
-                <Link to="#" className="app-item">
-                  <div className="app-stage-bar app-stage-bar--slate"></div>
-                  <div className="app-logo app-logo--slate">TP</div>
-                  <div className="app-detail">
-                    <span className="app-title">Junior .NET Developer</span>
-                    <span className="app-meta">TechSpark PH · On-site</span>
+                  <div className="app-timeline-hint">
+                    <div className="timeline-track">
+                      {[1, 2, 3, 4, 5].map(stage => (
+                        <div
+                          key={stage}
+                          className={`timeline-seg ${stage <= timeline.reached ? 'timeline-seg--filled' : ''} ${stage === 2 && stage <= timeline.reached ? 'timeline-seg--amber' : ''} ${stage === 3 && stage <= timeline.reached ? 'timeline-seg--green' : ''}`}
+                        ></div>
+                      ))}
+                    </div>
+                    <span className="timeline-label">{timeline.label}</span>
                   </div>
-                  <div className="app-right">
-                    <span className="app-status app-status--slate">Submitted</span>
-                    <span className="app-date">Apr 3</span>
-                  </div>
-                </Link>
-
-                <Link to="#" className="app-item app-item--featured">
-                  <div className="app-stage-bar app-stage-bar--green"></div>
-                  <div className="app-logo app-logo--green">NT</div>
-                  <div className="app-detail">
-                    <span className="app-title">Backend Intern</span>
-                    <span className="app-meta">NexaTech Solutions · Hybrid</span>
-                  </div>
-                  <div className="app-right">
-                    <span className="app-status app-status--green">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24"
-                           fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                      Shortlisted
-                    </span>
-                    <span className="app-date">Mar 28</span>
-                  </div>
-                </Link>
-              </div>
-
-              {/* Timeline hint */}
-              <div className="app-timeline-hint">
-                <div className="timeline-track">
-                  <div className="timeline-seg timeline-seg--filled" title="Applied"></div>
-                  <div className="timeline-seg timeline-seg--filled timeline-seg--amber" title="Under Review"></div>
-                  <div className="timeline-seg timeline-seg--filled timeline-seg--green" title="Shortlisted"></div>
-                  <div className="timeline-seg" title="Interview"></div>
-                  <div className="timeline-seg" title="Offer"></div>
-                </div>
-                <span className="timeline-label">1 of 5 stages reached · Backend Intern</span>
-              </div>
+                </>
+              )}
             </div>
 
-            {/* COLUMN RIGHT: Top Matches */}
             <div className="panel">
               <div className="panel-header">
                 <div className="panel-header-left">
                   <h2 className="panel-title">Top Job Matches</h2>
-                  <span className="panel-badge">12</span>
+                  <span className="panel-badge">{dashboard.newMatchesCount}</span>
                 </div>
-                <Link to="/browse-jobs" className="panel-link">See all →</Link>
+                <Link to="/browse-jobs" className="panel-link">See all {'->'}</Link>
               </div>
 
-              <div className="match-list">
-                <Link to="#" className="match-item">
-                  <div className="match-score-ring match-score-ring--high">
-                    <svg viewBox="0 0 36 36" className="ring-svg">
-                      <circle className="ring-bg" cx="18" cy="18" r="15.5" />
-                      <circle className="ring-fill ring-fill--high" cx="18" cy="18" r="15.5"
-                              strokeDasharray="88.6 100" />
-                    </svg>
-                    <span className="ring-value">91</span>
-                  </div>
-                  <div className="match-body">
-                    <div className="match-top-row">
-                      <div>
-                        <span className="match-title">Full-Stack Developer Intern</span>
-                        <span className="match-company">CodeBridge Co. · Makati</span>
-                      </div>
-                      <span className="match-type-badge">Full-time</span>
-                    </div>
-                    <div className="match-skills">
-                      <span className="skill-tag">React</span>
-                      <span className="skill-tag">C#</span>
-                      <span className="skill-tag">ASP.NET</span>
-                    </div>
-                  </div>
-                  <svg className="match-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-                       fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                </Link>
+              {isLoading ? (
+                <LoadingPanel label="Finding matches..." />
+              ) : visibleMatches.length === 0 ? (
+                <EmptyPanel label={searchQuery ? 'No matches found for that search.' : 'No matches yet. Update your resume to improve recommendations.'} />
+              ) : (
+                <div className="match-list">
+                  {visibleMatches.map(match => {
+                    const ringClass = getRingClass(match.matchScore);
+                    const badgeClass = getMatchBadgeClass(match);
 
-                <Link to="#" className="match-item">
-                  <div className="match-score-ring match-score-ring--mid">
-                    <svg viewBox="0 0 36 36" className="ring-svg">
-                      <circle className="ring-bg" cx="18" cy="18" r="15.5" />
-                      <circle className="ring-fill ring-fill--mid" cx="18" cy="18" r="15.5"
-                              strokeDasharray="81.8 100" />
-                    </svg>
-                    <span className="ring-value">84</span>
-                  </div>
-                  <div className="match-body">
-                    <div className="match-top-row">
-                      <div>
-                        <span className="match-title">C# Backend Intern</span>
-                        <span className="match-company">SkyNet Systems · BGC</span>
-                      </div>
-                      <span className="match-type-badge match-type-badge--intern">Internship</span>
-                    </div>
-                    <div className="match-skills">
-                      <span className="skill-tag">.NET</span>
-                      <span className="skill-tag">SQL</span>
-                      <span className="skill-tag">Docker</span>
-                    </div>
-                  </div>
-                  <svg className="match-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-                       fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                </Link>
-
-                <Link to="#" className="match-item">
-                  <div className="match-score-ring match-score-ring--fair">
-                    <svg viewBox="0 0 36 36" className="ring-svg">
-                      <circle className="ring-bg" cx="18" cy="18" r="15.5" />
-                      <circle className="ring-fill ring-fill--fair" cx="18" cy="18" r="15.5"
-                              strokeDasharray="75.0 100" />
-                    </svg>
-                    <span className="ring-value">77</span>
-                  </div>
-                  <div className="match-body">
-                    <div className="match-top-row">
-                      <div>
-                        <span className="match-title">Junior Software Engineer</span>
-                        <span className="match-company">Luminary Labs · Remote</span>
-                      </div>
-                      <span className="match-type-badge match-type-badge--remote">Remote</span>
-                    </div>
-                    <div className="match-skills">
-                      <span className="skill-tag">Blazor</span>
-                      <span className="skill-tag">PostgreSQL</span>
-                      <span className="skill-tag">Azure</span>
-                    </div>
-                  </div>
-                  <svg className="match-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-                       fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                </Link>
-              </div>
+                    return (
+                      <Link key={match.jobListingId} to="/browse-jobs" className="match-item">
+                        <div className={`match-score-ring match-score-ring--${ringClass}`}>
+                          <svg viewBox="0 0 36 36" className="ring-svg">
+                            <circle className="ring-bg" cx="18" cy="18" r="15.5" />
+                            <circle className={`ring-fill ring-fill--${ringClass}`} cx="18" cy="18" r="15.5"
+                                    strokeDasharray={`${Math.max(match.matchScore, 4)} 100`} />
+                          </svg>
+                          <span className="ring-value">{match.matchScore}</span>
+                        </div>
+                        <div className="match-body">
+                          <div className="match-top-row">
+                            <div>
+                              <span className="match-title">{match.title}</span>
+                              <span className="match-company">{match.company} - {match.workSetup}</span>
+                            </div>
+                            <span className={`match-type-badge ${badgeClass}`}>{match.jobType}</span>
+                          </div>
+                          <div className="match-skills">
+                            {match.matchedSkills.slice(0, 3).map(skill => (
+                              <span key={skill} className="skill-tag">{skill}</span>
+                            ))}
+                          </div>
+                        </div>
+                        <svg className="match-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="9 18 15 12 9 6" />
+                        </svg>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Bottom Row: Resume Strength + Quick Actions */}
           <div className="bottom-row">
-            {/* Resume Strength */}
             <div className="panel panel--compact">
               <div className="panel-header">
                 <div className="panel-header-left">
                   <h2 className="panel-title">Resume Strength</h2>
                 </div>
-                <Link to="/resume" className="panel-link">Edit →</Link>
+                <Link to="/student-profile" className="panel-link">Edit {'->'}</Link>
               </div>
               <div className="resume-strength-body">
                 <div className="rs-arc-wrap">
@@ -283,51 +372,34 @@ export function Dashboard() {
                     <path className="rs-arc-fill"
                           d="M 10 55 A 40 40 0 0 1 90 55"
                           fill="none" strokeWidth="8" strokeLinecap="round"
-                          strokeDasharray="125" strokeDashoffset="37" />
+                          strokeDasharray="125" strokeDashoffset={resumeOffset} />
                   </svg>
                   <div className="rs-arc-label">
-                    <span className="rs-value">72</span>
+                    <span className="rs-value">{dashboard.resumeStrength.score}</span>
                     <span className="rs-unit">/ 100</span>
                   </div>
                 </div>
                 <div className="rs-checklist">
-                  <div className="rs-item rs-item--done">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
-                         fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
+                  <div className={`rs-item ${dashboard.resumeStrength.hasWorkExperience ? 'rs-item--done' : ''}`}>
+                    {dashboard.resumeStrength.hasWorkExperience ? <CheckIcon /> : <InfoIcon />}
                     Work Experience
                   </div>
-                  <div className="rs-item rs-item--done">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
-                         fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
+                  <div className={`rs-item ${dashboard.resumeStrength.hasSkills ? 'rs-item--done' : ''}`}>
+                    {dashboard.resumeStrength.hasSkills ? <CheckIcon /> : <InfoIcon />}
                     Skills Listed
                   </div>
-                  <div className="rs-item">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
-                         fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="12" y1="8" x2="12" y2="12" />
-                      <line x1="12" y1="16" x2="12.01" y2="16" />
-                    </svg>
+                  <div className={`rs-item ${dashboard.resumeStrength.hasPortfolio ? 'rs-item--done' : ''}`}>
+                    {dashboard.resumeStrength.hasPortfolio ? <CheckIcon /> : <InfoIcon />}
                     Add a portfolio link
                   </div>
-                  <div className="rs-item">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
-                         fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="12" y1="8" x2="12" y2="12" />
-                      <line x1="12" y1="16" x2="12.01" y2="16" />
-                    </svg>
+                  <div className={`rs-item ${dashboard.resumeStrength.hasLatestResume ? 'rs-item--done' : ''}`}>
+                    {dashboard.resumeStrength.hasLatestResume ? <CheckIcon /> : <InfoIcon />}
                     Upload latest resume
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Quick Actions */}
             <div className="panel panel--compact quick-actions-panel">
               <div className="panel-header">
                 <h2 className="panel-title">Quick Actions</h2>
@@ -335,53 +407,33 @@ export function Dashboard() {
               <div className="quick-actions">
                 <Link to="/browse-jobs" className="qa-item qa-item--primary">
                   <div className="qa-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                         fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="11" cy="11" r="8" />
-                      <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                    </svg>
+                    <SearchIcon />
                   </div>
                   <div className="qa-text">
                     <span className="qa-title">Browse Jobs</span>
-                    <span className="qa-sub">24 new listings today</span>
+                    <span className="qa-sub">{dashboard.newListingsTodayCount} new listings today</span>
                   </div>
-                  <svg className="qa-arrow" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-                       fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
+                  <ArrowIcon />
                 </Link>
                 <Link to="/my-applications" className="qa-item">
                   <div className="qa-icon qa-icon--slate">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                         fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
+                    <ClipboardIcon />
                   </div>
                   <div className="qa-text">
                     <span className="qa-title">Track Applications</span>
-                    <span className="qa-sub">1 awaiting update</span>
+                    <span className="qa-sub">{dashboard.awaitingUpdateCount} awaiting update</span>
                   </div>
-                  <svg className="qa-arrow" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-                       fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
+                  <ArrowIcon />
                 </Link>
-                <Link to="/resume" className="qa-item">
+                <Link to="/student-profile" className="qa-item">
                   <div className="qa-icon qa-icon--slate">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                         fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                      <polyline points="14 2 14 8 20 8" />
-                    </svg>
+                    <FileIcon />
                   </div>
                   <div className="qa-text">
                     <span className="qa-title">Update Resume</span>
                     <span className="qa-sub">Boost your match score</span>
                   </div>
-                  <svg className="qa-arrow" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-                       fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
+                  <ArrowIcon />
                 </Link>
               </div>
             </div>
@@ -389,5 +441,63 @@ export function Dashboard() {
         </div>
       </main>
     </div>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+function InfoIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="8" x2="12" y2="12" />
+      <line x1="12" y1="16" x2="12.01" y2="16" />
+    </svg>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  );
+}
+
+function ClipboardIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+    </svg>
+  );
+}
+
+function FileIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+    </svg>
+  );
+}
+
+function ArrowIcon() {
+  return (
+    <svg className="qa-arrow" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="9 18 15 12 9 6" />
+    </svg>
   );
 }

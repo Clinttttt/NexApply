@@ -79,7 +79,7 @@ export default function Register() {
         email,
         password,
         confirmPassword,
-        role: activeRole === 'Recruiter' ? 'Company' : 'Student'
+        role: activeRole === 'Recruiter' ? 1 : 0 // 0 = Student, 1 = Company
       });
 
       if (result.isSuccess) {

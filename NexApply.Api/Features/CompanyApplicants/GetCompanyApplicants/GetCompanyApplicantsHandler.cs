@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using NexApply.Api.Common;
@@ -25,6 +26,9 @@ public class GetCompanyApplicantsHandler : IRequestHandler<GetCompanyApplicantsQ
 
         var query = _context.Applications
             .Include(a => a.Student)
+                .ThenInclude(s => s.Resume)
+            .Include(a => a.Student)
+                .ThenInclude(s => s.User)
             .Include(a => a.JobListing)
             .Where(a => a.JobListing.CompanyId == companyId);
 
@@ -56,7 +60,10 @@ public class GetCompanyApplicantsHandler : IRequestHandler<GetCompanyApplicantsQ
             _ => query.OrderByDescending(a => a.CreatedAt) // Newest
         };
 
-        var applicants = await query
+        var applications = await query
+            .ToListAsync(ct);
+
+        var applicants = applications
             .Select(a => new ApplicantDto
             {
                 ApplicationId = a.Id,
@@ -77,10 +84,25 @@ public class GetCompanyApplicantsHandler : IRequestHandler<GetCompanyApplicantsQ
                 AppliedAt = a.CreatedAt,
                 CoverLetter = a.CoverLetter,
                 RecruiterNotes = a.RecruiterNotes,
-                Skills = new List<string>()
+                Skills = GetSkills(a.Student.Resume?.SkillsJson)
             })
-            .ToListAsync(ct);
+            .ToList();
 
         return Result<List<ApplicantDto>>.Success(applicants);
+    }
+
+    private static List<string> GetSkills(string? skillsJson)
+    {
+        if (string.IsNullOrWhiteSpace(skillsJson))
+            return [];
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(skillsJson) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
     }
 }

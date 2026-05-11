@@ -9,10 +9,6 @@ const JOB_TYPE_MAP: Record<number, string> = {
   0: 'FullTime', 1: 'PartTime', 2: 'Internship', 3: 'Freelance', 4: 'Remote'
 };
 
-const WORK_SETUP_MAP: Record<number, string> = {
-  0: 'OnSite', 1: 'Remote', 2: 'Hybrid'
-};
-
 const STATUS_MAP: Record<number, string> = {
   0: 'Active', 1: 'Paused', 2: 'Closed'
 };

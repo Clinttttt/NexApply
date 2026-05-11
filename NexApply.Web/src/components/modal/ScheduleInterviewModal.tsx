@@ -55,6 +55,22 @@ export const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({
   const [isLoadingJobs, setIsLoadingJobs] = useState(false);
 
   useEffect(() => {
+    if (!isVisible) return;
+
+    setInterview(initialInterview || {
+      candidateName: '',
+      jobTitle: '',
+      scheduledAt: new Date().toISOString().split('T')[0],
+      durationMins: 60,
+      format: '',
+      location: '',
+      notes: '',
+    });
+    setInterviewTime(initialTime || '10:00');
+    setInterviewerName(initialInterviewerName || '');
+  }, [isVisible]);
+
+  useEffect(() => {
     if (isVisible && !isRescheduleMode) {
       fetchJobListings();
     }

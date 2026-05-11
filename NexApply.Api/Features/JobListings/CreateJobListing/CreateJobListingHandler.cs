@@ -27,7 +27,7 @@ public class CreateJobListingHandler(AppDbContext context, CurrentUser currentUs
             : null;
 
         var jobListing = JobListing.Create(
-            companyProfile.Id,
+            userId,
             request.Title,
             request.Description,
             request.Responsibilities,

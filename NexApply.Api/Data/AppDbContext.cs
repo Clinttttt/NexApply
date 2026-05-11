@@ -17,6 +17,7 @@ public class AppDbContext : DbContext
     public DbSet<Resume> Resumes => Set<Resume>();
     public DbSet<Interview> Interviews => Set<Interview>();
     public DbSet<InterviewPanelist> InterviewPanelists => Set<InterviewPanelist>();
+    public DbSet<Message> Messages => Set<Message>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -217,6 +218,32 @@ public class AppDbContext : DbContext
              .WithMany(i => i.Panelists)
              .HasForeignKey(p => p.InterviewId)
              .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Message>(e =>
+        {
+            e.HasKey(m => m.Id);
+            e.Property(m => m.Content).IsRequired().HasColumnType("text");
+            e.Property(m => m.Type).IsRequired().HasMaxLength(50);
+            e.Property(m => m.CreatedAt).IsRequired();
+
+            e.HasOne(m => m.Sender)
+             .WithMany()
+             .HasForeignKey(m => m.SenderId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(m => m.Receiver)
+             .WithMany()
+             .HasForeignKey(m => m.ReceiverId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(m => m.Interview)
+             .WithMany()
+             .HasForeignKey(m => m.InterviewId)
+             .OnDelete(DeleteBehavior.SetNull);
+
+            e.HasIndex(m => new { m.SenderId, m.ReceiverId });
+            e.HasIndex(m => m.CreatedAt);
         });
     }
 }

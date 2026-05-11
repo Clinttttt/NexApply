@@ -22,9 +22,11 @@ public class ScheduleInterviewHandler : IRequestHandler<ScheduleInterviewCommand
 
     public async Task<Result<InterviewDto>> Handle(ScheduleInterviewCommand request, CancellationToken cancellationToken)
     {
+        var companyId = Guid.Parse(_currentUser.UserId);
+
         // Verify company profile exists
         var companyProfile = await _context.CompanyProfiles
-            .FirstOrDefaultAsync(cp => cp.UserId == Guid.Parse(_currentUser.UserId), cancellationToken);
+            .FirstOrDefaultAsync(cp => cp.UserId == companyId, cancellationToken);
 
         if (companyProfile is null)
             return Result<InterviewDto>.NotFound();
@@ -44,11 +46,12 @@ public class ScheduleInterviewHandler : IRequestHandler<ScheduleInterviewCommand
             if (application is null)
                 return Result<InterviewDto>.NotFound();
 
-            if (application.JobListing.CompanyId != companyProfile.Id)
+            if (application.JobListing.CompanyId != companyId)
                 return Result<InterviewDto>.Forbidden();
 
             student = application.Student;
             jobListing = application.JobListing;
+            application.MoveToInterview();
         }
         // Scenario 2: Direct scheduling (no application exists)
         else if (request.StudentId.HasValue && request.JobListingId.HasValue)
@@ -65,7 +68,7 @@ public class ScheduleInterviewHandler : IRequestHandler<ScheduleInterviewCommand
             if (jobListing is null)
                 return Result<InterviewDto>.NotFound();
 
-            if (jobListing.CompanyId != companyProfile.Id)
+            if (jobListing.CompanyId != companyId)
                 return Result<InterviewDto>.Forbidden();
 
             // Create application automatically
@@ -112,6 +115,10 @@ public class ScheduleInterviewHandler : IRequestHandler<ScheduleInterviewCommand
             }
             await _context.SaveChangesAsync(cancellationToken);
         }
+
+        var inviteContent = $"You are invited to interview for {jobListing.Title}.";
+        _context.Messages.Add(Message.CreateInterviewInvite(companyId, student.UserId, inviteContent, interview.Id));
+        await _context.SaveChangesAsync(cancellationToken);
 
         // Return DTO
         var dto = new InterviewDto

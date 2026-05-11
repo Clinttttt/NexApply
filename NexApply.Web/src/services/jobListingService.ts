@@ -88,6 +88,27 @@ export interface JobListingSummaryDto {
   forInterviewCount: number;
 }
 
+export interface StudentBrowseJobDto {
+  id: string;
+  title: string;
+  company: string;
+  jobType: string;
+  workSetup: string;
+  location: string;
+  matchScore: number;
+  postedAt: string;
+  applicants: number;
+  salary: string;
+  logoText: string;
+  isSaved: boolean;
+  hasApplied: boolean;
+  matchedSkills: string[];
+  missingSkills: string[];
+  description: string[];
+  responsibilities: string[];
+  requirements: string[];
+}
+
 export interface CreateJobListingCommand {
   title: string;
   description: string;
@@ -203,6 +224,19 @@ export const jobListingService = {
       return {
         isSuccess: false,
         error: error.response?.data?.error || 'Failed to load job listings',
+        statusCode: error.response?.status
+      };
+    }
+  },
+
+  async getStudentBrowseJobs(): Promise<Result<StudentBrowseJobDto[]>> {
+    try {
+      const response = await apiClient.get<StudentBrowseJobDto[]>('/jobs/browse');
+      return { isSuccess: true, value: response.data };
+    } catch (error: any) {
+      return {
+        isSuccess: false,
+        error: error.response?.data?.error || error.response?.data?.message || 'Failed to load matched jobs',
         statusCode: error.response?.status
       };
     }

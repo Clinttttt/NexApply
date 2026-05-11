@@ -48,6 +48,7 @@ const INITIAL_INTERVIEWS: InterviewItem[] = [
   { id:7, candidateName:'Mark David',      jobTitle:'API Developer (.NET)',         scheduledAt:d(-7,9),     durationMins:60, format:'Video Call', status:'No-show',    location:'',                    meetingLink:'https://meet.google.com/xyz-uvwx', interviewers:['James Ortiz'],                         notes:'Candidate did not attend. Attempted contact.',     feedback:'', rating:0, recommendation:'' },
   { id:8, candidateName:'Luis Santos',     jobTitle:'React Frontend Developer',     scheduledAt:d(-2,15),    durationMins:30, format:'Phone',      status:'Cancelled',  location:'',                    meetingLink:'',                                 interviewers:['Marcus Lee'],                          notes:'Candidate withdrew application.',                  feedback:'', rating:0, recommendation:'' },
 ]
+void INITIAL_INTERVIEWS
 
 const TABS = ['All', 'Today', 'Upcoming', 'Completed', 'Cancelled']
 const DAY_HEADERS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
@@ -235,15 +236,15 @@ export default function CompanyInterviews() {
 
     // Prepare command
     const command = {
-      applicationId: null,
-      studentId: null,
-      jobListingId: null,
+      applicationId: undefined,
+      studentId: undefined,
+      jobListingId: undefined,
       scheduledAt: scheduledAt.toISOString(),
       durationMinutes: form.durationMins,
       format: form.format,
-      location: form.location || null,
-      meetingLink: form.location || null,
-      notes: form.notes || null,
+      location: form.location || undefined,
+      meetingLink: form.location || undefined,
+      notes: form.notes || undefined,
       interviewerNames: interviewerName ? [interviewerName.trim()] : []
     }
 

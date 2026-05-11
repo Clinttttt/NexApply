@@ -20,10 +20,11 @@ namespace NexApply.Api.Features.Auth.Login
                 return Result<TokenResponseDto>.Unauthorized("Invalid Password");
             }
 
-            if (!user.IsEmailVerified)
-            {
-                return Result<TokenResponseDto>.Unauthorized("Email not verified. Please verify your email before logging in.");
-            }
+            // TODO: Re-enable email verification in production
+            // if (!user.IsEmailVerified)
+            // {
+            //     return Result<TokenResponseDto>.Unauthorized("Email not verified. Please verify your email before logging in.");
+            // }
 
             return Result<TokenResponseDto>.Success(await tokenService.CreateTokenResponse(user));
         }

@@ -20,8 +20,10 @@ public class GetCompanyInterviewsHandler : IRequestHandler<GetCompanyInterviewsQ
 
     public async Task<Result<CompanyInterviewsDto>> Handle(GetCompanyInterviewsQuery request, CancellationToken cancellationToken)
     {
+        var companyId = Guid.Parse(_currentUser.UserId);
+
         var companyProfile = await _context.CompanyProfiles
-            .FirstOrDefaultAsync(cp => cp.UserId == new Guid(_currentUser.UserId), cancellationToken);
+            .FirstOrDefaultAsync(cp => cp.UserId == companyId, cancellationToken);
 
         if (companyProfile is null)
             return Result<CompanyInterviewsDto>.NotFound();
@@ -32,7 +34,7 @@ public class GetCompanyInterviewsHandler : IRequestHandler<GetCompanyInterviewsQ
             .Include(i => i.Application)
                 .ThenInclude(a => a.JobListing)
             .Include(i => i.Panelists)
-            .Where(i => i.Application.JobListing.CompanyId == companyProfile.Id)
+            .Where(i => i.Application.JobListing.CompanyId == companyId)
             .OrderBy(i => i.ScheduledAt)
             .Select(i => new InterviewDto
             {

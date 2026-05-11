@@ -1,20 +1,23 @@
-import { useState, useMemo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import './BrowseJobs.css'
 import {Sidebar} from '../../components/Sidebar'
 import {PageHeader} from '../../components/PageHeader'
+import { jobListingService, type StudentBrowseJobDto } from '../../services/jobListingService'
+import { applicationService } from '../../services/applicationService'
 
 // ─────────────────────────────────────────
 //  INTERFACES
 // ─────────────────────────────────────────
 
 interface JobListing {
-  id: number
+  id: string
   title: string
   company: string
   jobType: string
   workSetup: string
   location: string
   matchScore: number
+  postedAt: string
   postedDate: string
   applicants: number
   salary: string
@@ -37,179 +40,6 @@ interface FilterOption {
 // ─────────────────────────────────────────
 //  STATIC DATA
 // ─────────────────────────────────────────
-
-const ALL_JOBS: JobListing[] = [
-  {
-    id: 1, title: 'Full-Stack Developer Intern', company: 'CodeBridge Co.',
-    jobType: 'Internship', workSetup: 'Remote', location: 'Makati City',
-    matchScore: 91, postedDate: 'Apr 7', applicants: 14, salary: '₱8,000 / mo',
-    logoText: 'CB', logoCss: 'logo-cb', isSaved: true, hasApplied: false,
-    matchedSkills: ['C#', '.NET Core', 'Blazor', 'PostgreSQL', 'REST API'],
-    missingSkills: ['Docker', 'Azure'],
-    description: [
-      'CodeBridge Co. is looking for a motivated Full-Stack Developer Intern to join our product team. You will work alongside senior engineers building scalable web applications using Blazor Server and .NET Core Web API with PostgreSQL as the primary database.',
-      'This is a hands-on internship — you will participate in sprint planning, code reviews, and daily standups. A strong foundation in C# and basic SQL is required.'
-    ],
-    responsibilities: [
-      'Build and maintain Blazor Server components and pages',
-      'Design and consume RESTful API endpoints with .NET Core',
-      'Write and optimize PostgreSQL queries using Dapper',
-      'Participate in code reviews and agile sprints',
-      'Collaborate with UI/UX on frontend implementation'
-    ],
-    requirements: [
-      'Strong foundation in C# and object-oriented programming',
-      'Basic understanding of SQL and relational databases',
-      'Familiarity with Git version control',
-      'Currently enrolled in a CS, IT, or related degree program',
-      'Able to commit to at least 4 months'
-    ]
-  },
-  {
-    id: 2, title: 'C# Backend Intern', company: 'SkyNet Systems',
-    jobType: 'Internship', workSetup: 'Hybrid', location: 'BGC, Taguig',
-    matchScore: 84, postedDate: 'Apr 6', applicants: 9, salary: '₱10,000 / mo',
-    logoText: 'SN', logoCss: 'logo-sn', isSaved: false, hasApplied: false,
-    matchedSkills: ['.NET', 'SQL Server', 'C#', 'REST API'],
-    missingSkills: ['Redis', 'RabbitMQ'],
-    description: [
-      'SkyNet Systems is hiring a C# Backend Intern to support our platform engineering team.',
-      'Hybrid role in BGC, Taguig. Clean C# code and relational database experience required.'
-    ],
-    responsibilities: [
-      'Develop and maintain backend services in C# and .NET',
-      'Write SQL queries and stored procedures for SQL Server',
-      'Help design and document RESTful API contracts',
-      'Debug issues and support production deployments',
-      'Write unit and integration tests for new features'
-    ],
-    requirements: [
-      '1-2 years experience with C# and .NET',
-      'Strong SQL Server knowledge',
-      'Understanding of REST API principles',
-      'Good communication skills',
-      'Willing to work hybrid in BGC, Taguig'
-    ]
-  },
-  {
-    id: 3, title: 'Junior Software Engineer', company: 'Luminary Labs',
-    jobType: 'Full-time', workSetup: 'Remote', location: 'Anywhere',
-    matchScore: 77, postedDate: 'Apr 5', applicants: 22, salary: '₱35,000 / mo',
-    logoText: 'LL', logoCss: 'logo-ll', isSaved: false, hasApplied: false,
-    matchedSkills: ['Blazor', 'PostgreSQL', 'Git'],
-    missingSkills: ['Kubernetes', 'Terraform', 'Go'],
-    description: [
-      'Luminary Labs is a fully remote product company. You will own features end-to-end.',
-      'We value clean code, strong communication, and a growth mindset.'
-    ],
-    responsibilities: [
-      'Own features from design through deployment',
-      'Participate in sprint planning and retrospectives',
-      'Write clean, tested, and documented code',
-      'Review pull requests from peers',
-      'Monitor and troubleshoot production systems'
-    ],
-    requirements: [
-      '2+ years of software development experience',
-      'Proficiency in Blazor or similar frontend framework',
-      'Experience with PostgreSQL or similar database',
-      'Strong problem-solving skills',
-      'Excellent written and verbal communication'
-    ]
-  },
-  {
-    id: 4, title: '.NET Core Developer', company: 'TechSpark PH',
-    jobType: 'Full-time', workSetup: 'On-site', location: 'Ortigas Center',
-    matchScore: 71, postedDate: 'Apr 4', applicants: 17, salary: '₱40,000 - ₱55,000 / mo',
-    logoText: 'TS', logoCss: 'logo-ts', isSaved: false, hasApplied: false,
-    matchedSkills: ['.NET Core', 'C#', 'EF Core'],
-    missingSkills: ['Angular', 'Docker', 'Azure DevOps'],
-    description: [
-      'TechSpark PH needs a .NET Core Developer for enterprise web applications in finance and logistics.',
-      'Strong .NET ecosystem knowledge required.'
-    ],
-    responsibilities: [
-      'Develop web applications using ASP.NET Core and EF Core',
-      'Collaborate with business analysts',
-      'Conduct code reviews and ensure quality',
-      'Maintain and extend existing .NET applications',
-      'Document technical designs'
-    ],
-    requirements: [
-      '1-3 years experience in .NET Core development',
-      'Strong understanding of MVC architecture',
-      'Experience with SQL Server and stored procedures',
-      'Ability to read and interpret technical requirements',
-      'Willing to work on-site in Ortigas'
-    ]
-  },
-  {
-    id: 5, title: 'React Frontend Developer', company: 'NovaByte Inc.',
-    jobType: 'Internship', workSetup: 'Remote', location: 'Quezon City',
-    matchScore: 65, postedDate: 'Apr 3', applicants: 31, salary: '₱6,500 / mo',
-    logoText: 'NV', logoCss: 'logo-nv', isSaved: false, hasApplied: false,
-    matchedSkills: ['JavaScript', 'HTML/CSS'],
-    missingSkills: ['React', 'TypeScript', 'Tailwind', 'GraphQL'],
-    description: [
-      'NovaByte Inc. is hiring a React Frontend Developer Intern to build modern, responsive UIs.',
-      'Passion for UI/UX and vanilla JS required.'
-    ],
-    responsibilities: [
-      'Build React components using TypeScript',
-      'Implement pixel-perfect Figma designs',
-      'Integrate frontend with REST and GraphQL APIs',
-      'Optimize for performance and accessibility',
-      'Write unit tests using Jest'
-    ],
-    requirements: [
-      'Solid understanding of React hooks and component lifecycle',
-      'Proficiency in TypeScript',
-      'Experience consuming REST APIs',
-      'Familiarity with version control using Git',
-      'Portfolio or GitHub showcasing personal or academic projects'
-    ]
-  },
-  {
-    id: 6, title: 'API Developer (.NET)', company: 'ApexCore Solutions',
-    jobType: 'Full-time', workSetup: 'Hybrid', location: 'Makati City',
-    matchScore: 62, postedDate: 'Apr 2', applicants: 11, salary: '₱35,000 - ₱50,000 / mo',
-    logoText: 'AP', logoCss: 'logo-ap', isSaved: false, hasApplied: false,
-    matchedSkills: ['.NET', 'REST API', 'SQL'],
-    missingSkills: ['gRPC', 'Kafka', 'OpenAPI'],
-    description: [
-      'ApexCore Solutions needs an API Developer for our internal and external API ecosystem.',
-      'Strong .NET Web API knowledge required. Hybrid — 2 days on-site in Makati City.'
-    ],
-    responsibilities: [
-      'Design and build RESTful APIs using .NET',
-      'Maintain Swagger/OpenAPI documentation',
-      'Implement versioning, rate limiting, and security',
-      'Collaborate with frontend teams',
-      'Optimize API performance'
-    ],
-    requirements: [
-      '2+ years experience with .NET Web API development',
-      'Strong knowledge of SQL Server and Entity Framework Core',
-      'Experience with Docker and containerized deployments',
-      'Understanding of OAuth2 / JWT authentication',
-      'Excellent written and verbal communication skills'
-    ]
-  }
-]
-
-const JOB_TYPE_OPTIONS: FilterOption[] = [
-  { label: 'Full-time', count: 3 }, { label: 'Internship', count: 3 },
-  { label: 'Part-time', count: 0 }, { label: 'Contract', count: 0 }, { label: 'Freelance', count: 0 }
-]
-
-const WORK_SETUP_OPTIONS: FilterOption[] = [
-  { label: 'Remote', count: 3 }, { label: 'On-site', count: 1 }, { label: 'Hybrid', count: 2 }
-]
-
-const LOCATION_OPTIONS: FilterOption[] = [
-  { label: 'Makati City', count: 2 }, { label: 'BGC, Taguig', count: 1 },
-  { label: 'Ortigas Center', count: 1 }, { label: 'Quezon City', count: 1 }, { label: 'Anywhere', count: 1 }
-]
 
 const TECH_STACK_CATALOGUE: Record<string, string[]> = {
   'Frontend': ['HTML / CSS', 'JavaScript', 'TypeScript', 'React', 'Vue.js', 'Angular', 'Svelte', 'Next.js', 'Nuxt.js', 'Astro', 'Tailwind CSS', 'Bootstrap', 'Sass / SCSS', 'jQuery', 'Alpine.js'],
@@ -236,6 +66,35 @@ const getPreviewText = (job: JobListing) => {
   return fullText.length > 120 ? fullText.substring(0, 120) + '...' : fullText
 }
 
+const formatPostedDate = (postedAt: string) =>
+  new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(new Date(postedAt))
+
+const getLogoCss = (company: string) => {
+  const logoClasses = ['logo-cb', 'logo-sn', 'logo-ll', 'logo-ts', 'logo-nv', 'logo-ap']
+  const index = Math.abs([...company].reduce((sum, char) => sum + char.charCodeAt(0), 0)) % logoClasses.length
+  return logoClasses[index]
+}
+
+const mapBrowseJob = (job: StudentBrowseJobDto): JobListing => ({
+  ...job,
+  postedDate: formatPostedDate(job.postedAt),
+  logoCss: getLogoCss(job.company)
+})
+
+const buildFilterOptions = (jobs: JobListing[], labels: string[], selector: (job: JobListing) => string): FilterOption[] =>
+  labels.map(label => ({
+    label,
+    count: jobs.filter(job => selector(job) === label).length
+  }))
+
+const buildLocationOptions = (jobs: JobListing[]): FilterOption[] =>
+  [...new Set(jobs.map(job => job.location).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b))
+    .map(label => ({
+      label,
+      count: jobs.filter(job => job.location === label).length
+    }))
+
 // ─────────────────────────────────────────
 //  COMPONENT
 // ─────────────────────────────────────────
@@ -243,8 +102,10 @@ const getPreviewText = (job: JobListing) => {
 export function BrowseJobs() {
 
   // ── State ──────────────────────────────
-  const [jobs, setJobs] = useState<JobListing[]>(ALL_JOBS)
-  const [selectedJob, setSelectedJob] = useState<JobListing | null>(ALL_JOBS[0])
+  const [jobs, setJobs] = useState<JobListing[]>([])
+  const [selectedJob, setSelectedJob] = useState<JobListing | null>(null)
+  const [isLoadingJobs, setIsLoadingJobs] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [locationSearch, setLocationSearch] = useState('')
   const [sortBy, setSortBy] = useState('recent')
@@ -252,6 +113,9 @@ export function BrowseJobs() {
   const [onlyShowMatched, setOnlyShowMatched] = useState(false)
   const [showSkillPicker, setShowSkillPicker] = useState(false)
   const [skillPickerSearch, setSkillPickerSearch] = useState('')
+  const [applyingJobId, setApplyingJobId] = useState<string | null>(null)
+  const [applyMessage, setApplyMessage] = useState('')
+  const [applyError, setApplyError] = useState('')
   const [selectedJobTypes, setSelectedJobTypes] = useState<Set<string>>(new Set())
   const [selectedSetups, setSelectedSetups] = useState<Set<string>>(new Set())
   const [selectedLocations, setSelectedLocations] = useState<Set<string>>(new Set())
@@ -261,11 +125,49 @@ export function BrowseJobs() {
   ])
 
   // ── Computed ───────────────────────────
+  useEffect(() => {
+    const loadJobs = async () => {
+      setIsLoadingJobs(true)
+      setLoadError(null)
+
+      const result = await jobListingService.getStudentBrowseJobs()
+
+      if (result.isSuccess && result.value) {
+        const loadedJobs = result.value.map(mapBrowseJob)
+        setJobs(loadedJobs)
+        setSelectedJob(loadedJobs[0] ?? null)
+
+        const resumeSkills = loadedJobs.flatMap(job => job.matchedSkills)
+        if (resumeSkills.length > 0) {
+          setDisplayedSkills(prev => [...new Set([...prev, ...resumeSkills])])
+        }
+      } else {
+        setLoadError(result.error || 'Failed to load matched jobs')
+      }
+
+      setIsLoadingJobs(false)
+    }
+
+    loadJobs()
+  }, [])
+
+  const jobTypeOptions = useMemo(() =>
+    buildFilterOptions(jobs, ['Full-time', 'Internship', 'Part-time', 'Contract', 'Freelance'], job => job.jobType),
+    [jobs]
+  )
+
+  const workSetupOptions = useMemo(() =>
+    buildFilterOptions(jobs, ['Remote', 'On-site', 'Hybrid'], job => job.workSetup),
+    [jobs]
+  )
+
+  const locationOptions = useMemo(() => buildLocationOptions(jobs), [jobs])
+
   const filteredLocationOptions = useMemo(() =>
     locationSearch.trim() === ''
-      ? LOCATION_OPTIONS
-      : LOCATION_OPTIONS.filter(l => l.label.toLowerCase().includes(locationSearch.toLowerCase())),
-    [locationSearch]
+      ? locationOptions
+      : locationOptions.filter(l => l.label.toLowerCase().includes(locationSearch.toLowerCase())),
+    [locationSearch, locationOptions]
   )
 
   const filteredSkillCategories = useMemo(() => {
@@ -313,7 +215,7 @@ export function BrowseJobs() {
     const list = [...filteredJobs]
     if (sortBy === 'match') return list.sort((a, b) => b.matchScore - a.matchScore)
     if (sortBy === 'company') return list.sort((a, b) => a.company.localeCompare(b.company))
-    return list.sort((a, b) => b.id - a.id)
+    return list.sort((a, b) => new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime())
   }, [filteredJobs, sortBy])
 
   // ── Handlers ───────────────────────────
@@ -324,7 +226,11 @@ export function BrowseJobs() {
 
   const toggleSet = (set: Set<string>, val: string): Set<string> => {
     const next = new Set(set)
-    next.has(val) ? next.delete(val) : next.add(val)
+    if (next.has(val)) {
+      next.delete(val)
+    } else {
+      next.add(val)
+    }
     return next
   }
 
@@ -378,19 +284,35 @@ export function BrowseJobs() {
     setMinMatchScore(0)
     setOnlyShowMatched(false)
     setShowSkillPicker(false)
-    setSelectedJob(ALL_JOBS[0])
+    setSelectedJob(jobs[0] ?? null)
   }
 
-  const toggleSave = (jobId: number) => {
+  const toggleSave = (jobId: string) => {
     setJobs(prev => prev.map(j => j.id === jobId ? { ...j, isSaved: !j.isSaved } : j))
     if (selectedJob?.id === jobId)
       setSelectedJob(prev => prev ? { ...prev, isSaved: !prev.isSaved } : null)
   }
 
-  const toggleApply = (jobId: number) => {
-    setJobs(prev => prev.map(j => j.id === jobId ? { ...j, hasApplied: !j.hasApplied } : j))
-    if (selectedJob?.id === jobId)
-      setSelectedJob(prev => prev ? { ...prev, hasApplied: !prev.hasApplied } : null)
+  const applyToJob = async (jobId: string) => {
+    if (selectedJob?.hasApplied || applyingJobId) return
+
+    setApplyingJobId(jobId)
+    setApplyMessage('')
+    setApplyError('')
+
+    const result = await applicationService.apply({ jobListingId: jobId })
+
+    if (result.isSuccess) {
+      setJobs(prev => prev.map(j => j.id === jobId ? { ...j, hasApplied: true, applicants: j.applicants + 1 } : j))
+      if (selectedJob?.id === jobId) {
+        setSelectedJob(prev => prev ? { ...prev, hasApplied: true, applicants: prev.applicants + 1 } : null)
+      }
+      setApplyMessage('Application submitted successfully.')
+    } else {
+      setApplyError(result.error || 'Failed to submit application.')
+    }
+
+    setApplyingJobId(null)
   }
 
   const toggleSkillPicker = () => {
@@ -453,7 +375,7 @@ export function BrowseJobs() {
             <div className="filter-group">
               <p className="filter-group-label">Job Type</p>
               <div className="filter-options">
-                {JOB_TYPE_OPTIONS.map(opt => (
+                {jobTypeOptions.map(opt => (
                   <label key={opt.label} className={`filter-check ${selectedJobTypes.has(opt.label) ? 'active-filter' : ''}`}>
                     <input type="checkbox" checked={selectedJobTypes.has(opt.label)} onChange={() => toggleJobType(opt.label)} />
                     <span className="checkmark"></span>
@@ -470,7 +392,7 @@ export function BrowseJobs() {
             <div className="filter-group">
               <p className="filter-group-label">Work Setup</p>
               <div className="filter-options">
-                {WORK_SETUP_OPTIONS.map(opt => (
+                {workSetupOptions.map(opt => (
                   <label key={opt.label} className={`filter-check ${selectedSetups.has(opt.label) ? 'active-filter' : ''}`}>
                     <input type="checkbox" checked={selectedSetups.has(opt.label)} onChange={() => toggleSetup(opt.label)} />
                     <span className="checkmark"></span>
@@ -629,7 +551,18 @@ export function BrowseJobs() {
               </div>
             </div>
 
-            {filteredJobs.length === 0 ? (
+            {isLoadingJobs ? (
+              <div className="empty-state">
+                <p className="empty-title">Loading matched jobs...</p>
+                <p className="empty-sub">Checking active listings against your resume.</p>
+              </div>
+            ) : loadError ? (
+              <div className="empty-state">
+                <p className="empty-title">Could not load jobs</p>
+                <p className="empty-sub">{loadError}</p>
+                <button className="filter-clear-btn" onClick={() => window.location.reload()}>Retry</button>
+              </div>
+            ) : filteredJobs.length === 0 ? (
               <div className="empty-state">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
                   <circle cx="11" cy="11" r="8" stroke="#CBD5E1" strokeWidth="1.5" />
@@ -845,9 +778,17 @@ export function BrowseJobs() {
                 <div className="jd-cta">
                   <button
                     className={`btn-apply ${selectedJob.hasApplied ? 'btn-apply--applied' : ''}`}
-                    onClick={() => toggleApply(selectedJob.id)}
+                    onClick={() => applyToJob(selectedJob.id)}
+                    disabled={selectedJob.hasApplied || applyingJobId === selectedJob.id}
                   >
-                    {selectedJob.hasApplied ? (
+                    {applyingJobId === selectedJob.id ? (
+                      <>
+                        <svg className="apply-spin" width="15" height="15" viewBox="0 0 24 24" fill="none">
+                          <path d="M21 12a9 9 0 11-6.219-8.56" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                        </svg>
+                        <span>Applying...</span>
+                      </>
+                    ) : selectedJob.hasApplied ? (
                       <>
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                           <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -864,6 +805,11 @@ export function BrowseJobs() {
                       </>
                     )}
                   </button>
+                  {(applyMessage || applyError) && (
+                    <div className={`apply-feedback ${applyError ? 'apply-feedback--error' : 'apply-feedback--success'}`}>
+                      {applyError || applyMessage}
+                    </div>
+                  )}
                   <button
                     className={`btn-save-job ${selectedJob.isSaved ? 'btn-save-job--saved' : ''}`}
                     onClick={() => toggleSave(selectedJob.id)}

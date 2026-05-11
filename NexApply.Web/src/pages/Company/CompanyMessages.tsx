@@ -3,6 +3,8 @@ import './CompanyMessages.css';
 import {CompanySidebar} from '../../components/CompanySidebar';
 import {CompanyHeader} from '../../components/CompanyHeader';
 import {ScheduleInterviewModal} from '../../components/modal/ScheduleInterviewModal';
+import { companyInterviewsService } from '../../services/companyInterviewsService';
+import { messageService, type ConversationDto } from '../../services/messageService';
 
 
 interface InterviewInviteDetails {
@@ -13,29 +15,15 @@ interface InterviewInviteDetails {
 }
 
 interface MessageItem {
-  id: number;
+  id: string;
   senderId: string;
   content: string;
-  sentAt: Date;
+  sentAt: string;
   type: string;
   inviteDetails?: InterviewInviteDetails;
 }
 
-interface ConversationItem {
-  id: number;
-  name: string;
-  role: string;
-  jobTitle: string;
-  isRead: boolean;
-  isOnline: boolean;
-  lastSenderIsMe: boolean;
-  lastMessage: string;
-  lastMessageAt: Date;
-  applicationStage?: string | null;
-  matchScore: number;
-  applicantId?: number | null;
-  appliedDate?: Date | null;
-  skills?: string[] | null;
+interface ConversationItem extends ConversationDto {
   messages: MessageItem[];
   get initials(): string;
 }
@@ -79,37 +67,39 @@ function getMatchClass(score: number): string {
   return score >= 80 ? 'high' : score >= 60 ? 'mid' : 'low';
 }
 
-function formatTime(dt: Date): string {
+function formatTime(dt: string): string {
+  const date = new Date(dt);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
-  const dtDay = new Date(dt);
+  const dtDay = new Date(date);
   dtDay.setHours(0, 0, 0, 0);
 
   if (dtDay.getTime() === today.getTime()) {
-    return dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   }
   if (dtDay.getTime() === yesterday.getTime()) return 'Yesterday';
   const diffDays = (today.getTime() - dtDay.getTime()) / 86400000;
-  if (diffDays < 7) return dt.toLocaleDateString('en-US', { weekday: 'short' });
-  return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  if (diffDays < 7) return date.toLocaleDateString('en-US', { weekday: 'short' });
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-function getDateLabel(date: Date): string {
+function getDateLabel(date: string): string {
+  const d = new Date(date);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
+  const dateDay = new Date(d);
+  dateDay.setHours(0, 0, 0, 0);
 
-  if (d.getTime() === today.getTime()) return 'Today';
-  if (d.getTime() === yesterday.getTime()) return 'Yesterday';
-  return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  if (dateDay.getTime() === today.getTime()) return 'Today';
+  if (dateDay.getTime() === yesterday.getTime()) return 'Yesterday';
+  return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 }
 
-function groupByDate(messages: MessageItem[]): { date: Date; msgs: MessageItem[] }[] {
+function groupByDate(messages: MessageItem[]): { date: string; msgs: MessageItem[] }[] {
   const map = new Map<number, MessageItem[]>();
   for (const msg of messages) {
     const day = new Date(msg.sentAt);
@@ -121,150 +111,10 @@ function groupByDate(messages: MessageItem[]): { date: Date; msgs: MessageItem[]
   return Array.from(map.entries())
     .sort(([a], [b]) => a - b)
     .map(([key, msgs]) => ({
-      date: new Date(key),
-      msgs: [...msgs].sort((a, b) => a.sentAt.getTime() - b.sentAt.getTime()),
+      date: new Date(key).toISOString(),
+      msgs: [...msgs].sort((a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime()),
     }));
 }
-
-// ── Seed data ────────────────────────────────────────────────────────────────
-
-const now = new Date();
-const today = new Date(now);
-today.setHours(0, 0, 0, 0);
-
-function daysAgo(n: number, h = 0, m = 0): Date {
-  const d = new Date(today);
-  d.setDate(d.getDate() - n);
-  d.setHours(h, m);
-  return d;
-}
-function todayAt(h: number, m = 0): Date {
-  const d = new Date(today);
-  d.setHours(h, m);
-  return d;
-}
-function minutesAgo(n: number): Date {
-  return new Date(now.getTime() - n * 60000);
-}
-function hoursAgo(n: number): Date {
-  return new Date(now.getTime() - n * 3600000);
-}
-
-const INITIAL_CONVERSATIONS: Omit<ConversationItem, 'initials'>[] = [
-  {
-    id: 1,
-    name: 'Kira Reyes',
-    role: 'Candidate',
-    jobTitle: 'Full-Stack Developer Intern',
-    isRead: false,
-    isOnline: true,
-    lastSenderIsMe: false,
-    lastMessage: "Thank you! I'll confirm my availability shortly.",
-    lastMessageAt: minutesAgo(5),
-    applicationStage: 'For Interview',
-    matchScore: 91,
-    applicantId: 1,
-    appliedDate: new Date(2025, 3, 9),
-    skills: ['React', 'ASP.NET Core', 'SQL', 'Git'],
-    messages: [
-      { id: 1, senderId: 'me', content: "Hi Kira! We've reviewed your application for the Full-Stack Developer Intern role and we're very impressed.", sentAt: daysAgo(2, 9), type: 'text' },
-      { id: 2, senderId: 'me', content: "We'd like to invite you to a technical interview. Are you available this week?", sentAt: new Date(daysAgo(2, 9).getTime() + 60000), type: 'text' },
-      { id: 3, senderId: 'them', content: "Hello! Thank you so much, I'm really excited about this opportunity!", sentAt: daysAgo(2, 10), type: 'text' },
-      { id: 4, senderId: 'them', content: "I'm available Thursday or Friday afternoon. Would either of those work?", sentAt: new Date(daysAgo(2, 10).getTime() + 2 * 60000), type: 'text' },
-      { id: 5, senderId: 'me', content: "Thursday at 2PM sounds perfect. I'll send you a calendar invite shortly.", sentAt: daysAgo(1, 9), type: 'text' },
-      {
-        id: 6, senderId: 'me', type: 'interview-invite',
-        content: 'Please find your interview details below. The session will be 60 minutes via Google Meet.',
-        sentAt: new Date(daysAgo(1, 9).getTime() + 5 * 60000),
-        inviteDetails: { position: 'Full-Stack Developer Intern', dateDisplay: 'Thursday, April 10, 2025', timeDisplay: '2:00 PM – 3:00 PM', format: 'Video Call (Google Meet)' },
-      },
-      { id: 7, senderId: 'them', content: "Thank you! I'll confirm my availability shortly.", sentAt: minutesAgo(5), type: 'text' },
-    ],
-  },
-  {
-    id: 2,
-    name: 'Marco Guerrero',
-    role: 'Candidate',
-    jobTitle: 'React Frontend Developer',
-    isRead: true,
-    isOnline: false,
-    lastSenderIsMe: true,
-    lastMessage: "We'll be in touch with the next steps soon.",
-    lastMessageAt: todayAt(8),
-    applicationStage: 'Shortlisted',
-    matchScore: 85,
-    applicantId: 2,
-    appliedDate: new Date(2025, 3, 8),
-    skills: ['React', 'TypeScript', 'CSS'],
-    messages: [
-      { id: 1, senderId: 'them', content: 'Hi, I wanted to ask about the status of my application for the React Frontend Developer role.', sentAt: daysAgo(1, 14), type: 'text' },
-      { id: 2, senderId: 'me', content: "Hi Marco! Great news — you've been shortlisted for the next round.", sentAt: todayAt(8), type: 'text' },
-      { id: 3, senderId: 'me', content: "We'll be in touch with the next steps soon.", sentAt: new Date(todayAt(8).getTime() + 60000), type: 'text' },
-    ],
-  },
-  {
-    id: 3,
-    name: 'Sofia Cruz',
-    role: 'Candidate',
-    jobTitle: 'API Developer (.NET)',
-    isRead: false,
-    isOnline: true,
-    lastSenderIsMe: false,
-    lastMessage: 'Could you share more about the tech stack you use?',
-    lastMessageAt: hoursAgo(1),
-    applicationStage: 'Under Review',
-    matchScore: 78,
-    applicantId: 3,
-    appliedDate: new Date(2025, 3, 7),
-    skills: ['ASP.NET Core', 'PostgreSQL', 'Docker'],
-    messages: [
-      { id: 1, senderId: 'them', content: 'Hi! I recently applied for the API Developer (.NET) position.', sentAt: hoursAgo(2), type: 'text' },
-      { id: 2, senderId: 'them', content: 'Could you share more about the tech stack you use?', sentAt: hoursAgo(1), type: 'text' },
-    ],
-  },
-  {
-    id: 4,
-    name: 'Marcus Lee',
-    role: 'Team',
-    jobTitle: '',
-    isRead: true,
-    isOnline: true,
-    lastSenderIsMe: false,
-    lastMessage: "I've finished reviewing the shortlist for React Frontend.",
-    lastMessageAt: todayAt(11),
-    applicationStage: null,
-    matchScore: 0,
-    applicantId: null,
-    appliedDate: null,
-    skills: null,
-    messages: [
-      { id: 1, senderId: 'them', content: 'Hey, do you have a moment to discuss the React Frontend candidate pool?', sentAt: todayAt(10), type: 'text' },
-      { id: 2, senderId: 'me', content: 'Sure! What are your thoughts so far?', sentAt: new Date(todayAt(10).getTime() + 5 * 60000), type: 'text' },
-      { id: 3, senderId: 'them', content: "I've finished reviewing the shortlist for React Frontend.", sentAt: todayAt(11), type: 'text' },
-    ],
-  },
-  {
-    id: 5,
-    name: 'Rachel Ong',
-    role: 'Candidate',
-    jobTitle: 'API Developer (.NET)',
-    isRead: true,
-    isOnline: false,
-    lastSenderIsMe: true,
-    lastMessage: 'Looking forward to meeting you on Thursday.',
-    lastMessageAt: daysAgo(1, 16),
-    applicationStage: 'For Interview',
-    matchScore: 95,
-    applicantId: 7,
-    appliedDate: new Date(2025, 3, 4),
-    skills: ['ASP.NET Core', 'PostgreSQL', 'Docker', 'Redis'],
-    messages: [
-      { id: 1, senderId: 'me', content: "Hi Rachel! Congratulations — you've been selected for an interview for the API Developer (.NET) role.", sentAt: daysAgo(2, 14), type: 'text' },
-      { id: 2, senderId: 'them', content: "That's wonderful news! I'm really looking forward to it.", sentAt: daysAgo(2, 15), type: 'text' },
-      { id: 3, senderId: 'me', content: 'Looking forward to meeting you on Thursday.', sentAt: daysAgo(1, 16), type: 'text' },
-    ],
-  },
-];
 
 const MESSAGE_TEMPLATES: MessageTemplate[] = [
   { name: 'Interview Invitation', body: "Hi {name}, we'd like to invite you to an interview for the {position} role. Please let us know your availability." },
@@ -274,20 +124,18 @@ const MESSAGE_TEMPLATES: MessageTemplate[] = [
   { name: 'Request for Documents', body: 'Hi {name}, as part of the application process for {position}, we\'d like to request the following documents: [list documents here].' },
 ];
 
-// ── Component ─────────────────────────────────────────────────────────────────
-
 const CompanyMessages: React.FC = () => {
 
-
-  const [conversations, setConversations] = useState<ConversationItem[]>(
-    INITIAL_CONVERSATIONS.map((c) => ({ ...c, get initials() { return getInitials(this.name); } }))
-  );
+  const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const [convSearch, setConvSearch] = useState('');
   const [convTab, setConvTab] = useState('All');
-  const [activeConvId, setActiveConvId] = useState<number | null>(null);
+  const [activeConvId, setActiveConvId] = useState<string | null>(null);
   const [composeText, setComposeText] = useState('');
   const [showTemplates, setShowTemplates] = useState(false);
   const [isTypingVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [messages, setMessages] = useState<MessageItem[]>([]);
 
   // Schedule modal state
   const [showScheduleModal, setShowScheduleModal] = useState(false);
@@ -303,7 +151,7 @@ const CompanyMessages: React.FC = () => {
 
   // Derived
   const unreadCount = conversations.filter((c) => !c.isRead).length;
-  const activeConversation = conversations.find((c) => c.id === activeConvId) ?? null;
+  const activeConversation = conversations.find((c) => c.userId === activeConvId) ?? null;
 
   const filteredConversations = conversations
     .filter((c) => {
@@ -319,49 +167,94 @@ const CompanyMessages: React.FC = () => {
         true;
       return matchesSearch && matchesTab;
     })
-    .sort((a, b) => b.lastMessageAt.getTime() - a.lastMessageAt.getTime());
+    .sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
+
+  // Load conversations on mount
+  useEffect(() => {
+    const loadConversations = async () => {
+      setIsLoading(true);
+      setError(null);
+      const result = await messageService.getConversations();
+      
+      if (result.isSuccess && result.value) {
+        const conversationsWithMessages = result.value.map((c: ConversationDto) => ({
+          ...c,
+          messages: [] as MessageItem[],
+          get initials() { return getInitials((this as ConversationItem).name); }
+        })) as ConversationItem[];
+        setConversations(conversationsWithMessages);
+      } else {
+        setError(result.error || 'Failed to load conversations');
+      }
+      
+      setIsLoading(false);
+    };
+    
+    loadConversations();
+  }, []);
+
+  // Load messages when conversation selected
+  useEffect(() => {
+    if (!activeConvId) return;
+    
+    const loadMessages = async () => {
+      const result = await messageService.getMessages(activeConvId);
+      if (result.isSuccess && result.value) {
+        setMessages(result.value);
+      }
+    };
+    
+    loadMessages();
+  }, [activeConvId]);
 
   // Auto-open first on mount
   useEffect(() => {
-    if (filteredConversations.length > 0 && activeConvId === null) {
-      selectConversation(filteredConversations[0].id);
+    if (filteredConversations.length > 0 && activeConvId === null && !isLoading) {
+      selectConversation(filteredConversations[0].userId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isLoading]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [activeConvId, activeConversation?.messages.length]);
+  }, [activeConvId, messages.length]);
 
-  function selectConversation(id: number) {
-    setActiveConvId(id);
+  function selectConversation(userId: string) {
+    setActiveConvId(userId);
     setShowTemplates(false);
     setConversations((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, isRead: true } : c))
+      prev.map((c) => (c.userId === userId ? { ...c, isRead: true } : c))
     );
   }
 
-  function sendMessage() {
+  async function sendMessage() {
     if (!composeText.trim() || !activeConvId) return;
     const text = composeText.trim();
-    setConversations((prev) =>
-      prev.map((c) => {
-        if (c.id !== activeConvId) return c;
-        return {
-          ...c,
-          messages: [
-            ...c.messages,
-            { id: c.messages.length + 1, senderId: 'me', content: text, sentAt: new Date(), type: 'text' },
-          ],
-          lastMessage: text,
-          lastMessageAt: new Date(),
-          lastSenderIsMe: true,
-        };
-      })
-    );
-    setComposeText('');
-    setShowTemplates(false);
+    
+    const result = await messageService.sendMessage({
+      receiverId: activeConvId,
+      content: text
+    });
+    
+    if (result.isSuccess && result.value) {
+      setMessages([...messages, result.value]);
+      setComposeText('');
+      setShowTemplates(false);
+      
+      // Update conversation last message
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c.userId !== activeConvId) return c;
+          return {
+            ...c,
+            lastMessage: text,
+            lastMessageAt: new Date().toISOString(),
+            lastSenderIsMe: true,
+          };
+        })
+      );
+    }
   }
 
   function handleComposeKey(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -399,9 +292,9 @@ const CompanyMessages: React.FC = () => {
     setShowScheduleModal(true);
   }
 
-  function handleScheduleConfirm(result: ScheduleResult) {
+  async function handleScheduleConfirm(result: ScheduleResult) {
     setShowScheduleModal(false);
-    if (!activeConvId) return;
+    if (!activeConvId || !activeConversation?.applicantId) return;
 
     const iv = result.interview;
     const [h, m] = result.interviewTime.split(':').map(Number);
@@ -412,12 +305,28 @@ const CompanyMessages: React.FC = () => {
     const fmt = (d: Date) =>
       d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 
+    const scheduledResult = await companyInterviewsService.scheduleInterview({
+      applicationId: activeConversation.applicantId,
+      scheduledAt: scheduledAt.toISOString(),
+      durationMinutes: iv.durationMins,
+      format: iv.format,
+      location: iv.format === 'Video Call' ? undefined : iv.location || undefined,
+      meetingLink: iv.format === 'Video Call' ? iv.location || undefined : undefined,
+      notes: iv.notes || undefined,
+      interviewerNames: result.interviewerName ? [result.interviewerName.trim()] : []
+    });
+
+    if (!scheduledResult.isSuccess) {
+      setError(scheduledResult.error || 'Failed to schedule interview');
+      return;
+    }
+
     const inviteMsg: MessageItem = {
-      id: 0, // will be overwritten
+      id: '0',
       senderId: 'me',
       type: 'interview-invite',
       content: `Please find your interview details below. The session will be ${iv.durationMins} minutes${iv.location ? ` via ${iv.format}.` : '.'}`,
-      sentAt: new Date(),
+      sentAt: new Date().toISOString(),
       inviteDetails: {
         position: iv.jobTitle,
         dateDisplay: scheduledAt.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
@@ -426,15 +335,15 @@ const CompanyMessages: React.FC = () => {
       },
     };
 
+    setMessages(prev => [...prev, inviteMsg]);
+
     setConversations((prev) =>
       prev.map((c) => {
-        if (c.id !== activeConvId) return c;
-        const newMsg = { ...inviteMsg, id: c.messages.length + 1 };
+        if (c.userId !== activeConvId) return c;
         return {
           ...c,
-          messages: [...c.messages, newMsg],
           lastMessage: '📅 Interview Invitation sent',
-          lastMessageAt: new Date(),
+          lastMessageAt: new Date().toISOString(),
           lastSenderIsMe: true,
           isRead: true,
         };
@@ -495,7 +404,11 @@ const CompanyMessages: React.FC = () => {
             </div>
 
             <div className="conv-list">
-              {filteredConversations.length === 0 ? (
+              {error ? (
+                <div className="conv-empty">
+                  <p>{error}</p>
+                </div>
+              ) : filteredConversations.length === 0 ? (
                 <div className="conv-empty">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                     fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -504,13 +417,13 @@ const CompanyMessages: React.FC = () => {
                   <p>No conversations found</p>
                 </div>
               ) : (
-                filteredConversations.map((conv) => (
-                  <button key={conv.id}
-                    className={`conv-item ${activeConvId === conv.id ? 'active' : ''} ${!conv.isRead ? 'unread' : ''}`}
-                    onClick={() => selectConversation(conv.id)}
+                filteredConversations.map((conv: ConversationItem) => (
+                  <button key={conv.userId}
+                    className={`conv-item ${activeConvId === conv.userId ? 'active' : ''} ${!conv.isRead ? 'unread' : ''}`}
+                    onClick={() => selectConversation(conv.userId)}
                     aria-label={`Open conversation with ${conv.name}`}
-                    aria-pressed={activeConvId === conv.id}>
-                    <div className={`conv-avatar conv-avatar--${getAvatarColor(conv.id)}`}>
+                    aria-pressed={activeConvId === conv.userId}>
+                    <div className={`conv-avatar conv-avatar--${getAvatarColor(parseInt(conv.userId.substring(0, 8), 16) % 5)}`}>
                       {getInitials(conv.name)}
                       {conv.isOnline && <span className="online-dot" />}
                     </div>
@@ -568,7 +481,7 @@ const CompanyMessages: React.FC = () => {
                 {/* Chat Header */}
                 <div className="chat-header">
                   <div className="chat-header-left">
-                    <div className={`chat-avatar chat-avatar--${getAvatarColor(activeConversation.id)}`}>
+                    <div className={`chat-avatar chat-avatar--${getAvatarColor(parseInt(activeConversation.userId.substring(0, 8), 16) % 5)}`}>
                       {getInitials(activeConversation.name)}
                       {activeConversation.isOnline && <span className="online-dot online-dot--lg" />}
                     </div>
@@ -582,7 +495,7 @@ const CompanyMessages: React.FC = () => {
                     </div>
                   </div>
                   <div className="chat-header-actions">
-                    {activeConversation.role === 'Candidate' && (
+                    {activeConversation.role === 'Candidate' && activeConversation.applicantId && (
                       <a href={`/company-applicants/${activeConversation.applicantId}`}
                         className="chat-hdr-btn chat-hdr-btn--profile" title="View applicant profile">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
@@ -618,8 +531,8 @@ const CompanyMessages: React.FC = () => {
 
                 {/* Messages Area */}
                 <div className="chat-messages" id="chat-messages-area">
-                  {groupByDate(activeConversation.messages).map(({ date, msgs }) => (
-                    <React.Fragment key={date.getTime()}>
+                  {groupByDate(messages).map(({ date, msgs }) => (
+                    <React.Fragment key={date}>
                       <div className="msg-date-sep">
                         <div className="msg-date-line" />
                         <span className="msg-date-label">{getDateLabel(date)}</span>
@@ -627,11 +540,11 @@ const CompanyMessages: React.FC = () => {
                       </div>
 
                       {msgs.map((msg) => {
-                        const isMe = msg.senderId === 'me';
+                        const isMe = msg.senderId !== activeConvId;
                         return (
                           <div key={msg.id} className={`msg-row ${isMe ? 'msg-row--me' : 'msg-row--them'}`}>
                             {!isMe && (
-                              <div className={`msg-avatar msg-avatar--${getAvatarColor(activeConversation.id)}`}>
+                              <div className={`msg-avatar msg-avatar--${getAvatarColor(parseInt(activeConversation.userId.substring(0, 8), 16) % 5)}`}>
                                 {getInitials(activeConversation.name)}
                               </div>
                             )}
@@ -689,7 +602,7 @@ const CompanyMessages: React.FC = () => {
                                 </div>
                               )}
                               <span className={`msg-time ${isMe ? 'msg-time--me' : ''}`}>
-                                {msg.sentAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                                {new Date(msg.sentAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                                 {isMe && (
                                   <svg className="msg-read-check" xmlns="http://www.w3.org/2000/svg" width="12" height="12"
                                     viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
@@ -708,7 +621,7 @@ const CompanyMessages: React.FC = () => {
                   {/* Typing indicator */}
                   {isTypingVisible && (
                     <div className="msg-row msg-row--them">
-                      <div className={`msg-avatar msg-avatar--${getAvatarColor(activeConversation.id)}`}>
+                      <div className={`msg-avatar msg-avatar--${getAvatarColor(parseInt(activeConversation.userId.substring(0, 8), 16) % 5)}`}>
                         {getInitials(activeConversation.name)}
                       </div>
                       <div className="msg-bubble-wrap">
@@ -805,7 +718,7 @@ const CompanyMessages: React.FC = () => {
               </div>
 
               <div className="context-profile">
-                <div className={`context-avatar context-avatar--${getAvatarColor(activeConversation.id)}`}>
+                <div className={`context-avatar context-avatar--${getAvatarColor(parseInt(activeConversation.userId.substring(0, 8), 16) % 5)}`}>
                   {getInitials(activeConversation.name)}
                 </div>
                 <span className="context-name">{activeConversation.name}</span>
@@ -839,7 +752,7 @@ const CompanyMessages: React.FC = () => {
                   </span>
                   <span className="cig-key">Applied</span>
                   <span className="cig-val">
-                    {activeConversation.appliedDate?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    {activeConversation.appliedDate ? new Date(activeConversation.appliedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}
                   </span>
                 </div>
               </div>
@@ -875,15 +788,17 @@ const CompanyMessages: React.FC = () => {
                   Quick Actions
                 </span>
                 <div className="context-actions">
-                  <a href={`/company-applicants/${activeConversation.applicantId}`}
-                    className="ctx-action-btn ctx-action-btn--profile">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-                      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </svg>
-                    View Full Profile
-                  </a>
+                  {activeConversation.applicantId && (
+                    <a href={`/company-applicants/${activeConversation.applicantId}`}
+                      className="ctx-action-btn ctx-action-btn--profile">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                      </svg>
+                      View Full Profile
+                    </a>
+                  )}
                   <button className="ctx-action-btn ctx-action-btn--schedule"
                     onClick={() => openScheduleModal(activeConversation)}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"

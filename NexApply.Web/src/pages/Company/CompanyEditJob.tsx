@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CompanySidebar } from '../../components/CompanySidebar';
 import { CompanyHeader } from '../../components/CompanyHeader';
-import { jobListingService, type JobListingDetailsDto, type UpdateJobListingCommand } from '../../services/jobListingService';
+import { jobListingService, type UpdateJobListingCommand } from '../../services/jobListingService';
 import './CompanyEditJob.css';
 
 const JOB_TYPES = [

@@ -61,4 +61,11 @@ public class StudentProfile : BaseEntity
         ParsedResumeText = parsedText;
         MarkAsUpdated();
     }
+
+    public void ClearUploadedResume()
+    {
+        ResumeFilePath = null;
+        ParsedResumeText = null;
+        MarkAsUpdated();
+    }
 }

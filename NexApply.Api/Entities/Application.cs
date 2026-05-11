@@ -38,6 +38,12 @@ public class Application : BaseEntity
         MarkAsUpdated();
     }
 
+    public void MarkAsSubmitted()
+    {
+        Status = ApplicationStatus.Submitted;
+        MarkAsUpdated();
+    }
+
     public void Shortlist()
     {
         Status = ApplicationStatus.Shortlisted;

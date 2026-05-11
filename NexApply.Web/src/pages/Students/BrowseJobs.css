@@ -1206,6 +1206,7 @@
 /* CTA Buttons */
 .jd-cta {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
     padding-top: 4px;
     position: sticky;
@@ -1237,6 +1238,11 @@
     .btn-apply:hover {
         box-shadow: 0 6px 18px rgba(29, 78, 216, 0.38);
         transform: translateY(-1px);
+    }
+
+    .btn-apply:disabled {
+        cursor: default;
+        transform: none;
     }
 
 .btn-save-job {
@@ -1338,6 +1344,39 @@
 .btn-apply--applied {
     background: linear-gradient(135deg, var(--color-green-600), var(--color-green-500)) !important;
     box-shadow: 0 4px 12px rgba(5, 150, 105, 0.28) !important;
+}
+
+.apply-feedback {
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: var(--radius-lg);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    text-align: center;
+}
+
+.apply-feedback--success {
+    background: var(--color-green-100);
+    color: var(--color-green-700);
+}
+
+.apply-feedback--error {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+@keyframes apply-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.apply-spin {
+    animation: apply-spin 0.9s linear infinite;
 }
 
 /* Save job button — saved state */

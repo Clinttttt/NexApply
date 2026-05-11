@@ -11,6 +11,7 @@ using NexApply.Api.Common;
 using NexApply.Api.Common.Behaviors;
 using NexApply.Api.Common.Middleware;
 using NexApply.Api.Data;
+using NexApply.Api.Features.Applications;
 using NexApply.Api.Features.Auth;
 using NexApply.Api.Features.Auth.Login;
 using NexApply.Api.Features.Auth.LoginWithEmail;
@@ -19,7 +20,11 @@ using NexApply.Api.Features.CompanyDashboard;
 using NexApply.Api.Features.CompanyProfile;
 using NexApply.Api.Features.Interviews;
 using NexApply.Api.Features.JobListings;
+using NexApply.Api.Features.Messages.GetConversations;
+using NexApply.Api.Features.Messages.GetMessages;
+using NexApply.Api.Features.Messages.SendMessage;
 using NexApply.Api.Features.Profile;
+using NexApply.Api.Features.StudentDashboard;
 using NexApply.Api.Services;
 using System.Xml.Linq;
 
@@ -157,10 +162,15 @@ app.MapControllers();
 app.MapAuthEndpoints();
 app.MapProfileEndpoints();
 app.MapJobListingsEndpoints();
+app.MapApplicationsEndpoints();
 app.MapCompanyProfileEndpoints();
 app.MapCompanyDashboardEndpoints();
+app.MapStudentDashboardEndpoints();
 app.MapCompanyApplicantsEndpoints();
 app.MapInterviewsEndpoints();
+app.MapGetConversations();
+app.MapGetMessages();
+app.MapSendMessage();
 
 app.Run();
 

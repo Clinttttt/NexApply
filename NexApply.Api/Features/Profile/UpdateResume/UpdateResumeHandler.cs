@@ -32,6 +32,8 @@ public class UpdateResumeHandler(AppDbContext context, CurrentUser currentUser) 
             resume.UpdateContent(request.Headline, request.AboutMe, request.EducationJson, request.WorkExperienceJson, request.SkillsJson);
         }
 
+        profile.ClearUploadedResume();
+
         await context.SaveChangesAsync(ct);
 
         var education = JsonSerializer.Deserialize<List<EducationDto>>(request.EducationJson) ?? new();

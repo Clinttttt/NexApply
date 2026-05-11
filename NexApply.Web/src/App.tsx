@@ -18,7 +18,7 @@ import CompanyInterviews from './pages/Company/CompanyInterviews';
 import CompanyMessages from './pages/Company/CompanyMessages';
 import CompanyJobView from './pages/Company/CompanyJobView';
 import CompanyEditJob from './pages/Company/CompanyEditJob';
-
+import { StudentProfile } from './pages/Students/StudentProfile';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -51,7 +51,9 @@ function App() {
           <Route path="/notifications" element={ <Notifications /> } />
 
           <Route path="/saved-jobs" element={ <SavedJobs /> } />
-
+          
+          <Route path="/student-profile" element={ <StudentProfile /> } />
+         
           <Route path="/company-dashboard" element={ <CompanyDashboard /> } />
 
           <Route path="/company-post-job" element={ <CompanyPostJob /> } />

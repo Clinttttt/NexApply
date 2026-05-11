@@ -4,6 +4,7 @@ import {CompanySidebar} from '../../components/CompanySidebar';
 import {CompanyHeader} from '../../components/CompanyHeader';
 import { ScheduleInterviewModal } from '../../components/modal/ScheduleInterviewModal';
 import { companyApplicantsService, type ApplicantDto } from '../../services/companyApplicantsService';
+import { companyInterviewsService } from '../../services/companyInterviewsService';
 import { jobListingService, type JobListingSummaryDto } from '../../services/jobListingService';
 
 // ─────────────────────────────────────────
@@ -181,6 +182,33 @@ export default function CompanyApplicants() {
   const openScheduleModal  = (app: ApplicantDto) => { setScheduleApplicant(app); setShowScheduleModal(true) }
   const closeScheduleModal = () => { setShowScheduleModal(false); setScheduleApplicant(null) }
 
+  const handleConfirmSchedule = async (result: any) => {
+    if (!scheduleApplicant) return
+
+    const { interview, interviewTime, interviewerName } = result
+    const [hours, mins] = interviewTime.split(':').map(Number)
+    const scheduledAt = new Date(interview.scheduledAt)
+    scheduledAt.setHours(hours, mins, 0, 0)
+
+    const scheduledResult = await companyInterviewsService.scheduleInterview({
+      applicationId: scheduleApplicant.applicationId,
+      scheduledAt: scheduledAt.toISOString(),
+      durationMinutes: interview.durationMins,
+      format: interview.format,
+      location: interview.format === 'Video Call' ? undefined : interview.location || undefined,
+      meetingLink: interview.format === 'Video Call' ? interview.location || undefined : undefined,
+      notes: interview.notes || undefined,
+      interviewerNames: interviewerName ? [interviewerName.trim()] : []
+    })
+
+    if (scheduledResult.isSuccess) {
+      setApplicants(prev => prev.map(a =>
+        a.applicationId === scheduleApplicant.applicationId ? { ...a, status: 'ForInterview' } : a
+      ))
+      closeScheduleModal()
+    }
+  }
+
   // ── Render ─────────────────────────────
   return (
     <div className="app-shell">
@@ -305,10 +333,10 @@ export default function CompanyApplicants() {
 
               <div className="filter-controls">
                 <select className="filter-select" value={sortBy} onChange={e => setSortBy(e.target.value)}>
-                  <option value="newest">Newest First</option>
-                  <option value="oldest">Oldest First</option>
-                  <option value="name">Name A–Z</option>
-                  <option value="match">Best Match</option>
+                  <option value="Newest">Newest First</option>
+                  <option value="Oldest">Oldest First</option>
+                  <option value="NameAsc">Name A-Z</option>
+                  <option value="BestMatch">Best Match</option>
                 </select>
               </div>
 
@@ -774,7 +802,7 @@ export default function CompanyApplicants() {
           notes: '',
         } : undefined}
         onClose={closeScheduleModal}
-        onConfirm={(_result) => closeScheduleModal()}
+        onConfirm={handleConfirmSchedule}
       />
 
     </div>

@@ -17,7 +17,7 @@ export interface RegisterRequest {
   email: string;
   password: string;
   confirmPassword: string;
-  role: 'Student' | 'Company';
+  role: 0 | 1; // 0 = Student, 1 = Company
 }
 
 export interface Result<T> {

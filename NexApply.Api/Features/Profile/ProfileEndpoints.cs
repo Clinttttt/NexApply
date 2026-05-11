@@ -2,6 +2,7 @@ using NexApply.Api.Features.Profile.GetStudentProfile;
 using NexApply.Api.Features.Profile.UpdateStudentProfile;
 using NexApply.Api.Features.Profile.UploadResume;
 using NexApply.Api.Features.Profile.GetResumeContent;
+using NexApply.Api.Features.Profile.GetUploadedResumeFile;
 using NexApply.Api.Features.Profile.UpdateResume;
 
 namespace NexApply.Api.Features.Profile;
@@ -14,6 +15,7 @@ public static class ProfileEndpoints
         app.MapUpdateStudentProfileEndpoint();
         app.MapUploadResumeEndpoint();
         app.MapGetResumeContentEndpoint();
+        app.MapGetUploadedResumeFileEndpoint();
         app.MapUpdateResumeEndpoint();
     }
 }
