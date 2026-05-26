@@ -1,17 +1,22 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {Sidebar} from "../../components/Sidebar";
 import {PageHeader} from "../../components/PageHeader";
 import "./JobBoard.css";
+import { jobListingService, type JobBoardJobDto } from "../../services/jobListingService";
+import { savedJobsService } from "../../services/savedJobsService";
+import { applicationService } from "../../services/applicationService";
+import { cookieService } from "../../lib/cookieService";
 
 // ── Data Model ──────────────────────────────────────────────────────────────
 interface JobItem {
-  id: number;
+  id: string;
   company: string;
   role: string;
   type: string;
   setup: string;
   location: string;
+  postedAt: string; // ISO string
   postedDate: string;
   salary: string;
   applicants: number;
@@ -24,195 +29,41 @@ interface JobItem {
   requirements: string[];
 }
 
-// ── Static Data ──────────────────────────────────────────────────────────────
-const ALL_JOBS: JobItem[] = [
-  {
-    id: 1,
-    company: "CodeBridge Co.",
-    role: "Full-Stack Developer Intern",
-    type: "Internship",
-    setup: "Hybrid",
-    location: "Makati City",
-    postedDate: "Apr 7",
-    salary: "₱8,000 / mo",
-    applicants: 14,
-    matchPct: 91,
-    logoColor: "purple",
-    logoText: "CB",
-    skills: ["C#", ".NET Core", "Blazor", "PostgreSQL", "REST API", "Docker", "Azure"],
-    about:
-      "CodeBridge Co. is looking for a motivated Full-Stack Developer Intern to join our product team. You will work alongside senior engineers building scalable web applications using Blazor Server and .NET Core Web API with PostgreSQL as the primary database. This is a hands-on internship — you will participate in sprint planning, code reviews, and daily standups.",
-    responsibilities: [
-      "Build and maintain Blazor Server components and pages",
-      "Design and consume RESTful API endpoints with .NET Core",
-      "Write and optimize PostgreSQL queries using Dapper",
-      "Participate in code reviews and agile sprints",
-      "Collaborate with UI/UX on frontend implementation",
-    ],
-    requirements: [
-      "Strong foundation in C# and object-oriented programming",
-      "Basic understanding of SQL and relational databases",
-      "Familiarity with Git version control",
-      "Currently enrolled in a CS, IT, or related degree program",
-      "Able to commit to at least 4 months",
-    ],
-  },
-  {
-    id: 2,
-    company: "ApexCore Solutions",
-    role: "API Developer (.NET)",
-    type: "Full-time",
-    setup: "Hybrid",
-    location: "Makati City",
-    postedDate: "Apr 2",
-    salary: "₱35,000 – ₱50,000 / mo",
-    applicants: 27,
-    matchPct: 62,
-    logoColor: "blue",
-    logoText: "AP",
-    skills: ["C#", ".NET 8", "Web API", "Entity Framework", "SQL Server", "Redis", "Docker"],
-    about:
-      "ApexCore Solutions is hiring a mid-level API Developer to build and maintain enterprise-grade REST APIs powering fintech products used across Southeast Asia. You will own the design and delivery of microservices in a cloud-first environment.",
-    responsibilities: [
-      "Design, build, and maintain scalable .NET Web API services",
-      "Integrate with third-party payment and banking APIs",
-      "Implement caching strategies using Redis",
-      "Write unit and integration tests with xUnit",
-      "Collaborate with frontend and mobile teams on API contracts",
-    ],
-    requirements: [
-      "2+ years experience with .NET Web API development",
-      "Strong knowledge of SQL Server and Entity Framework Core",
-      "Experience with Docker and containerized deployments",
-      "Understanding of OAuth2 / JWT authentication",
-      "Excellent written and verbal communication skills",
-    ],
-  },
-  {
-    id: 3,
-    company: "NovaByte Inc.",
-    role: "React Frontend Developer",
-    type: "Internship",
-    setup: "Remote",
-    location: "Quezon City",
-    postedDate: "Apr 3",
-    salary: "₱6,500 / mo",
-    applicants: 41,
-    matchPct: 65,
-    logoColor: "green",
-    logoText: "NV",
-    skills: ["React", "TypeScript", "Tailwind CSS", "REST API", "Git", "Figma"],
-    about:
-      "NovaByte Inc. is seeking a React Frontend Developer Intern to help ship polished, accessible UI components for our SaaS dashboard products. You will work directly with the product designer and backend team in a fully remote setup.",
-    responsibilities: [
-      "Build reusable React components following design specs",
-      "Integrate REST APIs using Axios or React Query",
-      "Write clean, maintainable TypeScript code",
-      "Implement responsive layouts with Tailwind CSS",
-      "Participate in weekly design and engineering syncs",
-    ],
-    requirements: [
-      "Solid understanding of React hooks and component lifecycle",
-      "Proficiency in TypeScript",
-      "Experience consuming REST APIs",
-      "Familiarity with version control using Git",
-      "Portfolio or GitHub showcasing personal or academic projects",
-    ],
-  },
-  {
-    id: 4,
-    company: "TechSpark PH",
-    role: ".NET Core Developer",
-    type: "Full-time",
-    setup: "On-site",
-    location: "Ortigas Center",
-    postedDate: "Apr 4",
-    salary: "₱40,000 – ₱55,000 / mo",
-    applicants: 19,
-    matchPct: 71,
-    logoColor: "amber",
-    logoText: "TS",
-    skills: ["C#", ".NET Core", "MVC", "EF Core", "SQL Server", "Azure DevOps"],
-    about:
-      "TechSpark PH is a growing software firm specializing in government and enterprise solutions. We are hiring a .NET Core Developer to join our backend team delivering robust, secure web applications for public sector clients.",
-    responsibilities: [
-      "Develop and maintain ASP.NET Core MVC applications",
-      "Design database schemas and write efficient EF Core queries",
-      "Implement authentication and role-based access control",
-      "Collaborate with project managers and business analysts",
-      "Deploy applications through Azure DevOps pipelines",
-    ],
-    requirements: [
-      "1–3 years experience in .NET Core development",
-      "Strong understanding of MVC architecture",
-      "Experience with SQL Server and stored procedures",
-      "Ability to read and interpret technical requirements",
-      "Willing to work on-site in Ortigas",
-    ],
-  },
-  {
-    id: 5,
-    company: "SkyLink Digital",
-    role: "DevOps Engineer",
-    type: "Full-time",
-    setup: "Remote",
-    location: "Remote — PH",
-    postedDate: "Apr 5",
-    salary: "₱55,000 – ₱75,000 / mo",
-    applicants: 33,
-    matchPct: 48,
-    logoColor: "cyan",
-    logoText: "SK",
-    skills: ["Docker", "Kubernetes", "CI/CD", "Terraform", "AWS", "Linux", "Bash"],
-    about:
-      "SkyLink Digital is looking for an experienced DevOps Engineer to automate, scale, and secure our cloud infrastructure on AWS. You will work across engineering teams to streamline delivery pipelines and maintain production reliability at scale.",
-    responsibilities: [
-      "Build and maintain CI/CD pipelines using GitHub Actions",
-      "Manage containerized workloads with Kubernetes (EKS)",
-      "Write infrastructure-as-code using Terraform",
-      "Monitor system health with CloudWatch and Grafana",
-      "Lead incident response and post-mortem reviews",
-    ],
-    requirements: [
-      "3+ years in a DevOps or SRE role",
-      "Hands-on experience with AWS services (EC2, RDS, S3, EKS)",
-      "Strong proficiency with Docker and Kubernetes",
-      "Experience writing Terraform or Pulumi modules",
-      "Comfortable with Linux systems administration and Bash scripting",
-    ],
-  },
-  {
-    id: 6,
-    company: "DataForge PH",
-    role: "Data Engineer",
-    type: "Contract",
-    setup: "Hybrid",
-    location: "BGC, Taguig",
-    postedDate: "Apr 6",
-    salary: "₱60,000 / mo",
-    applicants: 11,
-    matchPct: 55,
-    logoColor: "red",
-    logoText: "DF",
-    skills: ["Python", "SQL", "Apache Spark", "Airflow", "GCP", "BigQuery", "dbt"],
-    about:
-      "DataForge PH is a data consultancy building modern data stacks for retail and logistics clients. We are looking for a contract Data Engineer to design and maintain ETL pipelines and data warehouse models for a 6-month engagement.",
-    responsibilities: [
-      "Design and build ETL pipelines with Apache Airflow",
-      "Model data transformations using dbt on BigQuery",
-      "Collaborate with data analysts on schema design",
-      "Monitor pipeline health and resolve data quality issues",
-      "Document data lineage and transformation logic",
-    ],
-    requirements: [
-      "Strong Python skills for data pipeline development",
-      "Experience with BigQuery or another cloud data warehouse",
-      "Familiarity with dbt for data transformation",
-      "Understanding of dimensional modeling (star schema)",
-      "Available to start within 2 weeks",
-    ],
-  },
-];
+const LOGO_COLORS = ["purple", "blue", "green", "amber", "cyan", "red"] as const;
+
+const formatPostedDate = (postedAt: string) =>
+  new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(new Date(postedAt));
+
+const buildLogoText = (company: string) => {
+  const parts = company.split(" ").filter(Boolean).slice(0, 2);
+  const text = parts.map(p => p[0].toUpperCase()).join("");
+  return text || "NA";
+};
+
+const pickLogoColor = (company: string) => {
+  const sum = [...company].reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  return LOGO_COLORS[Math.abs(sum) % LOGO_COLORS.length];
+};
+
+const mapJobBoardDto = (job: JobBoardJobDto): JobItem => ({
+  id: job.id,
+  company: job.company,
+  role: job.role,
+  type: job.type,
+  setup: job.setup,
+  location: job.location,
+  postedAt: job.postedAt,
+  postedDate: formatPostedDate(job.postedAt),
+  salary: job.salary,
+  applicants: job.applicants,
+  matchPct: 0,
+  logoColor: pickLogoColor(job.company),
+  logoText: buildLogoText(job.company),
+  skills: job.skills ?? [],
+  about: job.about,
+  responsibilities: job.responsibilities ?? [],
+  requirements: job.requirements ?? [],
+});
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function getPreviewText(text: string): string {
@@ -221,20 +72,96 @@ function getPreviewText(text: string): string {
   return text.length > 120 ? text.substring(0, 120) + "..." : text;
 }
 
+function normalizeBulletText(value: string): string {
+  return value
+    .replace(/\s+/g, " ")
+    .replace(/,{2,}/g, ",")
+    .replace(/^[\s,;:•·\-–—*]+/g, "")
+    .replace(/[\s,;:]+$/g, "")
+    .trim();
+}
+
+function normalizeBulletLines(lines: string[]): string[] {
+  const result: string[] = [];
+
+  for (const line of lines ?? []) {
+    if (!line) continue;
+
+    const parts = line
+      .split(/\r?\n|[•·]/g)
+      .map(normalizeBulletText)
+      .filter(Boolean);
+
+    result.push(...parts);
+  }
+
+  return result;
+}
+
 // ── Component ────────────────────────────────────────────────────────────────
 export default function JobBoard() {
   const navigate = useNavigate();
+
+  const [jobs, setJobs] = useState<JobItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [setupFilter, setSetupFilter] = useState("");
   const [sortOrder, setSortOrder] = useState("Recent");
   const [selectedJob, setSelectedJob] = useState<JobItem | null>(null);
-  const [savedJobIds, setSavedJobIds] = useState<Set<number>>(new Set());
+  const [savedJobIds, setSavedJobIds] = useState<Set<string>>(new Set());
+  const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
+  const [applyingJobId, setApplyingJobId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const load = async () => {
+      setIsLoading(true);
+      setLoadError(null);
+
+      const jobIdFromQuery = new URLSearchParams(window.location.search).get("jobId");
+
+      const jobsResult = await jobListingService.getJobBoardJobs();
+      if (jobsResult.isSuccess && jobsResult.value) {
+        const loaded = jobsResult.value.map(mapJobBoardDto);
+        setJobs(loaded);
+
+        // If a jobId is provided, preselect it (used by recruiter "Share Listing").
+        if (jobIdFromQuery) {
+          const match = loaded.find(j => j.id === jobIdFromQuery) ?? null;
+          setSelectedJob(match);
+        } else {
+          setSelectedJob(null); // keep the "Select a job" empty state until user clicks
+        }
+      } else {
+        setJobs([]);
+        setLoadError(jobsResult.error || "Failed to load job board");
+      }
+
+      // If a user is logged in as a Student, sync persisted saved jobs (ignore failures).
+      if (cookieService.isAuthenticated()) {
+        const saved = await savedJobsService.getSavedJobs();
+        if (saved.isSuccess && saved.value) {
+          setSavedJobIds(new Set(saved.value.map(s => s.jobListingId)));
+        }
+
+        // Also sync previously applied jobs so the UI can show "Applied" immediately.
+        const applications = await applicationService.getMyApplications();
+        if (applications.isSuccess && applications.value) {
+          setAppliedJobIds(new Set(applications.value.map(a => a.jobListingId)));
+        }
+      }
+
+      setIsLoading(false);
+    };
+
+    load();
+  }, []);
 
   // ── Filtered / sorted list ──
   const filteredJobs = useMemo(() => {
-    let result = [...ALL_JOBS];
+    let result = [...jobs];
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -251,10 +178,14 @@ export default function JobBoard() {
 
     if (sortOrder === "Match") {
       result = [...result].sort((a, b) => b.matchPct - a.matchPct);
+    } else {
+      result = [...result].sort(
+        (a, b) => new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime()
+      );
     }
 
     return result;
-  }, [searchQuery, typeFilter, setupFilter, sortOrder]);
+  }, [jobs, searchQuery, typeFilter, setupFilter, sortOrder]);
 
   // ── Handlers ──
   function clearFilters() {
@@ -263,12 +194,47 @@ export default function JobBoard() {
     setSetupFilter("");
   }
 
-  function toggleSave(jobId: number) {
+  async function toggleSave(jobId: string) {
+    const willSave = !savedJobIds.has(jobId);
+
+    // Optimistic UI update
     setSavedJobIds((prev) => {
       const next = new Set(prev);
-      next.has(jobId) ? next.delete(jobId) : next.add(jobId);
+      willSave ? next.add(jobId) : next.delete(jobId);
       return next;
     });
+
+    const result = willSave
+      ? await savedJobsService.saveJob(jobId)
+      : await savedJobsService.unsaveJob(jobId);
+
+    if (!result.isSuccess) {
+      // Revert on failure
+      setSavedJobIds((prev) => {
+        const next = new Set(prev);
+        willSave ? next.delete(jobId) : next.add(jobId);
+        return next;
+      });
+    }
+  }
+
+  async function applyNow(jobId: string) {
+    if (applyingJobId || appliedJobIds.has(jobId)) return;
+
+    setApplyingJobId(jobId);
+    const result = await applicationService.apply({ jobListingId: jobId });
+
+    if (result.isSuccess) {
+      setAppliedJobIds((prev) => new Set([...prev, jobId]));
+      setJobs((prev) =>
+        prev.map((j) => (j.id === jobId ? { ...j, applicants: j.applicants + 1 } : j))
+      );
+      if (selectedJob?.id === jobId) {
+        setSelectedJob((prev) => (prev ? { ...prev, applicants: prev.applicants + 1 } : prev));
+      }
+    }
+
+    setApplyingJobId(null);
   }
 
   const hasActiveFilters =
@@ -281,7 +247,13 @@ export default function JobBoard() {
       <main className="main-content">
         <PageHeader
           title="Job Board"
-          subtitle={`${filteredJobs.length} listings — updated today`}
+          subtitle={
+            isLoading
+              ? "Loading jobs…"
+              : loadError
+                ? "Failed to load jobs"
+                : `${filteredJobs.length} listings — updated today`
+          }
         >
           <div className="header-actions">
             <a
@@ -398,7 +370,43 @@ export default function JobBoard() {
 
             {/* ── Job List ── */}
             <div className="job-list">
-              {filteredJobs.length === 0 ? (
+              {isLoading ? (
+                <div className="empty-state">
+                  <svg
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  <p className="empty-state__title">Loading jobs…</p>
+                  <p className="empty-state__sub">Please wait.</p>
+                </div>
+              ) : loadError ? (
+                <div className="empty-state">
+                  <svg
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  <p className="empty-state__title">Failed to load jobs</p>
+                  <p className="empty-state__sub">{loadError}</p>
+                </div>
+              ) : filteredJobs.length === 0 ? (
                 <div className="empty-state">
                   <svg
                     width="32"
@@ -438,6 +446,9 @@ export default function JobBoard() {
                       <div className="job-card__tags">
                         <span className="jb-tag jb-tag--type">{job.type}</span>
                         <span className="jb-tag jb-tag--setup">{job.setup}</span>
+                        {appliedJobIds.has(job.id) && (
+                          <span className="jb-tag jb-tag--applied">Applied</span>
+                        )}
                         <span className="jb-tag jb-tag--location">
                           <svg
                             width="10"
@@ -515,7 +526,11 @@ export default function JobBoard() {
                       </svg>
                       {savedJobIds.has(selectedJob.id) ? "Saved" : "Save"}
                     </button>
-                    <button className="btn-apply">
+                    <button
+                      className="btn-apply"
+                      onClick={() => applyNow(selectedJob.id)}
+                      disabled={applyingJobId === selectedJob.id || appliedJobIds.has(selectedJob.id)}
+                    >
                       <svg
                         width="13"
                         height="13"
@@ -528,7 +543,11 @@ export default function JobBoard() {
                       >
                         <path d="M12 5v14M5 12l7 7 7-7" />
                       </svg>
-                      Apply Now
+                      {appliedJobIds.has(selectedJob.id)
+                        ? "Applied"
+                        : applyingJobId === selectedJob.id
+                          ? "Applying…"
+                          : "Apply Now"}
                     </button>
                   </div>
                 </div>
@@ -679,7 +698,7 @@ export default function JobBoard() {
                 <div className="detail-section">
                   <h4 className="detail-section__title">Responsibilities</h4>
                   <ul className="detail-list">
-                    {selectedJob.responsibilities.map((item, i) => (
+                    {normalizeBulletLines(selectedJob.responsibilities).map((item, i) => (
                       <li key={i}>{item}</li>
                     ))}
                   </ul>
@@ -689,7 +708,7 @@ export default function JobBoard() {
                 <div className="detail-section">
                   <h4 className="detail-section__title">Requirements</h4>
                   <ul className="detail-list">
-                    {selectedJob.requirements.map((item, i) => (
+                    {normalizeBulletLines(selectedJob.requirements).map((item, i) => (
                       <li key={i}>{item}</li>
                     ))}
                   </ul>
@@ -697,7 +716,11 @@ export default function JobBoard() {
 
                 {/* ── Bottom CTA ── */}
                 <div className="detail-cta">
-                  <button className="btn-apply btn-apply--full">
+                  <button
+                    className="btn-apply btn-apply--full"
+                    onClick={() => applyNow(selectedJob.id)}
+                    disabled={applyingJobId === selectedJob.id || appliedJobIds.has(selectedJob.id)}
+                  >
                     <svg
                       width="14"
                       height="14"
@@ -710,7 +733,11 @@ export default function JobBoard() {
                     >
                       <path d="M12 5v14M5 12l7 7 7-7" />
                     </svg>
-                    Apply Now
+                    {appliedJobIds.has(selectedJob.id)
+                      ? "Applied"
+                      : applyingJobId === selectedJob.id
+                        ? "Applying…"
+                        : "Apply Now"}
                   </button>
                   <button
                     className={`btn-save${savedJobIds.has(selectedJob.id) ? " btn-save--saved" : ""} btn-save--full`}

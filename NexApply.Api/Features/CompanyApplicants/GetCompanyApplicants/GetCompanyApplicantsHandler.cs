@@ -80,7 +80,7 @@ public class GetCompanyApplicantsHandler : IRequestHandler<GetCompanyApplicantsQ
                 JobTitle = a.JobListing.Title,
                 JobType = a.JobListing.JobType.ToString(),
                 Status = a.Status.ToString(),
-                MatchScore = null,
+                MatchScore = SkillMatchScorer.CalculateMatchScore(a.JobListing.RequiredSkills, a.Student),
                 AppliedAt = a.CreatedAt,
                 CoverLetter = a.CoverLetter,
                 RecruiterNotes = a.RecruiterNotes,

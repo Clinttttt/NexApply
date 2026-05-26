@@ -150,7 +150,7 @@ const RecruiterDashboard: React.FC = () => {
             <section className="rec-panel" aria-labelledby="recent-applicants-heading">
               <div className="rec-panel-header">
                 <h2 className="rec-section-title" id="recent-applicants-heading">Recent Applicants</h2>
-                <Link to="/recruiter/applicants" className="rec-panel-link">View all</Link>
+                <Link to="/company-applicants" className="rec-panel-link">View all</Link>
               </div>
 
               {isLoading ? (
@@ -186,7 +186,7 @@ const RecruiterDashboard: React.FC = () => {
             <section className="rec-panel" aria-labelledby="active-listings-heading">
               <div className="rec-panel-header">
                 <h2 className="rec-section-title" id="active-listings-heading">Active Listings</h2>
-                <Link to="/recruiter/manage-jobs" className="rec-panel-link">Manage all</Link>
+                <Link to="/company-manage-jobs" className="rec-panel-link">Manage all</Link>
               </div>
 
               {isLoading ? (

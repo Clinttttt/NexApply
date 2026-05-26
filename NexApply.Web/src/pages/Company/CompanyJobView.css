@@ -154,6 +154,31 @@
   flex-wrap: wrap;
 }
 
+.cjv-confirm-banner--danger {
+  background-color: #FEF2F2;
+  border-color: #FECACA;
+  color: #991B1B;
+}
+
+.cjv-confirm-banner--danger svg {
+  color: #DC2626;
+}
+
+.cjv-toast {
+  position: sticky;
+  top: 10px;
+  align-self: flex-end;
+  z-index: 5;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #E2E8F0;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  color: #0F172A;
+  font-size: 13px;
+  backdrop-filter: blur(8px);
+}
+
 .cjv-confirm-banner svg {
   flex-shrink: 0;
   color: #D97706;
@@ -559,6 +584,16 @@
 .cjv-action-item:hover {
   background-color: #F1F5F9;
   color: #0F172A;
+}
+
+.cjv-action-item:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.cjv-action-item:disabled:hover {
+  background-color: transparent;
+  color: inherit;
 }
 
 .cjv-action-item--danger {

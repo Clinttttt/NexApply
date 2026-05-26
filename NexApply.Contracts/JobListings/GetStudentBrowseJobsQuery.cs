@@ -1,6 +1,8 @@
 using MediatR;
+using NexApply.Common;
 using NexApply.Contracts.Common;
 
 namespace NexApply.Contracts.JobListings;
 
-public record GetStudentBrowseJobsQuery : IRequest<Result<List<StudentBrowseJobDto>>>;
+public record GetStudentBrowseJobsQuery(DateTime? Cursor = null, int PageSize = 10)
+    : IRequest<Result<CursorPagedResult<StudentBrowseJobDto>>>;

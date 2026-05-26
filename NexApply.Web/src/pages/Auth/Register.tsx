@@ -9,8 +9,8 @@ import './auth.css';
 type UserRole = 'Student' | 'Recruiter';
 
 export default function Register() {
-  const { renderButton } = useGoogleOneTap();
   const [activeRole, setActiveRole] = useState<UserRole>('Student');
+  const { renderButton } = useGoogleOneTap(activeRole);
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -97,7 +97,7 @@ export default function Register() {
 
   useEffect(() => {
     renderButton('google-signup-button');
-  }, [renderButton]);
+  }, [renderButton, activeRole]);
 
   return (
     <div className="login-shell">

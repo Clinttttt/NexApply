@@ -23,7 +23,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NexApply.Api\NexApply.Api.csproj" />
-    <ProjectReference Include="..\NexApply.Client\NexApply.Client.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Unit\" />
   </ItemGroup>
 
 </Project>

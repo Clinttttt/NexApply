@@ -19,9 +19,14 @@ export interface ActiveListingDto {
 }
 
 export interface CompanyDashboardDto {
+  companyName: string;
+  hiringManagerTitle?: string | null;
+  companyLogoUrl?: string | null;
   awaitingReview: number;
+  totalApplicants: number;
   upcomingInterviews: number;
   unreadMessages: number;
+  activeJobsCount: number;
   recentApplicants: RecentApplicantDto[];
   activeListings: ActiveListingDto[];
 }

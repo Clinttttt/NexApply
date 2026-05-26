@@ -27,6 +27,23 @@ export interface Result<T> {
   statusCode?: number;
 }
 
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  email: string;
+  resetCode: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
 export const authService = {
   async login(data: LoginRequest): Promise<TokenResponse> {
     const response = await apiClient.post<TokenResponse>('/auth/login', data);
@@ -49,6 +66,45 @@ export const authService = {
       return {
         isSuccess: false,
         error: error.response?.data?.error || error.response?.data?.message || 'Registration failed',
+        statusCode: error.response?.status
+      };
+    }
+  },
+
+  async changePassword(data: ChangePasswordRequest): Promise<Result<string>> {
+    try {
+      const response = await apiClient.put<string>('/auth/change-password', data);
+      return { isSuccess: true, value: response.data };
+    } catch (error: any) {
+      return {
+        isSuccess: false,
+        error: error.response?.data?.error || error.response?.data?.message || 'Failed to change password',
+        statusCode: error.response?.status
+      };
+    }
+  },
+
+  async forgotPassword(data: ForgotPasswordRequest): Promise<Result<string>> {
+    try {
+      const response = await apiClient.post<string>('/auth/forgot-password', data);
+      return { isSuccess: true, value: response.data };
+    } catch (error: any) {
+      return {
+        isSuccess: false,
+        error: error.response?.data?.error || error.response?.data?.message || 'Failed to send password reset email',
+        statusCode: error.response?.status
+      };
+    }
+  },
+
+  async resetPassword(data: ResetPasswordRequest): Promise<Result<string>> {
+    try {
+      const response = await apiClient.post<string>('/auth/reset-password', data);
+      return { isSuccess: true, value: response.data };
+    } catch (error: any) {
+      return {
+        isSuccess: false,
+        error: error.response?.data?.error || error.response?.data?.message || 'Failed to set password',
         statusCode: error.response?.status
       };
     }

@@ -1487,6 +1487,8 @@
 
 .picker-search {
     flex: 1;
+    /* Prevent the input's intrinsic min-width from pushing the close (X) button out of bounds */
+    min-width: 0;
     border: none;
     outline: none;
     font-size: var(--text-md);

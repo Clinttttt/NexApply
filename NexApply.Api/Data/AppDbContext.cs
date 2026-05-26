@@ -18,6 +18,8 @@ public class AppDbContext : DbContext
     public DbSet<Interview> Interviews => Set<Interview>();
     public DbSet<InterviewPanelist> InterviewPanelists => Set<InterviewPanelist>();
     public DbSet<Message> Messages => Set<Message>();
+    public DbSet<NotificationState> NotificationStates => Set<NotificationState>();
+    public DbSet<CompanyUserSettings> CompanyUserSettings => Set<CompanyUserSettings>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -244,6 +246,31 @@ public class AppDbContext : DbContext
 
             e.HasIndex(m => new { m.SenderId, m.ReceiverId });
             e.HasIndex(m => m.CreatedAt);
+        });
+
+        modelBuilder.Entity<NotificationState>(e =>
+        {
+            e.HasKey(n => n.Id);
+            e.Property(n => n.NotificationId).IsRequired().HasMaxLength(300);
+            e.Property(n => n.CreatedAt).IsRequired();
+            e.HasIndex(n => new { n.StudentId, n.NotificationId }).IsUnique();
+            e.HasIndex(n => n.StudentId);
+        });
+
+        modelBuilder.Entity<CompanyUserSettings>(e =>
+        {
+            e.HasKey(s => s.Id);
+            e.Property(s => s.UserId).IsRequired();
+            e.Property(s => s.ApplicantUpdatesEnabled).IsRequired().HasDefaultValue(true);
+            e.Property(s => s.WeeklyDigestEnabled).IsRequired().HasDefaultValue(false);
+            e.Property(s => s.CreatedAt).IsRequired();
+
+            e.HasIndex(s => s.UserId).IsUnique();
+
+            e.HasOne(s => s.User)
+             .WithOne()
+             .HasForeignKey<CompanyUserSettings>(s => s.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

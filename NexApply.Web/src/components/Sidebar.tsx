@@ -113,6 +113,16 @@ export function Sidebar() {
           <span className="nav-dot"></span>
         </Link>
 
+        <Link to="/messages" className="nav-item">
+          <span className="nav-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+              <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"
+                    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+          Messages
+        </Link>
+
         <Link to="/saved-jobs" className="nav-item">
           <span className="nav-icon">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none">

@@ -4,6 +4,7 @@ import {Sidebar} from '../../components/Sidebar'
 import {PageHeader} from '../../components/PageHeader'
 import { jobListingService, type StudentBrowseJobDto } from '../../services/jobListingService'
 import { applicationService } from '../../services/applicationService'
+import { savedJobsService } from '../../services/savedJobsService'
 
 // ─────────────────────────────────────────
 //  INTERFACES
@@ -95,11 +96,43 @@ const buildLocationOptions = (jobs: JobListing[]): FilterOption[] =>
       count: jobs.filter(job => job.location === label).length
     }))
 
+const normalizeBulletText = (value: string): string => {
+  return value
+    .replace(/\s+/g, ' ')
+    .replace(/,{2,}/g, ',')
+    .replace(/^[\s,;:•·\-–—*]+/g, '')
+    .replace(/[\s,;:]+$/g, '')
+    .trim()
+}
+
+// Some backend fields may contain bullet-separated strings inside a single array item.
+// This normalizes them into a clean list of bullet lines for the UI.
+const normalizeBulletLines = (lines: string[]): string[] => {
+  const result: string[] = []
+
+  for (const line of lines ?? []) {
+    if (!line) continue
+
+    // Split by common bullet characters and newlines. Avoid splitting on hyphens to not break sentences.
+    const parts = line
+      .split(/\r?\n|[•·]/g)
+      .map(normalizeBulletText)
+      .filter(Boolean)
+
+    // If no bullet chars were present, split() will still return [line] so it's safe.
+    result.push(...parts)
+  }
+
+  return result
+}
+
 // ─────────────────────────────────────────
 //  COMPONENT
 // ─────────────────────────────────────────
 
 export function BrowseJobs() {
+
+  const PAGE_SIZE = 8
 
   // ── State ──────────────────────────────
   const [jobs, setJobs] = useState<JobListing[]>([])
@@ -124,16 +157,23 @@ export function BrowseJobs() {
     'C#', '.NET', 'Blazor', 'React', 'PostgreSQL', 'Python', 'TypeScript', 'Vue.js', 'Docker', 'Azure'
   ])
 
+  // Cursor pagination state (server-side)
+  const [pageIndex, setPageIndex] = useState(0)
+  const [cursorStack, setCursorStack] = useState<(string | null)[]>([null])
+  const [nextCursors, setNextCursors] = useState<(string | null)[]>([])
+  const [hasMore, setHasMore] = useState(false)
+
   // ── Computed ───────────────────────────
   useEffect(() => {
     const loadJobs = async () => {
       setIsLoadingJobs(true)
       setLoadError(null)
 
-      const result = await jobListingService.getStudentBrowseJobs()
+      const cursor = cursorStack[pageIndex] ?? null
+      const result = await jobListingService.getStudentBrowseJobs({ cursor, pageSize: PAGE_SIZE })
 
       if (result.isSuccess && result.value) {
-        const loadedJobs = result.value.map(mapBrowseJob)
+        const loadedJobs = (result.value.items ?? []).map(mapBrowseJob)
         setJobs(loadedJobs)
         setSelectedJob(loadedJobs[0] ?? null)
 
@@ -141,15 +181,47 @@ export function BrowseJobs() {
         if (resumeSkills.length > 0) {
           setDisplayedSkills(prev => [...new Set([...prev, ...resumeSkills])])
         }
+
+        const next = result.value.nextCursor ?? null
+        setHasMore(!!result.value.hasMore)
+        setNextCursors(prev => {
+          const copy = [...prev]
+          copy[pageIndex] = next
+          return copy
+        })
       } else {
         setLoadError(result.error || 'Failed to load matched jobs')
+        setJobs([])
+        setSelectedJob(null)
+        setHasMore(false)
       }
 
       setIsLoadingJobs(false)
     }
 
     loadJobs()
-  }, [])
+  }, [pageIndex, cursorStack])
+
+  const canGoPrev = pageIndex > 0
+  const canGoNext = hasMore && !!nextCursors[pageIndex]
+
+  const goPrev = () => {
+    if (!canGoPrev) return
+    setPageIndex(i => Math.max(0, i - 1))
+  }
+
+  const goNext = () => {
+    if (!canGoNext) return
+
+    const nextCursor = nextCursors[pageIndex] ?? null
+    setCursorStack(prev => {
+      const copy = [...prev]
+      if (copy.length <= pageIndex + 1) copy.push(nextCursor)
+      else copy[pageIndex + 1] = nextCursor
+      return copy
+    })
+    setPageIndex(i => i + 1)
+  }
 
   const jobTypeOptions = useMemo(() =>
     buildFilterOptions(jobs, ['Full-time', 'Internship', 'Part-time', 'Contract', 'Freelance'], job => job.jobType),
@@ -287,10 +359,27 @@ export function BrowseJobs() {
     setSelectedJob(jobs[0] ?? null)
   }
 
-  const toggleSave = (jobId: string) => {
-    setJobs(prev => prev.map(j => j.id === jobId ? { ...j, isSaved: !j.isSaved } : j))
+  const toggleSave = async (jobId: string) => {
+    const current = jobs.find(j => j.id === jobId)
+    if (!current) return
+
+    const nextIsSaved = !current.isSaved
+
+    // Optimistic UI update
+    setJobs(prev => prev.map(j => j.id === jobId ? { ...j, isSaved: nextIsSaved } : j))
     if (selectedJob?.id === jobId)
-      setSelectedJob(prev => prev ? { ...prev, isSaved: !prev.isSaved } : null)
+      setSelectedJob(prev => prev ? { ...prev, isSaved: nextIsSaved } : null)
+
+    const result = nextIsSaved
+      ? await savedJobsService.saveJob(jobId)
+      : await savedJobsService.unsaveJob(jobId)
+
+    if (!result.isSuccess) {
+      // Revert on failure
+      setJobs(prev => prev.map(j => j.id === jobId ? { ...j, isSaved: !nextIsSaved } : j))
+      if (selectedJob?.id === jobId)
+        setSelectedJob(prev => prev ? { ...prev, isSaved: !nextIsSaved } : null)
+    }
   }
 
   const applyToJob = async (jobId: string) => {
@@ -613,17 +702,36 @@ export function BrowseJobs() {
                 </div>
 
                 <div className="pagination">
-                  <button className="page-btn page-btn--prev" disabled>
+                  <button
+                    className="page-btn page-btn--prev"
+                    disabled={!canGoPrev}
+                    onClick={goPrev}
+                    type="button"
+                  >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                       <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     </svg>
                   </button>
-                  <button className="page-btn page-btn--active">1</button>
-                  <button className="page-btn">2</button>
-                  <button className="page-btn">3</button>
-                  <span className="page-ellipsis">...</span>
-                  <button className="page-btn">8</button>
-                  <button className="page-btn page-btn--next">
+
+                  {cursorStack.map((_, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      className={`page-btn ${idx === pageIndex ? 'page-btn--active' : ''}`}
+                      onClick={() => setPageIndex(idx)}
+                    >
+                      {idx + 1}
+                    </button>
+                  ))}
+
+                  {hasMore && <span className="page-ellipsis">...</span>}
+
+                  <button
+                    className="page-btn page-btn--next"
+                    disabled={!canGoNext}
+                    onClick={goNext}
+                    type="button"
+                  >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                       <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     </svg>
@@ -762,7 +870,7 @@ export function BrowseJobs() {
                 <div className="jd-section">
                   <p className="jd-section-label">Responsibilities</p>
                   <ul className="jd-list">
-                    {selectedJob.responsibilities.map((r, i) => <li key={i}>{r}</li>)}
+                    {normalizeBulletLines(selectedJob.responsibilities).map((r, i) => <li key={i}>{r}</li>)}
                   </ul>
                 </div>
 
@@ -771,7 +879,7 @@ export function BrowseJobs() {
                 <div className="jd-section">
                   <p className="jd-section-label">Requirements</p>
                   <ul className="jd-list">
-                    {selectedJob.requirements.map((r, i) => <li key={i}>{r}</li>)}
+                    {normalizeBulletLines(selectedJob.requirements).map((r, i) => <li key={i}>{r}</li>)}
                   </ul>
                 </div>
 

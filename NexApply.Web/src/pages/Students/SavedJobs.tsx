@@ -1,19 +1,24 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {Sidebar} from "../../components/Sidebar";
 import {PageHeader} from "../../components/PageHeader";
 import "./SavedJobs.css";
+import { savedJobsService } from "../../services/savedJobsService";
+import { applicationService } from "../../services/applicationService";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface SavedJob {
-  id: number;
+  id: string; // savedJobId
+  jobListingId: string;
   title: string;
   company: string;
   location: string;
   type: string;
   setup: string;
   salary: string;
+  postedAt: string; // ISO string
+  savedAt: string; // ISO string
   postedDate: string;
   savedDate: string;
   description: string;
@@ -23,86 +28,6 @@ interface SavedJob {
 
 type FilterTab = "All" | "Full-time" | "Internship" | "Remote" | "Applied";
 type SortOption = "recent" | "company" | "type";
-
-// ─── Seed data (mirrors Blazor @code block) ───────────────────────────────────
-
-const INITIAL_JOBS: SavedJob[] = [
-  {
-    id: 1,
-    title: "Full-Stack Developer Intern",
-    company: "CodeBridge Co.",
-    location: "Makati City",
-    type: "Internship",
-    setup: "Hybrid",
-    salary: "₱8,000 / mo",
-    postedDate: "Apr 7",
-    savedDate: "Apr 8",
-    applied: false,
-    skills: ["C#", ".NET", "Blazor", "PostgreSQL", "REST API", "Docker", "Azure"],
-    description:
-      "CodeBridge Co. is looking for a motivated Full-Stack Developer Intern to join our product team, working across backend APIs and Blazor frontends.",
-  },
-  {
-    id: 2,
-    title: "React Frontend Developer",
-    company: "NovaByte Inc.",
-    location: "Quezon City",
-    type: "Internship",
-    setup: "Remote",
-    salary: "₱6,000 / mo",
-    postedDate: "Apr 6",
-    savedDate: "Apr 7",
-    applied: true,
-    skills: ["React", "TypeScript", "Tailwind CSS", "REST API", "Git"],
-    description:
-      "NovaByte Inc. is hiring a React Frontend Developer Intern to build modern, responsive UIs for their SaaS platform.",
-  },
-  {
-    id: 3,
-    title: ".NET Core Developer",
-    company: "TechSpark PH",
-    location: "Ortigas Center",
-    type: "Full-time",
-    setup: "On-site",
-    salary: "₱45,000 / mo",
-    postedDate: "Apr 5",
-    savedDate: "Apr 6",
-    applied: false,
-    skills: ["C#", ".NET 8", "EF Core", "SQL Server", "Azure"],
-    description:
-      "TechSpark PH needs a .NET Core Developer to build and maintain scalable enterprise systems for financial services clients.",
-  },
-  {
-    id: 4,
-    title: "DevOps / Cloud Engineer",
-    company: "Stackify Labs",
-    location: "Remote",
-    type: "Full-time",
-    setup: "Remote",
-    salary: "₱60,000 / mo",
-    postedDate: "Apr 4",
-    savedDate: "Apr 5",
-    applied: false,
-    skills: ["Docker", "Kubernetes", "AWS", "Terraform", "CI/CD", "Linux"],
-    description:
-      "Stackify Labs is hiring a DevOps engineer to own their cloud infrastructure, improve deployment pipelines, and reduce downtime across microservices.",
-  },
-  {
-    id: 5,
-    title: "UI/UX Designer (Tech Focus)",
-    company: "PixelCraft Studio",
-    location: "Cebu City",
-    type: "Full-time",
-    setup: "Remote",
-    salary: "₱40,000 / mo",
-    postedDate: "Apr 3",
-    savedDate: "Apr 4",
-    applied: false,
-    skills: ["Figma", "Design Systems", "Prototyping", "User Research", "Accessibility"],
-    description:
-      "PixelCraft Studio is growing its design team. You'll own end-to-end product design for multiple SaaS clients, from wireframes to polished design systems.",
-  },
-];
 
 const FILTER_TABS: FilterTab[] = ["All", "Full-time", "Internship", "Remote", "Applied"];
 
@@ -123,7 +48,7 @@ function applySort(jobs: SavedJob[], sortBy: SortOption): SavedJob[] {
   switch (sortBy) {
     case "company": return copy.sort((a, b) => a.company.localeCompare(b.company));
     case "type":    return copy.sort((a, b) => a.type.localeCompare(b.type));
-    default:        return copy.sort((a, b) => b.savedDate.localeCompare(a.savedDate));
+    default:        return copy.sort((a, b) => Date.parse(b.savedAt) - Date.parse(a.savedAt));
   }
 }
 
@@ -134,10 +59,48 @@ function typeClass(type: string): string {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export  function SavedJobs() {
-  const [savedJobs, setSavedJobs] = useState<SavedJob[]>(INITIAL_JOBS);
+  const [savedJobs, setSavedJobs] = useState<SavedJob[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [activeFilter, setActiveFilter] = useState<FilterTab>("All");
   const [sortBy, setSortBy] = useState<SortOption>("recent");
+
+  useEffect(() => {
+    const load = async () => {
+      setIsLoading(true);
+      setLoadError(null);
+
+      const result = await savedJobsService.getSavedJobs();
+      if (result.isSuccess && result.value) {
+        const items: SavedJob[] = result.value.map(j => ({
+          id: j.savedJobId,
+          jobListingId: j.jobListingId,
+          title: j.title,
+          company: j.company,
+          location: j.location,
+          type: j.jobType,
+          setup: j.workSetup,
+          salary: j.salary,
+          postedAt: j.postedAt,
+          savedAt: j.savedAt,
+          postedDate: new Date(j.postedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+          savedDate: new Date(j.savedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+          description: j.description,
+          applied: j.hasApplied,
+          skills: j.skills ?? [],
+        }));
+        setSavedJobs(items);
+      } else {
+        setLoadError(result.error || 'Failed to load saved jobs');
+        setSavedJobs([]);
+      }
+
+      setIsLoading(false);
+    };
+
+    load();
+  }, []);
 
   // Mirrors ApplyFilters() + SortJobs() from @code
   const filteredJobs = useMemo<SavedJob[]>(() => {
@@ -173,14 +136,24 @@ export  function SavedJobs() {
     setSortBy(e.target.value as SortOption);
   }
 
-  function unsaveJob(job: SavedJob) {
-    setSavedJobs((prev) => prev.filter((j) => j.id !== job.id));
+  async function unsaveJob(job: SavedJob) {
+    const result = await savedJobsService.unsaveJob(job.jobListingId);
+    if (result.isSuccess) {
+      setSavedJobs((prev) => prev.filter((j) => j.id !== job.id));
+      return;
+    }
+    setLoadError(result.error || 'Failed to remove saved job');
   }
 
-  function markApplied(job: SavedJob) {
-    setSavedJobs((prev) =>
-      prev.map((j) => (j.id === job.id ? { ...j, applied: true } : j))
-    );
+  async function markApplied(job: SavedJob) {
+    const result = await applicationService.apply({ jobListingId: job.jobListingId });
+    if (result.isSuccess) {
+      setSavedJobs((prev) =>
+        prev.map((j) => (j.id === job.id ? { ...j, applied: true } : j))
+      );
+      return;
+    }
+    setLoadError(result.error || 'Failed to apply to job');
   }
 
   function resetFilters() {
@@ -207,6 +180,25 @@ export  function SavedJobs() {
 
         <div className="sj-body">
 
+          {isLoading && (
+            <div className="sj-empty">
+              <p className="sj-empty-title">Loading saved jobs…</p>
+              <p className="sj-empty-sub">Please wait.</p>
+            </div>
+          )}
+
+          {!isLoading && loadError && (
+            <div className="sj-empty">
+              <p className="sj-empty-title">Failed to load saved jobs</p>
+              <p className="sj-empty-sub">{loadError}</p>
+              <button className="sj-empty-reset" onClick={() => window.location.reload()}>
+                Retry
+              </button>
+            </div>
+          )}
+
+          {!isLoading && !loadError && (
+          <>
           {/* ── Filter + Sort Toolbar ── */}
           <div className="sj-toolbar">
             <div className="sj-filter-tabs">
@@ -349,7 +341,7 @@ export  function SavedJobs() {
 
                   {/* Card Footer */}
                   <div className="sj-card-footer">
-                    <Link to={`/job-board/${job.id}`} className="sj-view-btn">
+                    <Link to={`/job-board`} className="sj-view-btn">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                         <circle cx="12" cy="12" r="3" />
@@ -369,6 +361,8 @@ export  function SavedJobs() {
                 </div>
               ))}
             </div>
+          )}
+          </>
           )}
 
         </div>

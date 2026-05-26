@@ -7,12 +7,12 @@ let googleInitialized = false;
 
 // Initialize Google Sign-In
 window.initGoogleSignIn = () => {
-  if (googleInitialized) {
-    console.log('Google Sign-In already initialized');
-    return;
-  }
-
   if (typeof google !== 'undefined' && google.accounts) {
+    if (googleInitialized) {
+      // We intentionally allow re-initialization so the latest
+      // window.handleGoogleCallback (and role selection) is used.
+      console.log('Google Sign-In re-initializing');
+    }
     google.accounts.id.initialize({
       client_id: window.googleConfig.clientId,
       callback: window.handleGoogleCallback,

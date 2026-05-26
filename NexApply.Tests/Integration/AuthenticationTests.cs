@@ -30,7 +30,7 @@ public class AuthenticationTests : IClassFixture<TestWebApplicationFactory>
         // Arrange
         await SeedTestUser("testuser", "Test123!");
 
-        var loginRequest = new LoginCommand("testuser", "Test123!");
+        var loginRequest = new LoginCommand("testuser@test.com", "Test123!");
 
         // Act
         var response = await _client.PostAsJsonAsync("/api/auth/login", loginRequest);
@@ -55,7 +55,7 @@ public class AuthenticationTests : IClassFixture<TestWebApplicationFactory>
     public async Task Login_WithInvalidCredentials_ReturnsUnauthorized()
     {
         // Arrange
-        var loginRequest = new LoginCommand("nonexistent", "WrongPassword");
+        var loginRequest = new LoginCommand("nonexistent@test.com", "WrongPassword");
 
         // Act
         var response = await _client.PostAsJsonAsync("/api/auth/login", loginRequest);
@@ -70,7 +70,7 @@ public class AuthenticationTests : IClassFixture<TestWebApplicationFactory>
         // Arrange
         await SeedTestUser("testuser2", "CorrectPassword123!");
 
-        var loginRequest = new LoginCommand("testuser2", "WrongPassword");
+        var loginRequest = new LoginCommand("testuser2@test.com", "WrongPassword");
 
         // Act
         var response = await _client.PostAsJsonAsync("/api/auth/login", loginRequest);
@@ -85,7 +85,7 @@ public class AuthenticationTests : IClassFixture<TestWebApplicationFactory>
         // Arrange
         await SeedTestUser("roleswitch", "Test123!");
         var loginResponse = await _client.PostAsJsonAsync("/api/auth/login", 
-            new LoginCommand("roleswitch", "Test123!"));
+            new LoginCommand("roleswitch@test.com", "Test123!"));
         var tokens = await loginResponse.Content.ReadFromJsonAsync<TokenResponseDto>();
 
         _client.DefaultRequestHeaders.Authorization = 
@@ -121,7 +121,7 @@ public class AuthenticationTests : IClassFixture<TestWebApplicationFactory>
         // Arrange
         await SeedTestUser("jwttest", "Test123!");
 
-        var loginRequest = new LoginCommand("jwttest", "Test123!");
+        var loginRequest = new LoginCommand("jwttest@test.com", "Test123!");
 
         // Act
         var response = await _client.PostAsJsonAsync("/api/auth/login", loginRequest);

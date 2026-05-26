@@ -6,18 +6,19 @@ using NexApply.Api.Common;
 using NexApply.Api.Data;
 using NexApply.Api.Entities;
 using NexApply.Api.Entities.Enums;
+using NexApply.Common;
 using NexApply.Contracts.Common;
 using NexApply.Contracts.JobListings;
 
 namespace NexApply.Api.Features.JobListings.GetStudentBrowseJobs;
 
 public class GetStudentBrowseJobsHandler(AppDbContext context, CurrentUser currentUser)
-    : IRequestHandler<GetStudentBrowseJobsQuery, Result<List<StudentBrowseJobDto>>>
+    : IRequestHandler<GetStudentBrowseJobsQuery, Result<CursorPagedResult<StudentBrowseJobDto>>>
 {
     private static readonly Regex SentenceRegex = new(@"(?<=[.!?])\s+", RegexOptions.Compiled);
     private static readonly Regex WhitespaceRegex = new(@"\s+", RegexOptions.Compiled);
 
-    public async Task<Result<List<StudentBrowseJobDto>>> Handle(GetStudentBrowseJobsQuery request, CancellationToken ct)
+    public async Task<Result<CursorPagedResult<StudentBrowseJobDto>>> Handle(GetStudentBrowseJobsQuery request, CancellationToken ct)
     {
         var userId = Guid.Parse(currentUser.UserId);
 
@@ -26,21 +27,32 @@ public class GetStudentBrowseJobsHandler(AppDbContext context, CurrentUser curre
             .FirstOrDefaultAsync(s => s.UserId == userId, ct);
 
         if (student is null)
-            return Result<List<StudentBrowseJobDto>>.NotFound("Student profile not found");
+            return Result<CursorPagedResult<StudentBrowseJobDto>>.NotFound("Student profile not found");
 
         var resumeSkills = GetResumeSkills(student);
         var searchableResumeText = BuildSearchableResumeText(student, resumeSkills);
 
-        var jobs = await context.JobListings
+        var jobsQuery = context.JobListings
             .Include(j => j.Company)
             .ThenInclude(c => c.CompanyProfile)
             .Include(j => j.Applications)
             .Include(j => j.SavedByStudents)
             .Where(j => j.Status == JobListingStatus.Active)
             .OrderByDescending(j => j.CreatedAt)
-            .ToListAsync(ct);
+            .AsQueryable();
 
-        var dtos = jobs
+        if (request.Cursor.HasValue)
+        {
+            // Cursor pagination based on CreatedAt (PostedAt in UI).
+            jobsQuery = jobsQuery.Where(j => j.CreatedAt < request.Cursor.Value);
+        }
+
+        var pagedJobs = await jobsQuery.ToCursorPagedResultAsync(
+            request.PageSize,
+            job => job.CreatedAt,
+            ct);
+
+        var dtos = pagedJobs.Items
             .Select(job =>
             {
                 var requiredSkills = ParseSkills(job.RequiredSkills);
@@ -76,11 +88,14 @@ public class GetStudentBrowseJobsHandler(AppDbContext context, CurrentUser curre
                     Requirements = SplitText(job.Qualifications)
                 };
             })
-            .OrderByDescending(job => job.MatchScore)
-            .ThenByDescending(job => job.PostedAt)
             .ToList();
 
-        return Result<List<StudentBrowseJobDto>>.Success(dtos);
+        return Result<CursorPagedResult<StudentBrowseJobDto>>.Success(new CursorPagedResult<StudentBrowseJobDto>
+        {
+            Items = dtos,
+            NextCursor = pagedJobs.NextCursor,
+            HasMore = pagedJobs.HasMore
+        });
     }
 
     private static List<string> GetResumeSkills(StudentProfile student)

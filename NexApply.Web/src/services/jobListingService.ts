@@ -109,6 +109,28 @@ export interface StudentBrowseJobDto {
   requirements: string[];
 }
 
+export interface JobBoardJobDto {
+  id: string;
+  company: string;
+  role: string;
+  type: string;
+  setup: string;
+  location: string;
+  postedAt: string;
+  applicants: number;
+  salary: string;
+  skills: string[];
+  about: string;
+  responsibilities: string[];
+  requirements: string[];
+}
+
+export interface CursorPagedResult<T> {
+  items: T[];
+  nextCursor?: string | null;
+  hasMore: boolean;
+}
+
 export interface CreateJobListingCommand {
   title: string;
   description: string;
@@ -216,6 +238,19 @@ export const jobListingService = {
     }
   },
 
+  async deleteJobListing(id: string): Promise<Result<boolean>> {
+    try {
+      const response = await apiClient.delete<boolean>(`/jobs/${id}`);
+      return { isSuccess: true, value: response.data };
+    } catch (error: any) {
+      return {
+        isSuccess: false,
+        error: error.response?.data?.error || error.response?.data?.message || 'Failed to delete job listing',
+        statusCode: error.response?.status
+      };
+    }
+  },
+
   async getCompanyJobListings(): Promise<Result<JobListingSummaryDto[]>> {
     try {
       const response = await apiClient.get<JobListingSummaryDto[]>('/jobs/company');
@@ -229,14 +264,35 @@ export const jobListingService = {
     }
   },
 
-  async getStudentBrowseJobs(): Promise<Result<StudentBrowseJobDto[]>> {
+  async getStudentBrowseJobs(params?: { cursor?: string | null; pageSize?: number }): Promise<Result<CursorPagedResult<StudentBrowseJobDto>>> {
     try {
-      const response = await apiClient.get<StudentBrowseJobDto[]>('/jobs/browse');
+      const searchParams = new URLSearchParams();
+      if (params?.cursor) searchParams.append('cursor', params.cursor);
+      if (params?.pageSize) searchParams.append('pageSize', String(params.pageSize));
+
+      const url = searchParams.toString()
+        ? `/jobs/browse?${searchParams.toString()}`
+        : '/jobs/browse';
+
+      const response = await apiClient.get<CursorPagedResult<StudentBrowseJobDto>>(url);
       return { isSuccess: true, value: response.data };
     } catch (error: any) {
       return {
         isSuccess: false,
         error: error.response?.data?.error || error.response?.data?.message || 'Failed to load matched jobs',
+        statusCode: error.response?.status
+      };
+    }
+  },
+
+  async getJobBoardJobs(): Promise<Result<JobBoardJobDto[]>> {
+    try {
+      const response = await apiClient.get<JobBoardJobDto[]>('/jobs/board');
+      return { isSuccess: true, value: response.data };
+    } catch (error: any) {
+      return {
+        isSuccess: false,
+        error: error.response?.data?.error || error.response?.data?.message || 'Failed to load job board',
         statusCode: error.response?.status
       };
     }

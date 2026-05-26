@@ -1,5 +1,7 @@
 using NexApply.Api.Features.JobListings.CreateJobListing;
+using NexApply.Api.Features.JobListings.DeleteJobListing;
 using NexApply.Api.Features.JobListings.GetCompanyJobListings;
+using NexApply.Api.Features.JobListings.GetJobBoardJobs;
 using NexApply.Api.Features.JobListings.GetJobListingDetails;
 using NexApply.Api.Features.JobListings.GetStudentBrowseJobs;
 using NexApply.Api.Features.JobListings.UpdateJobListing;
@@ -12,10 +14,12 @@ public static class JobListingsEndpoints
     public static void MapJobListingsEndpoints(this WebApplication app)
     {
         app.MapCreateJobListing();
+        app.MapDeleteJobListing();
         app.MapGetJobListingDetailsEndpoint();
         app.MapUpdateJobListing();
         app.MapUpdateJobListingStatus();
         app.MapGetCompanyJobListings();
         app.MapGetStudentBrowseJobs();
+        app.MapGetJobBoardJobs();
     }
 }

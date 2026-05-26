@@ -2,9 +2,14 @@ namespace NexApply.Contracts.CompanyDashboard;
 
 public class CompanyDashboardDto
 {
+    public string CompanyName { get; set; } = string.Empty;
+    public string? HiringManagerTitle { get; set; }
+    public string? CompanyLogoUrl { get; set; }
     public int AwaitingReview { get; set; }
+    public int TotalApplicants { get; set; }
     public int UpcomingInterviews { get; set; }
     public int UnreadMessages { get; set; }
+    public int ActiveJobsCount { get; set; }
     public List<RecentApplicantDto> RecentApplicants { get; set; } = new();
     public List<ActiveListingDto> ActiveListings { get; set; } = new();
 }

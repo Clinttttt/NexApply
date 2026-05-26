@@ -22,8 +22,31 @@ public class GetCompanyDashboardHandler : IRequestHandler<GetCompanyDashboardQue
     {
         var companyId = Guid.Parse(_currentUser.UserId);
 
+        var companyProfile = await _context.CompanyProfiles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.UserId == companyId, ct);
+
         var awaitingReview = await _context.Applications
             .Where(a => a.JobListing.CompanyId == companyId && a.Status == Entities.Enums.ApplicationStatus.Submitted)
+            .CountAsync(ct);
+
+        var totalApplicants = await _context.Applications
+            .Where(a => a.JobListing.CompanyId == companyId)
+            .CountAsync(ct);
+
+        var activeJobsCount = await _context.JobListings
+            .Where(j => j.CompanyId == companyId && j.Status == Entities.Enums.JobListingStatus.Active)
+            .CountAsync(ct);
+
+        var upcomingInterviews = await _context.Interviews
+            .Where(i =>
+                i.Application.JobListing.CompanyId == companyId
+                && i.Status == Entities.Enums.InterviewStatus.Scheduled
+                && i.ScheduledAt >= DateTime.UtcNow)
+            .CountAsync(ct);
+
+        var unreadMessages = await _context.Messages
+            .Where(m => m.ReceiverId == companyId && !m.IsRead)
             .CountAsync(ct);
 
         var recentApplicants = await _context.Applications
@@ -57,9 +80,14 @@ public class GetCompanyDashboardHandler : IRequestHandler<GetCompanyDashboardQue
 
         var dashboard = new CompanyDashboardDto
         {
+            CompanyName = companyProfile?.CompanyName ?? string.Empty,
+            HiringManagerTitle = companyProfile?.HiringManagerTitle,
+            CompanyLogoUrl = companyProfile?.LogoUrl,
             AwaitingReview = awaitingReview,
-            UpcomingInterviews = 0,
-            UnreadMessages = 0,
+            TotalApplicants = totalApplicants,
+            ActiveJobsCount = activeJobsCount,
+            UpcomingInterviews = upcomingInterviews,
+            UnreadMessages = unreadMessages,
             RecentApplicants = recentApplicants,
             ActiveListings = activeListings
         };

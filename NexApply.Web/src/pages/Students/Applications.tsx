@@ -1,32 +1,26 @@
-import { useState, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import './Applications.css'
 import {Sidebar} from '../../components/Sidebar'
 import {PageHeader} from '../../components/PageHeader'
+import { applicationService } from '../../services/applicationService'
 
 // ─────────────────────────────────────────
 //  INTERFACES
 // ─────────────────────────────────────────
 
 interface AppItem {
+  applicationId: string
+  jobListingId: string
   company: string
   role: string
   status: string
   jobType: string
   location: string
-  appliedDate: string
+  appliedAt: string // ISO string
+  appliedDate: string // UI formatted date
   pipelineStage: number
 }
-
-// ─────────────────────────────────────────
-//  STATIC DATA
-// ─────────────────────────────────────────
-
-const ALL_APPLICATIONS: AppItem[] = [
-  { company: 'Acme Corp',       role: 'Frontend Engineer Intern',    status: 'For Interview', jobType: 'Internship', location: 'Cebu City',   appliedDate: 'Apr 2', pipelineStage: 3 },
-  { company: 'TechNova PH',     role: 'Junior .NET Developer',       status: 'Shortlisted',   jobType: 'Full-time',  location: 'Makati City', appliedDate: 'Apr 3', pipelineStage: 2 },
-  { company: 'CodeBridge Co.',  role: 'Full-Stack Developer Intern',  status: 'Under Review',  jobType: 'Internship', location: 'Makati City', appliedDate: 'Apr 7', pipelineStage: 1 },
-]
 
 const PIPELINE_STEPS = ['Submitted', 'Under Review', 'Shortlisted', 'For Interview', 'Decided']
 
@@ -69,10 +63,44 @@ const getStepMod = (stepName: string, isDone: boolean, isActive: boolean): strin
 export default function Applications() {
 
   // ── State ──────────────────────────────
+  const [applications, setApplications] = useState<AppItem[]>([])
+  const [isLoading, setIsLoading]       = useState(true)
+  const [loadError, setLoadError]       = useState<string | null>(null)
   const [searchQuery, setSearchQuery]     = useState('')
   const [statusFilter, setStatusFilter]   = useState('')
   const [jobTypeFilter, setJobTypeFilter] = useState('')
   const [sortOrder, setSortOrder]         = useState('Most Recent')
+
+  useEffect(() => {
+    const load = async () => {
+      setIsLoading(true)
+      setLoadError(null)
+
+      const result = await applicationService.getMyApplications()
+      if (result.isSuccess && result.value) {
+        const items: AppItem[] = result.value.map(a => ({
+          applicationId: a.applicationId,
+          jobListingId: a.jobListingId,
+          company: a.companyName,
+          role: a.jobTitle,
+          status: a.status,
+          jobType: a.jobType,
+          location: a.location,
+          appliedAt: a.appliedAt,
+          appliedDate: new Date(a.appliedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+          pipelineStage: a.pipelineStage
+        }))
+        setApplications(items)
+      } else {
+        setLoadError(result.error || 'Failed to load applications')
+        setApplications([])
+      }
+
+      setIsLoading(false)
+    }
+
+    load()
+  }, [])
 
   const clearFilters = () => {
     setSearchQuery('')
@@ -85,7 +113,7 @@ export default function Applications() {
 
   // ── Computed ───────────────────────────
   const filteredApplications = useMemo(() => {
-    let result = [...ALL_APPLICATIONS]
+    let result = [...applications]
 
     if (searchQuery.trim())
       result = result.filter(a =>
@@ -100,7 +128,7 @@ export default function Applications() {
     if (sortOrder === 'Status')  result = result.sort((a, b) => a.pipelineStage - b.pipelineStage)
 
     return result
-  }, [searchQuery, statusFilter, jobTypeFilter, sortOrder])
+  }, [applications, searchQuery, statusFilter, jobTypeFilter, sortOrder])
 
   // ── Render ─────────────────────────────
   return (
@@ -110,7 +138,7 @@ export default function Applications() {
       <main className="main-content">
         <PageHeader
           title="My Applications"
-          subtitle={`${ALL_APPLICATIONS.length} applications — last updated today`}
+          subtitle={`${applications.length} applications — last updated today`}
         >
           <Link to="/browse-jobs" className="btn-browse">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -123,37 +151,54 @@ export default function Applications() {
 
         <div className="applications-body">
 
+          {isLoading && (
+            <div className="empty-state">
+              <p className="empty-state__title">Loading applications…</p>
+              <p className="empty-state__sub">Please wait.</p>
+            </div>
+          )}
+
+          {!isLoading && loadError && (
+            <div className="empty-state">
+              <p className="empty-state__title">Failed to load applications</p>
+              <p className="empty-state__sub">{loadError}</p>
+              <button className="btn-clear-filters" onClick={() => window.location.reload()}>Retry</button>
+            </div>
+          )}
+
+          {!isLoading && !loadError && (
+          <>
           {/* ── Stat Strip ── */}
           <div className="stat-strip">
             <div className="stat-item">
-              <span className="stat-item__value">{ALL_APPLICATIONS.length}</span>
+              <span className="stat-item__value">{applications.length}</span>
               <span className="stat-item__label">Total Applied</span>
             </div>
             <div className="stat-divider"></div>
             <div className="stat-item">
               <span className="stat-item__value stat-item__value--review">
-                {ALL_APPLICATIONS.filter(a => a.status === 'Under Review').length}
+                {applications.filter(a => a.status === 'Under Review').length}
               </span>
               <span className="stat-item__label">Under Review</span>
             </div>
             <div className="stat-divider"></div>
             <div className="stat-item">
               <span className="stat-item__value stat-item__value--shortlisted">
-                {ALL_APPLICATIONS.filter(a => a.status === 'Shortlisted').length}
+                {applications.filter(a => a.status === 'Shortlisted').length}
               </span>
               <span className="stat-item__label">Shortlisted</span>
             </div>
             <div className="stat-divider"></div>
             <div className="stat-item">
               <span className="stat-item__value stat-item__value--interview">
-                {ALL_APPLICATIONS.filter(a => a.status === 'For Interview').length}
+                {applications.filter(a => a.status === 'For Interview').length}
               </span>
               <span className="stat-item__label">For Interview</span>
             </div>
             <div className="stat-divider"></div>
             <div className="stat-item">
               <span className="stat-item__value stat-item__value--declined">
-                {ALL_APPLICATIONS.filter(a => a.status === 'Declined').length}
+                {applications.filter(a => a.status === 'Declined').length}
               </span>
               <span className="stat-item__label">Declined</span>
             </div>
@@ -216,9 +261,9 @@ export default function Applications() {
           </div>
 
           {/* ── Result Count ── */}
-          {filteredApplications.length !== ALL_APPLICATIONS.length && (
+          {filteredApplications.length !== applications.length && (
             <p className="result-count">
-              Showing <strong>{filteredApplications.length}</strong> of {ALL_APPLICATIONS.length} applications
+              Showing <strong>{filteredApplications.length}</strong> of {applications.length} applications
             </p>
           )}
 
@@ -325,6 +370,8 @@ export default function Applications() {
               })
             )}
           </div>
+          </>
+          )}
 
         </div>
       </main>

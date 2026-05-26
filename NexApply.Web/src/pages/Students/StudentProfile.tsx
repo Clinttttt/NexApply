@@ -1064,23 +1064,31 @@ export function StudentProfile() {
                         <div key={edu.id} className="rdoc-entry">
                           <div className="rdoc-entry-top">
                             <div className="rdoc-entry-left">
-                              <input 
-                                className="rdoc-entry-org" 
-                                type="text" 
-                                value={edu.organization} 
-                                onChange={(e) => updateEducation(edu.id, 'organization', e.target.value)}
-                                placeholder="University or School" 
-                                disabled={!isEditingResume} 
-                              />
+                              {isEditingResume ? (
+                                <input
+                                  className="rdoc-entry-org"
+                                  type="text"
+                                  value={edu.organization}
+                                  onChange={(e) => updateEducation(edu.id, 'organization', e.target.value)}
+                                  placeholder="University or School"
+                                  disabled={!isEditingResume}
+                                />
+                              ) : (
+                                <div className="rdoc-entry-org-text">{edu.organization}</div>
+                              )}
                               <span className="rdoc-entry-sep">|</span>
-                              <input 
-                                className="rdoc-entry-period" 
-                                type="text" 
-                                value={edu.period} 
-                                onChange={(e) => updateEducation(edu.id, 'period', e.target.value)}
-                                placeholder="2021-2025" 
-                                disabled={!isEditingResume} 
-                              />
+                              {isEditingResume ? (
+                                <input
+                                  className="rdoc-entry-period"
+                                  type="text"
+                                  value={edu.period}
+                                  onChange={(e) => updateEducation(edu.id, 'period', e.target.value)}
+                                  placeholder="2021-2025"
+                                  disabled={!isEditingResume}
+                                />
+                              ) : (
+                                <div className="rdoc-entry-period-text">{edu.period}</div>
+                              )}
                             </div>
                             {isEditingResume && (
                               <button className="rdoc-remove-btn" onClick={() => removeEducation(edu.id)}>
@@ -1091,22 +1099,30 @@ export function StudentProfile() {
                               </button>
                             )}
                           </div>
-                          <input 
-                            className="rdoc-entry-title" 
-                            type="text" 
-                            value={edu.title} 
-                            onChange={(e) => updateEducation(edu.id, 'title', e.target.value)}
-                            placeholder="Degree or Program" 
-                            disabled={!isEditingResume} 
-                          />
-                          <textarea 
-                            className="rdoc-entry-desc" 
-                            rows={1} 
-                            value={edu.description} 
-                            onChange={(e) => updateEducation(edu.id, 'description', e.target.value)}
-                            placeholder="Relevant coursework, honors, or achievements..." 
-                            disabled={!isEditingResume}
-                          />
+                          {isEditingResume ? (
+                            <input
+                              className="rdoc-entry-title"
+                              type="text"
+                              value={edu.title}
+                              onChange={(e) => updateEducation(edu.id, 'title', e.target.value)}
+                              placeholder="Degree or Program"
+                              disabled={!isEditingResume}
+                            />
+                          ) : (
+                            <div className="rdoc-entry-title-text">{edu.title}</div>
+                          )}
+                          {isEditingResume ? (
+                            <textarea
+                              className="rdoc-entry-desc"
+                              rows={1}
+                              value={edu.description}
+                              onChange={(e) => updateEducation(edu.id, 'description', e.target.value)}
+                              placeholder="Relevant coursework, honors, or achievements..."
+                              disabled={!isEditingResume}
+                            />
+                          ) : (
+                            <div className="rdoc-entry-desc-text">{edu.description}</div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -1128,23 +1144,31 @@ export function StudentProfile() {
                           <div key={exp.id} className="rdoc-entry">
                             <div className="rdoc-entry-top">
                               <div className="rdoc-entry-left">
-                                <input 
-                                  className="rdoc-entry-org" 
-                                  type="text" 
-                                  value={exp.organization} 
-                                  onChange={(e) => updateExperience(exp.id, 'organization', e.target.value)}
-                                  placeholder="Company or Organization" 
-                                  disabled={!isEditingResume} 
-                                />
+                                {isEditingResume ? (
+                                  <input
+                                    className="rdoc-entry-org"
+                                    type="text"
+                                    value={exp.organization}
+                                    onChange={(e) => updateExperience(exp.id, 'organization', e.target.value)}
+                                    placeholder="Company or Organization"
+                                    disabled={!isEditingResume}
+                                  />
+                                ) : (
+                                  <div className="rdoc-entry-org-text">{exp.organization}</div>
+                                )}
                                 <span className="rdoc-entry-sep">|</span>
-                                <input 
-                                  className="rdoc-entry-period" 
-                                  type="text" 
-                                  value={exp.period} 
-                                  onChange={(e) => updateExperience(exp.id, 'period', e.target.value)}
-                                  placeholder="2023-2024" 
-                                  disabled={!isEditingResume} 
-                                />
+                                {isEditingResume ? (
+                                  <input
+                                    className="rdoc-entry-period"
+                                    type="text"
+                                    value={exp.period}
+                                    onChange={(e) => updateExperience(exp.id, 'period', e.target.value)}
+                                    placeholder="2023-2024"
+                                    disabled={!isEditingResume}
+                                  />
+                                ) : (
+                                  <div className="rdoc-entry-period-text">{exp.period}</div>
+                                )}
                               </div>
                               {isEditingResume && (
                                 <button className="rdoc-remove-btn" onClick={() => removeExperience(exp.id)}>
@@ -1155,22 +1179,30 @@ export function StudentProfile() {
                                 </button>
                               )}
                             </div>
-                            <input 
-                              className="rdoc-entry-title" 
-                              type="text" 
-                              value={exp.title} 
-                              onChange={(e) => updateExperience(exp.id, 'title', e.target.value)}
-                              placeholder="Job Title" 
-                              disabled={!isEditingResume} 
-                            />
-                            <textarea 
-                              className="rdoc-entry-desc" 
-                              rows={1} 
-                              value={exp.description} 
-                              onChange={(e) => updateExperience(exp.id, 'description', e.target.value)}
-                              placeholder="Key responsibilities and achievements..." 
-                              disabled={!isEditingResume}
-                            />
+                            {isEditingResume ? (
+                              <input
+                                className="rdoc-entry-title"
+                                type="text"
+                                value={exp.title}
+                                onChange={(e) => updateExperience(exp.id, 'title', e.target.value)}
+                                placeholder="Job Title"
+                                disabled={!isEditingResume}
+                              />
+                            ) : (
+                              <div className="rdoc-entry-title-text">{exp.title}</div>
+                            )}
+                            {isEditingResume ? (
+                              <textarea
+                                className="rdoc-entry-desc"
+                                rows={1}
+                                value={exp.description}
+                                onChange={(e) => updateExperience(exp.id, 'description', e.target.value)}
+                                placeholder="Key responsibilities and achievements..."
+                                disabled={!isEditingResume}
+                              />
+                            ) : (
+                              <div className="rdoc-entry-desc-text">{exp.description}</div>
+                            )}
                           </div>
                         ))
                       )}

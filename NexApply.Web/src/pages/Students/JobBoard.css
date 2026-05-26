@@ -291,6 +291,11 @@
     color: var(--color-slate-600);
 }
 
+.jb-tag--applied {
+    background-color: #DCFCE7; /* green-100 */
+    color: #166534; /* green-800 */
+}
+
 /* ── Job Card Preview ── */
 .job-card__preview {
     font-size: var(--text-sm);
@@ -443,6 +448,17 @@
         background-color: #1a44c0;
         box-shadow: var(--shadow-primary);
     }
+
+.btn-apply:disabled {
+    background-color: var(--color-slate-300);
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.btn-apply:disabled:hover {
+    background-color: var(--color-slate-300);
+    box-shadow: none;
+}
 
 .btn-apply--full {
     width: 100%;

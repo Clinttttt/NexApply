@@ -169,6 +169,39 @@ namespace NexApply.Api.Migrations
                     b.ToTable("CompanyProfiles");
                 });
 
+            modelBuilder.Entity("NexApply.Api.Entities.CompanyUserSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("ApplicantUpdatesEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("WeeklyDigestEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("CompanyUserSettings");
+                });
+
             modelBuilder.Entity("NexApply.Api.Entities.Interview", b =>
                 {
                     b.Property<Guid>("Id")
@@ -387,6 +420,42 @@ namespace NexApply.Api.Migrations
                     b.HasIndex("SenderId", "ReceiverId");
 
                     b.ToTable("Messages");
+                });
+
+            modelBuilder.Entity("NexApply.Api.Entities.NotificationState", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDismissed")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("NotificationId")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId");
+
+                    b.HasIndex("StudentId", "NotificationId")
+                        .IsUnique();
+
+                    b.ToTable("NotificationStates");
                 });
 
             modelBuilder.Entity("NexApply.Api.Entities.Resume", b =>
@@ -615,6 +684,17 @@ namespace NexApply.Api.Migrations
                     b.HasOne("NexApply.Api.Entities.User", "User")
                         .WithOne("CompanyProfile")
                         .HasForeignKey("NexApply.Api.Entities.CompanyProfile", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("NexApply.Api.Entities.CompanyUserSettings", b =>
+                {
+                    b.HasOne("NexApply.Api.Entities.User", "User")
+                        .WithOne()
+                        .HasForeignKey("NexApply.Api.Entities.CompanyUserSettings", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

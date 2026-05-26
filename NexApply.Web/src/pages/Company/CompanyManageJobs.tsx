@@ -407,7 +407,7 @@ const CompanyManageJobs: React.FC = () => {
                           <Link to={`/company/jobs/${job.id}`} className="cmj-btn-action cmj-btn-action--view" title="View Details">
                             <IconPeople size={14} /><span>View Details</span>
                           </Link>
-                          <Link to={`/company-applicants/${job.id}`} className="cmj-btn-action cmj-btn-action--view" title="View Applicants">
+                          <Link to={`/company-applicants?jobListingId=${job.id}`} className="cmj-btn-action cmj-btn-action--view" title="View Applicants">
                             <IconPeople size={14} /><span>Applicants</span>
                           </Link>
                           <Link to={`/company/jobs/${job.id}/edit`} className="cmj-btn-action cmj-btn-action--edit" title="Edit Job">

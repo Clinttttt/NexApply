@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {CompanySidebar} from '../../components/CompanySidebar';
 import {CompanyHeader} from '../../components/CompanyHeader';
@@ -35,6 +35,39 @@ export function CompanyJobView() {
   const [error, setError] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<'pause' | 'close' | 'activate' | null>(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
+  const shareUrl = useMemo(() => {
+    if (!job?.id) return '';
+    return `${window.location.origin}/job-board?jobId=${job.id}`;
+  }, [job?.id]);
+
+  const showToast = (message: string) => {
+    setToast(message);
+    window.setTimeout(() => setToast(null), 2200);
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // Fallback for non-secure contexts / older browsers
+      try {
+        const input = document.createElement('input');
+        input.value = text;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+  };
 
   const loadJobDetails = async () => {
     if (!id) return;
@@ -57,6 +90,7 @@ export function CompanyJobView() {
     
     setIsUpdatingStatus(true);
     setConfirmAction(null);
+    setConfirmDelete(false);
 
     const statusMap = {
       activate: 0, // Active
@@ -83,6 +117,51 @@ export function CompanyJobView() {
     }
 
     setIsUpdatingStatus(false);
+  };
+
+  const handleDuplicate = () => {
+    if (!job) return;
+    navigate('/company-post-job', { state: { duplicateFrom: job } });
+  };
+
+  const handleShare = async () => {
+    if (!job) return;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: job.title,
+          text: `${job.title} at ${job.companyName}`,
+          url: shareUrl,
+        });
+        showToast('Shared successfully');
+        return;
+      }
+
+      const ok = await copyToClipboard(shareUrl);
+      showToast(ok ? 'Link copied to clipboard' : 'Could not copy link');
+    } catch {
+      showToast('Share cancelled');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!job) return;
+
+    setIsDeleting(true);
+    setConfirmDelete(false);
+    setConfirmAction(null);
+
+    const result = await jobListingService.deleteJobListing(job.id);
+    if (result.isSuccess) {
+      showToast('Listing deleted');
+      navigate('/company-manage-jobs');
+    } else {
+      setError(result.error || 'Failed to delete job listing');
+      showToast('Delete failed');
+    }
+
+    setIsDeleting(false);
   };
 
   if (isLoading) {
@@ -182,6 +261,7 @@ export function CompanyJobView() {
         />
 
         <div className="cjv-body">
+          {toast && <div className="cjv-toast" role="status" aria-live="polite">{toast}</div>}
 
           {/* ── Top Action Bar ── */}
           <div className="cjv-action-bar">
@@ -246,7 +326,10 @@ export function CompanyJobView() {
                 </button>
               )}
 
-              <button className="cjv-btn cjv-btn--primary" onClick={() => window.location.href = `/recruiter/applicants?jobId=${job.id}`}>
+              <button
+                className="cjv-btn cjv-btn--primary"
+                onClick={() => navigate(`/company-applicants?jobListingId=${job.id}`)}
+              >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
                      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -287,6 +370,38 @@ export function CompanyJobView() {
                   disabled={isUpdatingStatus}
                 >
                   {isUpdatingStatus ? 'Updating...' : `Confirm ${confirmAction === 'pause' ? 'Pause' : confirmAction === 'activate' ? 'Reactivate' : 'Close'}`}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {confirmDelete && (
+            <div className="cjv-confirm-banner cjv-confirm-banner--danger">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                <path d="M10 11v6M14 11v6"/>
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+              </svg>
+              <p>
+                Delete <strong>{job.title}</strong>? This can’t be undone.
+                If the listing already has applicants, deletion will be blocked — close it instead.
+              </p>
+              <div className="cjv-confirm-actions">
+                <button
+                  className="cjv-btn cjv-btn--ghost cjv-btn--sm"
+                  onClick={() => setConfirmDelete(false)}
+                  disabled={isDeleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="cjv-btn cjv-btn--danger cjv-btn--sm"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? 'Deleting…' : 'Confirm Delete'}
                 </button>
               </div>
             </div>
@@ -419,7 +534,7 @@ export function CompanyJobView() {
                   </div>
                 </div>
 
-                <a href={`/recruiter/applicants?jobId=${job.id}`} className="cjv-view-applicants-link">
+                <Link to={`/company-applicants?jobListingId=${job.id}`} className="cjv-view-applicants-link">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
                        stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -428,7 +543,7 @@ export function CompanyJobView() {
                     <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                   </svg>
                   Review All Applicants
-                </a>
+                </Link>
               </div>
 
               {/* ── Job Info Card ── */}
@@ -536,7 +651,11 @@ export function CompanyJobView() {
               <div className="cjv-card cjv-quick-actions">
                 <h3 className="cjv-sidebar-card-title">Quick Actions</h3>
                 <div className="cjv-action-list">
-                  <button className="cjv-action-item" onClick={() => navigate(`/company/jobs/${job.id}/edit`)}>
+                  <button
+                    className="cjv-action-item"
+                    onClick={() => navigate(`/company/jobs/${job.id}/edit`)}
+                    disabled={isDeleting || isUpdatingStatus}
+                  >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -544,7 +663,11 @@ export function CompanyJobView() {
                     </svg>
                     Edit Listing
                   </button>
-                  <button className="cjv-action-item">
+                  <button
+                    className="cjv-action-item"
+                    onClick={handleDuplicate}
+                    disabled={isDeleting || isUpdatingStatus}
+                  >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
@@ -552,7 +675,11 @@ export function CompanyJobView() {
                     </svg>
                     Duplicate Listing
                   </button>
-                  <button className="cjv-action-item">
+                  <button
+                    className="cjv-action-item"
+                    onClick={handleShare}
+                    disabled={isDeleting || isUpdatingStatus}
+                  >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
@@ -561,7 +688,14 @@ export function CompanyJobView() {
                     </svg>
                     Share Listing
                   </button>
-                  <button className="cjv-action-item cjv-action-item--danger">
+                  <button
+                    className="cjv-action-item cjv-action-item--danger"
+                    onClick={() => {
+                      setConfirmDelete(true);
+                      setConfirmAction(null);
+                    }}
+                    disabled={isDeleting || isUpdatingStatus}
+                  >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="3 6 5 6 21 6"/>

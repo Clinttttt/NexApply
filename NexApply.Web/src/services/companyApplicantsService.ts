@@ -1,5 +1,6 @@
 import apiClient from '../lib/apiClient';
 import type { Result } from '../types';
+import type { ResumeContentDto } from './studentProfileService';
 
 export interface ApplicantDto {
   applicationId: string;
@@ -30,7 +31,47 @@ export interface GetCompanyApplicantsQuery {
   sortBy?: string;
 }
 
+export interface ResumeFileDto {
+  blob: Blob;
+  fileName?: string;
+  contentType?: string;
+}
+
+function parseFileNameFromContentDisposition(contentDisposition?: string): string | undefined {
+  if (!contentDisposition) return undefined;
+
+  // Examples:
+  // - attachment; filename="resume.pdf"
+  // - attachment; filename*=UTF-8''resume%20(1).pdf
+  const utf8Match = /filename\*\s*=\s*UTF-8''([^;]+)/i.exec(contentDisposition);
+  if (utf8Match?.[1]) {
+    try {
+      return decodeURIComponent(utf8Match[1]);
+    } catch {
+      return utf8Match[1];
+    }
+  }
+
+  const asciiMatch = /filename\s*=\s*"([^"]+)"/i.exec(contentDisposition) ?? /filename\s*=\s*([^;]+)/i.exec(contentDisposition);
+  if (asciiMatch?.[1]) return asciiMatch[1].trim();
+
+  return undefined;
+}
+
 export const companyApplicantsService = {
+  async getApplicant(applicationId: string): Promise<Result<ApplicantDto>> {
+    try {
+      const response = await apiClient.get<ApplicantDto>(`/company/applicants/${applicationId}`);
+      return { isSuccess: true, value: response.data };
+    } catch (error: any) {
+      return {
+        isSuccess: false,
+        error: error.response?.data?.error || error.response?.data?.message || 'Failed to load applicant',
+        statusCode: error.response?.status
+      };
+    }
+  },
+
   async getApplicants(query?: GetCompanyApplicantsQuery): Promise<Result<ApplicantDto[]>> {
     try {
       const params = new URLSearchParams();
@@ -71,6 +112,42 @@ export const companyApplicantsService = {
       return {
         isSuccess: false,
         error: error.response?.data?.error || error.response?.data?.message || 'Failed to update application notes',
+        statusCode: error.response?.status
+      };
+    }
+  },
+
+  async getApplicantUploadedResumeFile(applicationId: string): Promise<Result<ResumeFileDto>> {
+    try {
+      const response = await apiClient.get<Blob>(`/company/applicants/${applicationId}/resume/uploaded-file`, {
+        responseType: 'blob'
+      });
+
+      const rawContentType = response.headers?.['content-type'];
+      const rawContentDisposition = response.headers?.['content-disposition'];
+
+      const contentType = typeof rawContentType === 'string' ? rawContentType : undefined;
+      const contentDisposition = typeof rawContentDisposition === 'string' ? rawContentDisposition : undefined;
+      const fileName = parseFileNameFromContentDisposition(contentDisposition);
+
+      return { isSuccess: true, value: { blob: response.data, fileName, contentType } };
+    } catch (error: any) {
+      return {
+        isSuccess: false,
+        error: error.response?.data?.error || error.response?.data?.message || 'No uploaded resume found',
+        statusCode: error.response?.status
+      };
+    }
+  },
+
+  async getApplicantResumeContent(applicationId: string): Promise<Result<ResumeContentDto>> {
+    try {
+      const response = await apiClient.get<ResumeContentDto>(`/company/applicants/${applicationId}/resume/content`);
+      return { isSuccess: true, value: response.data };
+    } catch (error: any) {
+      return {
+        isSuccess: false,
+        error: error.response?.data?.error || error.response?.data?.message || 'Failed to load profile resume',
         statusCode: error.response?.status
       };
     }

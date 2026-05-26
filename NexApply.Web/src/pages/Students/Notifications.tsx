@@ -1,12 +1,14 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import {Sidebar} from "../../components/Sidebar";
 import {PageHeader} from "../../components/PageHeader";
 import "./Notifications.css";
+import { notificationsService, type NotificationDto } from "../../services/notificationsService";
 
 // ── Models ───────────────────────────────────────────────────────────────────
 
 interface NotificationItem {
-  id: number;
+  id: string;
   title: string;
   body: string;
   detailBody: string;
@@ -41,243 +43,124 @@ const IconSystem = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none">
 const IconSaved = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const IconInterview = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
 const IconCheck = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`;
-const IconResume = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9l-7-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><polyline points="13,2 13,9 20,9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
 const IconCatAll = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/></svg>`;
-
-// ── Static notification data ──────────────────────────────────────────────────
-
-const INITIAL_NOTIFICATIONS: NotificationItem[] = [
-  // TODAY
-  {
-    id: 1,
-    title: "You've been shortlisted!",
-    body: "NexaTech Solutions has shortlisted you for the Backend Intern position.",
-    detailBody:
-      "Congratulations! NexaTech Solutions reviewed your application and moved you to the Shortlisted stage. This means they are interested in your profile and may reach out soon to schedule an interview. Keep your profile updated and prepare for a potential interview.",
-    category: "Application",
-    dateGroup: "Today",
-    timeAgo: "2h ago",
-    isRead: false,
-    iconSvg: IconCheck,
-    iconBg: "notif-icon--green",
-    badgeCss: "badge--green",
-    actionLabel: "Shortlisted",
-    actionTagCss: "tag--shortlisted",
-    primaryAction: "View Application",
-    secondaryAction: "Browse More Jobs",
-    metaItems: {
-      Company: "NexaTech Solutions",
-      Position: "Backend Intern",
-      Status: "Shortlisted",
-      Applied: "Mar 28, 2025",
-    },
-  },
-  {
-    id: 2,
-    title: "New job matches found",
-    body: "12 new jobs match your resume — Full-Stack Developer roles are trending this week.",
-    detailBody:
-      "Based on your resume skills (C#, .NET, Blazor, PostgreSQL), we found 12 new job listings that closely match your profile. The top match is 91% — Full-Stack Developer Intern at CodeBridge Co. Don't miss out!",
-    category: "Match",
-    dateGroup: "Today",
-    timeAgo: "4h ago",
-    isRead: false,
-    iconSvg: IconMatch,
-    iconBg: "notif-icon--blue",
-    badgeCss: "badge--blue",
-    actionLabel: "12 matches",
-    actionTagCss: "tag--match",
-    primaryAction: "View Matches",
-    secondaryAction: "",
-    metaItems: {
-      "Top Match": "91% — CodeBridge Co.",
-      "Total Matches": "12 new listings",
-      "Skills Matched": "C#, .NET, Blazor",
-    },
-  },
-  {
-    id: 3,
-    title: "Application under review",
-    body: "SoftForge Inc. has moved your Frontend Developer Intern application to Under Review.",
-    detailBody:
-      "Your application to SoftForge Inc. for the Frontend Developer Intern position is now Under Review. This means the hiring team is actively evaluating your profile. You'll be notified when there's an update.",
-    category: "Application",
-    dateGroup: "Today",
-    timeAgo: "6h ago",
-    isRead: false,
-    iconSvg: IconApplication,
-    iconBg: "notif-icon--amber",
-    badgeCss: "badge--amber",
-    actionLabel: "Under Review",
-    actionTagCss: "tag--review",
-    primaryAction: "View Application",
-    secondaryAction: "",
-    metaItems: {
-      Company: "SoftForge Inc.",
-      Position: "Frontend Developer Intern",
-      Status: "Under Review",
-      Applied: "Apr 5, 2025",
-    },
-  },
-
-  // YESTERDAY
-  {
-    id: 4,
-    title: "Resume parsed successfully",
-    body: "Your uploaded resume has been parsed. 6 skills detected and matched against job listings.",
-    detailBody:
-      "We successfully extracted text from your uploaded PDF resume using our parsing engine. 6 skills were detected: C#, .NET, Blazor, PostgreSQL, HTML/CSS, Git. These skills are now being used in your job match score calculations. You can review and edit them in Resume & Profile.",
-    category: "System",
-    dateGroup: "Yesterday",
-    timeAgo: "Yesterday, 3:14 PM",
-    isRead: true,
-    iconSvg: IconResume,
-    iconBg: "notif-icon--slate",
-    badgeCss: "badge--slate",
-    actionLabel: "",
-    actionTagCss: "",
-    primaryAction: "View Resume & Profile",
-    secondaryAction: "",
-    metaItems: {
-      "Skills Detected": "6 skills",
-      File: "resume_clint.pdf",
-      Parser: "iTextSharp (PDF)",
-    },
-  },
-  {
-    id: 5,
-    title: "Saved job expiring soon",
-    body: "API Developer (.NET) at ApexCore Solutions closes in 3 days. Apply before it's gone!",
-    detailBody:
-      "You saved the API Developer (.NET) listing at ApexCore Solutions. This listing is set to expire in 3 days. If you're interested, now is a good time to apply. The role offers a 62% match with your resume.",
-    category: "Saved",
-    dateGroup: "Yesterday",
-    timeAgo: "Yesterday, 11:00 AM",
-    isRead: false,
-    iconSvg: IconSaved,
-    iconBg: "notif-icon--red",
-    badgeCss: "badge--red",
-    actionLabel: "Closing soon",
-    actionTagCss: "tag--danger",
-    primaryAction: "Apply Now",
-    secondaryAction: "View Listing",
-    metaItems: {
-      Company: "ApexCore Solutions",
-      Position: "API Developer (.NET)",
-      Closes: "Apr 13, 2025",
-      "Match Score": "62%",
-    },
-  },
-  {
-    id: 6,
-    title: "Interview scheduled",
-    body: "CodeBridge Co. has scheduled an interview for Full-Stack Developer Intern on Apr 15.",
-    detailBody:
-      "Congratulations! CodeBridge Co. has confirmed an interview for you for the Full-Stack Developer Intern position. The interview is scheduled for April 15, 2025 at 10:00 AM. Make sure to prepare your portfolio, review the job description, and be ready to discuss your C# and Blazor experience.",
-    category: "Application",
-    dateGroup: "Yesterday",
-    timeAgo: "Yesterday, 9:30 AM",
-    isRead: true,
-    iconSvg: IconInterview,
-    iconBg: "notif-icon--green",
-    badgeCss: "badge--green",
-    actionLabel: "For Interview",
-    actionTagCss: "tag--interview",
-    primaryAction: "View Interview Details",
-    secondaryAction: "Add to Calendar",
-    metaItems: {
-      Company: "CodeBridge Co.",
-      Position: "Full-Stack Developer Intern",
-      "Interview Date": "Apr 15, 2025",
-      Time: "10:00 AM",
-    },
-  },
-
-  // THIS WEEK
-  {
-    id: 7,
-    title: "Profile strength increased",
-    body: "You added your education and skills — profile strength is now at 100%. Great job!",
-    detailBody:
-      "Your profile is now complete. Adding your education, skills, and about section has boosted your profile strength to 100%. A complete profile increases your chances of being shortlisted by companies browsing applicants.",
-    category: "System",
-    dateGroup: "This Week",
-    timeAgo: "Apr 7",
-    isRead: true,
-    iconSvg: IconSystem,
-    iconBg: "notif-icon--blue",
-    badgeCss: "badge--blue",
-    actionLabel: "100% complete",
-    actionTagCss: "tag--match",
-    primaryAction: "View Profile",
-    secondaryAction: "",
-    metaItems: {
-      "Profile Strength": "100%",
-      "Last Updated": "Apr 7, 2025",
-    },
-  },
-  {
-    id: 8,
-    title: "Application submitted",
-    body: "Your application to TechSpark PH for .NET Core Developer has been submitted successfully.",
-    detailBody:
-      "Your application has been successfully submitted to TechSpark PH for the .NET Core Developer position. The company will review your profile and update your application status. You can track this in My Applications.",
-    category: "Application",
-    dateGroup: "This Week",
-    timeAgo: "Apr 4",
-    isRead: true,
-    iconSvg: IconApplication,
-    iconBg: "notif-icon--slate",
-    badgeCss: "badge--slate",
-    actionLabel: "Submitted",
-    actionTagCss: "tag--submitted",
-    primaryAction: "View Application",
-    secondaryAction: "",
-    metaItems: {
-      Company: "TechSpark PH",
-      Position: ".NET Core Developer",
-      Status: "Submitted",
-      Date: "Apr 4, 2025",
-    },
-  },
-  {
-    id: 9,
-    title: "New listings in your area",
-    body: "5 new Full-time positions opened in Makati City and BGC this week.",
-    detailBody:
-      "Based on your location preferences and job type filters, 5 new full-time listings have been posted this week in Makati City and BGC. These include roles in .NET development, backend engineering, and API development.",
-    category: "Match",
-    dateGroup: "This Week",
-    timeAgo: "Apr 3",
-    isRead: true,
-    iconSvg: IconMatch,
-    iconBg: "notif-icon--blue",
-    badgeCss: "badge--blue",
-    actionLabel: "5 new jobs",
-    actionTagCss: "tag--match",
-    primaryAction: "Browse Jobs",
-    secondaryAction: "",
-    metaItems: {
-      Locations: "Makati City, BGC",
-      "Job Types": "Full-time",
-      "New Listings": "5 this week",
-    },
-  },
-];
 
 // ── Date group ordering for stable display ────────────────────────────────────
 const DATE_GROUP_ORDER = ["Today", "Yesterday", "This Week"];
 
+function getDateGroup(date: Date): string {
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfThatDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diffDays = Math.floor((startOfToday.getTime() - startOfThatDay.getTime()) / (24 * 60 * 60 * 1000));
+
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  return "This Week";
+}
+
+function getTimeAgo(createdAt: string): string {
+  const date = new Date(createdAt);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+
+  if (diffMin < 60) return `${Math.max(diffMin, 1)}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+
+  const group = getDateGroup(date);
+  if (group === "Yesterday") {
+    return `Yesterday, ${date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
+  }
+
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function getIconFor(dto: NotificationDto): { iconSvg: string; iconBg: string; badgeCss: string; actionTagCss: string } {
+  if (dto.category === "Saved") {
+    return { iconSvg: IconSaved, iconBg: "notif-icon--red", badgeCss: "badge--red", actionTagCss: "tag--danger" };
+  }
+  if (dto.category === "Match") {
+    return { iconSvg: IconMatch, iconBg: "notif-icon--blue", badgeCss: "badge--blue", actionTagCss: "tag--match" };
+  }
+  if (dto.category === "System") {
+    return { iconSvg: IconSystem, iconBg: "notif-icon--slate", badgeCss: "badge--slate", actionTagCss: "tag--match" };
+  }
+
+  // Application
+  if (dto.actionLabel === "Shortlisted") {
+    return { iconSvg: IconCheck, iconBg: "notif-icon--green", badgeCss: "badge--green", actionTagCss: "tag--shortlisted" };
+  }
+  if (dto.actionLabel === "Under Review") {
+    return { iconSvg: IconApplication, iconBg: "notif-icon--amber", badgeCss: "badge--amber", actionTagCss: "tag--review" };
+  }
+  if (dto.actionLabel === "For Interview") {
+    return { iconSvg: IconInterview, iconBg: "notif-icon--green", badgeCss: "badge--green", actionTagCss: "tag--interview" };
+  }
+  if (dto.actionLabel === "Submitted") {
+    return { iconSvg: IconApplication, iconBg: "notif-icon--slate", badgeCss: "badge--slate", actionTagCss: "tag--submitted" };
+  }
+
+  return { iconSvg: IconApplication, iconBg: "notif-icon--blue", badgeCss: "badge--blue", actionTagCss: "tag--match" };
+}
+
+function mapNotification(dto: NotificationDto): NotificationItem {
+  const createdAt = dto.createdAt;
+  const date = new Date(createdAt);
+  const { iconSvg, iconBg, badgeCss, actionTagCss } = getIconFor(dto);
+
+  return {
+    id: dto.id,
+    title: dto.title,
+    body: dto.body,
+    detailBody: dto.detailBody,
+    category: dto.category,
+    timeAgo: getTimeAgo(createdAt),
+    dateGroup: getDateGroup(date),
+    isRead: dto.isRead,
+    iconSvg,
+    iconBg,
+    badgeCss,
+    actionLabel: dto.actionLabel,
+    actionTagCss: dto.actionLabel ? actionTagCss : "",
+    primaryAction: dto.primaryAction,
+    secondaryAction: dto.secondaryAction,
+    metaItems: dto.metaItems || {},
+  };
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 export function Notifications() {
-  const [notifications, setNotifications] = useState<NotificationItem[]>(
-    INITIAL_NOTIFICATIONS
-  );
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState("All");
   const [readFilter, setReadFilter] = useState("all");
-  const [selectedNotif, setSelectedNotif] = useState<NotificationItem>(
-    INITIAL_NOTIFICATIONS[0]
-  );
+  const [selectedNotif, setSelectedNotif] = useState<NotificationItem | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    const load = async () => {
+      setIsLoading(true);
+      setLoadError(null);
+
+      const result = await notificationsService.getNotifications();
+      if (result.isSuccess && result.value) {
+        const items = result.value.map(mapNotification);
+        setNotifications(items);
+        setSelectedNotif(items[0] ?? null);
+      } else {
+        setNotifications([]);
+        setSelectedNotif(null);
+        setLoadError(result.error || "Failed to load notifications");
+      }
+
+      setIsLoading(false);
+    };
+
+    load();
+  }, []);
 
   // ── Derived ──
   const unreadCount = useMemo(
@@ -339,8 +222,15 @@ export function Notifications() {
       q = q.filter((n) => n.category === activeCategory);
     if (readFilter === "unread") q = q.filter((n) => !n.isRead);
     else if (readFilter === "read") q = q.filter((n) => n.isRead);
+    const s = searchQuery.trim().toLowerCase();
+    if (s) {
+      q = q.filter((n) => {
+        const haystack = `${n.title} ${n.body} ${n.detailBody}`.toLowerCase();
+        return haystack.includes(s);
+      });
+    }
     return q;
-  }, [notifications, activeCategory, readFilter]);
+  }, [notifications, activeCategory, readFilter, searchQuery]);
 
   const groupedNotifications = useMemo(() => {
     const map: Record<string, NotificationItem[]> = {};
@@ -358,53 +248,77 @@ export function Notifications() {
   // ── Handlers ──
   function selectNotif(n: NotificationItem) {
     setSelectedNotif(n);
-    // auto-mark as read on open
-    setNotifications((prev) =>
-      prev.map((item) => (item.id === n.id ? { ...item, isRead: true } : item))
-    );
+    if (!n.isRead) {
+      void markRead(n.id);
+    }
   }
 
-  function markRead(id: number) {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-    );
-    // keep selectedNotif in sync
-    if (selectedNotif?.id === id)
-      setSelectedNotif((prev) => prev && { ...prev, isRead: true });
+  async function markRead(id: string) {
+    // optimistic
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
+    if (selectedNotif?.id === id) setSelectedNotif((prev) => (prev ? { ...prev, isRead: true } : prev));
+
+    const result = await notificationsService.markRead(id);
+    if (!result.isSuccess) {
+      // revert on failure
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: false } : n)));
+      if (selectedNotif?.id === id) setSelectedNotif((prev) => (prev ? { ...prev, isRead: false } : prev));
+    }
   }
 
-  function markAllRead() {
+  async function markAllRead() {
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    if (selectedNotif)
-      setSelectedNotif((prev) => prev && { ...prev, isRead: true });
+    if (selectedNotif) setSelectedNotif((prev) => (prev ? { ...prev, isRead: true } : prev));
+
+    const result = await notificationsService.markAllRead();
+    if (!result.isSuccess) {
+      // fallback: refresh from server state
+      const refreshed = await notificationsService.getNotifications();
+      if (refreshed.isSuccess && refreshed.value) {
+        const items = refreshed.value.map(mapNotification);
+        setNotifications(items);
+        setSelectedNotif(items.find(x => x.id === selectedNotif?.id) ?? items[0] ?? null);
+      } else {
+        setLoadError(result.error || "Failed to mark all as read");
+      }
+    }
   }
 
-  function dismissNotif(id: number) {
-    setNotifications((prev) => {
-      const next = prev.filter((n) => n.id !== id);
-      // if we dismissed the selected one, pick the first available in the new displayed list
-      if (selectedNotif?.id === id) {
-        const nextDisplayed = next.filter(
-          (n) =>
-            (activeCategory === "All" || n.category === activeCategory) &&
-            (readFilter === "all" ||
-              (readFilter === "unread" && !n.isRead) ||
-              (readFilter === "read" && n.isRead))
-        );
-        setSelectedNotif(nextDisplayed[0] ?? null!);
+  async function dismissNotif(id: string) {
+    // optimistic
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    if (selectedNotif?.id === id) setSelectedNotif(null);
+
+    const result = await notificationsService.dismiss(id);
+    if (!result.isSuccess) {
+      // fallback: refresh
+      const refreshed = await notificationsService.getNotifications();
+      if (refreshed.isSuccess && refreshed.value) {
+        const items = refreshed.value.map(mapNotification);
+        setNotifications(items);
+        setSelectedNotif(items[0] ?? null);
+      } else {
+        setLoadError(result.error || "Failed to dismiss notification");
       }
-      return next;
-    });
+    }
   }
 
-  function clearAll() {
-    setNotifications((prev) => {
-      const next = prev.filter((n) => !n.isRead);
-      if (selectedNotif && !next.find((n) => n.id === selectedNotif.id)) {
-        setSelectedNotif(next[0] ?? null!);
+  async function clearAll() {
+    // optimistic remove read
+    setNotifications((prev) => prev.filter((n) => !n.isRead));
+    if (selectedNotif?.isRead) setSelectedNotif(null);
+
+    const result = await notificationsService.clearRead();
+    if (!result.isSuccess) {
+      const refreshed = await notificationsService.getNotifications();
+      if (refreshed.isSuccess && refreshed.value) {
+        const items = refreshed.value.map(mapNotification);
+        setNotifications(items);
+        setSelectedNotif(items[0] ?? null);
+      } else {
+        setLoadError(result.error || "Failed to clear read notifications");
       }
-      return next;
-    });
+    }
   }
 
   const STATUS_FILTERS = [
@@ -422,30 +336,30 @@ export function Notifications() {
           title="Notifications"
           subtitle={`${unreadCount} unread — stay on top of your job hunt`}
         >
-          {unreadCount > 0 && (
-            <button className="mark-all-btn" onClick={markAllRead}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M20 6L9 17l-5-5"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              Mark all as read
-            </button>
-          )}
-          <button className="notif-settings-btn" title="Notification settings">
+          <div className="search-wrap">
+            <svg className="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none">
+              <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" />
+              <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            <input
+              className="search-input"
+              type="text"
+              placeholder="Search notifications..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <Link to="/notifications" className="notif-btn" aria-label="Notifications">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
               <path
-                d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"
+                d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"
                 stroke="currentColor"
                 strokeWidth="2"
+                strokeLinecap="round"
               />
             </svg>
-          </button>
+            {unreadCount > 0 && <span className="notif-indicator" />}
+          </Link>
         </PageHeader>
 
         {/* ── Body ── */}
@@ -545,7 +459,37 @@ export function Notifications() {
           {/* ══ CENTER — Notification List ══ */}
           <section className="notif-list-section">
 
-            {displayedNotifications.length === 0 ? (
+            {isLoading ? (
+              <div className="notif-empty">
+                <div className="notif-empty-icon">
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"
+                      stroke="#CBD5E1"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </div>
+                <p className="notif-empty-title">Loading notifications…</p>
+                <p className="notif-empty-sub">Please wait.</p>
+              </div>
+            ) : loadError ? (
+              <div className="notif-empty">
+                <div className="notif-empty-icon">
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"
+                      stroke="#CBD5E1"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </div>
+                <p className="notif-empty-title">Failed to load notifications</p>
+                <p className="notif-empty-sub">{loadError}</p>
+              </div>
+            ) : displayedNotifications.length === 0 ? (
               <div className="notif-empty">
                 <div className="notif-empty-icon">
                   <svg width="36" height="36" viewBox="0 0 24 24" fill="none">

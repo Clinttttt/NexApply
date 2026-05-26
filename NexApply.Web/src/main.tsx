@@ -1,4 +1,4 @@
-import { StrictMode, useEffect } from 'react'
+import { Fragment, StrictMode, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
@@ -18,7 +18,17 @@ function AppWithLoader() {
 }
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <AppWithLoader />
-  </StrictMode>,
+  // NOTE:
+  // React StrictMode intentionally double-invokes certain lifecycle paths in DEV,
+  // which can look like "double render" / "double fetch" when navigating.
+  // Keep it opt-in via env var so day-to-day dev is not noisy:
+  //   VITE_STRICT_MODE=true npm run dev
+  (() => {
+    const Root = import.meta.env.VITE_STRICT_MODE === 'true' ? StrictMode : Fragment
+    return (
+      <Root>
+        <AppWithLoader />
+      </Root>
+    )
+  })(),
 )

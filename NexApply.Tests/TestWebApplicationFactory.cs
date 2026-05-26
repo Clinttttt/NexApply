@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using NexApply.Api.Data;
 
 namespace NexApply.Tests;
@@ -21,7 +23,10 @@ public class TestWebApplicationFactory : WebApplicationFactory<NexApply.Api.Appl
             {
                 ["AppSettings:Token"] = "ThisIsAVerySecureTestKeyThatIsLongEnoughForHS256Algorithm",
                 ["AppSettings:Issuer"] = "TestIssuer",
-                ["AppSettings:Audience"] = "TestAudience"
+                ["AppSettings:Audience"] = "TestAudience",
+                // Prevent Google auth provider initialization failures in tests
+                ["Authentication:Google:ClientId"] = "test-client-id",
+                ["Authentication:Google:ClientSecret"] = "test-client-secret"
             });
         });
         
@@ -31,6 +36,8 @@ public class TestWebApplicationFactory : WebApplicationFactory<NexApply.Api.Appl
             services.RemoveAll(typeof(DbContextOptions<AppDbContext>));
             services.RemoveAll(typeof(DbContextOptions));
             services.RemoveAll(typeof(AppDbContext));
+            services.RemoveAll(typeof(IConfigureOptions<DbContextOptions<AppDbContext>>));
+            services.RemoveAll(typeof(IDbContextOptionsConfiguration<AppDbContext>));
 
             // Add InMemory database
             services.AddDbContext<AppDbContext>(options =>

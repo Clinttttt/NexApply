@@ -1,12 +1,52 @@
-import { useLocation, Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { companyDashboardService, type CompanyDashboardDto } from '../services/companyDashboardService';
 import './CompanySidebar.css';
+
+const getInitials = (name: string): string => {
+  const trimmed = name.trim();
+  if (!trimmed) return '?';
+  return trimmed
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase();
+};
+
+const fetchCompanyDashboard = async (): Promise<CompanyDashboardDto> => {
+  const result = await companyDashboardService.getDashboard();
+  if (result.isSuccess && result.value) return result.value;
+  throw new Error(result.error || 'Failed to load company dashboard');
+};
 
 export function CompanySidebar() {
   const location = useLocation();
 
   const isActive = (path: string) => {
-    return location.pathname === path;
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
+
+  const { data: dashboard } = useQuery({
+    queryKey: ['companyDashboard'],
+    queryFn: fetchCompanyDashboard,
+    staleTime: 60_000,
+  });
+
+  const companyName = dashboard?.companyName?.trim() ? dashboard.companyName : 'Company';
+  const hiringManagerTitle = dashboard?.hiringManagerTitle?.trim()
+    ? dashboard.hiringManagerTitle
+    : 'Recruiter';
+
+  const activeJobsCount = dashboard?.activeJobsCount ?? 0;
+  const unreadMessages = dashboard?.unreadMessages ?? 0;
+  const upcomingInterviews = dashboard?.upcomingInterviews ?? 0;
+  const totalApplicants = dashboard?.totalApplicants ?? 0;
+  const awaitingReview = dashboard?.awaitingReview ?? 0;
+
+  const applicantBadgeValue = awaitingReview > 0 ? awaitingReview : totalApplicants;
+  const applicantBadgeLabel =
+    awaitingReview > 0 ? `${awaitingReview} awaiting review` : `${totalApplicants} applicants`;
 
   return (
     <aside className="rec-sidebar" aria-label="Recruiter navigation">
@@ -25,18 +65,23 @@ export function CompanySidebar() {
 
       {/* Company Card */}
       <div className="rec-company-card">
-        <div className="rec-company-avatar" aria-label="CodeBridge Co. logo">
-          <span>CB</span>
+        <div className="rec-company-avatar" aria-label={`${companyName} logo`}>
+          <span>{getInitials(companyName)}</span>
         </div>
         <div className="rec-company-meta">
-          <span className="rec-company-name">CodeBridge Co.</span>
-          <span className="rec-company-role">Hiring Manager</span>
+          <span className="rec-company-name">{companyName}</span>
+          <span className="rec-company-role">{hiringManagerTitle}</span>
         </div>
-        <button className="rec-company-chevron" title="Company settings" aria-label="Open company settings">
+        <Link
+          to="/company-profile"
+          className="rec-company-chevron"
+          title="Company profile"
+          aria-label="Open company profile"
+        >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
           </svg>
-        </button>
+        </Link>
       </div>
 
       {/* Navigation */}
@@ -61,7 +106,7 @@ export function CompanySidebar() {
 
         <Link 
           to="/company-post-job" 
-          className={`rec-nav-item ${isActive('/recruiter/post-job') ? 'is-active' : ''}`}
+          className={`rec-nav-item ${isActive('/company-post-job') ? 'is-active' : ''}`}
         >
           <span className="rec-nav-icon" aria-hidden="true">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
@@ -75,7 +120,7 @@ export function CompanySidebar() {
 
         <Link 
           to="/company-manage-jobs" 
-          className={`rec-nav-item ${isActive('/recruiter/manage-jobs') ? 'is-active' : ''}`}
+          className={`rec-nav-item ${isActive('/company-manage-jobs') ? 'is-active' : ''}`}
         >
           <span className="rec-nav-icon" aria-hidden="true">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
@@ -84,7 +129,9 @@ export function CompanySidebar() {
             </svg>
           </span>
           Manage Jobs
-          <span className="rec-nav-count" aria-label="4 active jobs">4</span>
+          <span className="rec-nav-count" aria-label={`${activeJobsCount} active jobs`}>
+            {activeJobsCount}
+          </span>
         </Link>
 
         <Link 
@@ -99,7 +146,12 @@ export function CompanySidebar() {
             </svg>
           </span>
           Applicants
-          <span className="rec-nav-count rec-nav-count--alert" aria-label="12 applicants">12</span>
+          <span
+            className={`rec-nav-count ${awaitingReview > 0 ? 'rec-nav-count--alert' : ''}`}
+            aria-label={applicantBadgeLabel}
+          >
+            {applicantBadgeValue}
+          </span>
         </Link>
 
         <Link 
@@ -114,7 +166,9 @@ export function CompanySidebar() {
             </svg>
           </span>
           Interviews
-          <span className="rec-nav-dot" aria-label="Upcoming interviews indicator"></span>
+          {upcomingInterviews > 0 ? (
+            <span className="rec-nav-dot" aria-label="Upcoming interviews indicator"></span>
+          ) : null}
         </Link>
 
         <p className="rec-nav-label" style={{ marginTop: '1.25rem' }}>Communication</p>
@@ -130,7 +184,11 @@ export function CompanySidebar() {
             </svg>
           </span>
           Messages
-          <span className="rec-nav-count" aria-label="3 unread messages">3</span>
+          {unreadMessages > 0 ? (
+            <span className="rec-nav-count" aria-label={`${unreadMessages} unread messages`}>
+              {unreadMessages}
+            </span>
+          ) : null}
         </Link>
 
         <p className="rec-nav-label" style={{ marginTop: '1.25rem' }}>Account</p>
@@ -151,7 +209,11 @@ export function CompanySidebar() {
 
       {/* Footer */}
       <div className="rec-sidebar-footer">
-        <Link to="/company/settings" className="rec-nav-item">
+        <Link
+          to="/company/settings"
+          className={`rec-nav-item ${isActive('/company/settings') ? 'is-active' : ''}`}
+          aria-current={isActive('/company/settings') ? 'page' : undefined}
+        >
           <span className="rec-nav-icon" aria-hidden="true">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
               <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>

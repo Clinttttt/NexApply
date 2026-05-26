@@ -22,14 +22,34 @@ public class GetMessagesHandler : IRequestHandler<GetMessagesQuery, Result<List<
     {
         var userId = new Guid(_currentUser.UserId);
 
-        var messages = await _context.Messages
-            .Include(m => m.Interview)
-                .ThenInclude(i => i!.Application)
-                    .ThenInclude(a => a.JobListing)
+        // NOTE:
+        // We intentionally compute invite display fields in-memory to avoid EF translating
+        // ScheduledAt.AddMinutes(DurationMinutes) into a PostgreSQL interval expression that can fail
+        // when the left-joined interview row is null.
+        var rows = await _context.Messages
+            .AsNoTracking()
             .Where(m => (m.SenderId == userId && m.ReceiverId == request.OtherUserId) ||
-                       (m.SenderId == request.OtherUserId && m.ReceiverId == userId))
+                        (m.SenderId == request.OtherUserId && m.ReceiverId == userId))
             .OrderBy(m => m.CreatedAt)
-            .Select(m => new MessageDto
+            .Select(m => new
+            {
+                m.Id,
+                m.SenderId,
+                m.Content,
+                m.CreatedAt,
+                m.Type,
+                Interview = m.Interview == null ? null : new
+                {
+                    Position = m.Interview.Application.JobListing.Title,
+                    m.Interview.ScheduledAt,
+                    m.Interview.DurationMinutes,
+                    Format = m.Interview.Format.ToString(),
+                    m.Interview.Location
+                }
+            })
+            .ToListAsync(ct);
+
+        var messages = rows.Select(m => new MessageDto
             {
                 Id = m.Id,
                 SenderId = m.SenderId,
@@ -38,13 +58,13 @@ public class GetMessagesHandler : IRequestHandler<GetMessagesQuery, Result<List<
                 Type = m.Type,
                 InviteDetails = m.Type == "interview-invite" && m.Interview != null ? new InterviewInviteDetailsDto
                 {
-                    Position = m.Interview.Application.JobListing.Title,
+                    Position = m.Interview.Position,
                     DateDisplay = m.Interview.ScheduledAt.ToString("dddd, MMMM dd, yyyy"),
-                    TimeDisplay = m.Interview.ScheduledAt.ToString("h:mm tt") + " – " + m.Interview.ScheduledAt.AddMinutes(m.Interview.DurationMinutes).ToString("h:mm tt"),
-                    Format = m.Interview.Format.ToString() + (m.Interview.Location != null ? " · " + m.Interview.Location : "")
+                    TimeDisplay = $"{m.Interview.ScheduledAt:h:mm tt} – {m.Interview.ScheduledAt.AddMinutes(m.Interview.DurationMinutes):h:mm tt}",
+                    Format = m.Interview.Format + (m.Interview.Location != null ? " · " + m.Interview.Location : "")
                 } : null
             })
-            .ToListAsync(ct);
+            .ToList();
 
         // Mark as read
         var unreadMessages = await _context.Messages

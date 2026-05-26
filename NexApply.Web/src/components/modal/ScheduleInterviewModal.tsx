@@ -86,7 +86,10 @@ export const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({
   };
 
   const handleConfirm = () => {
-    if (!interview.candidateName || !interview.jobTitle || !interview.format) return;
+    if (!interview.candidateName || !interview.jobTitle || !interview.format) {
+      alert('Please fill in Candidate Name, Position, and Interview Format before scheduling.');
+      return;
+    }
 
     onConfirm({
       interview,
@@ -261,7 +264,7 @@ export const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({
                 Interview Format <span className="sched-required">*</span>
               </label>
               <div className="sched-format-toggle">
-                {['Video Call', 'On-site', 'Phone'].map((fmt) => (
+                {['Video Call', 'On Site', 'Phone'].map((fmt) => (
                   <button
                     key={fmt}
                     type="button"

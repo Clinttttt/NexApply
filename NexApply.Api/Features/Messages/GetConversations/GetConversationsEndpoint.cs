@@ -10,7 +10,7 @@ public static class GetConversationsEndpoint
 {
     public static void MapGetConversations(this WebApplication app)
     {
-        app.MapGet("/api/messages/conversations", [Authorize(Roles = "Company")] async (IMediator mediator) =>
+        app.MapGet("/api/messages/conversations", [Authorize] async (IMediator mediator) =>
         {
             var result = await mediator.Send(new GetConversationsQuery());
             return result.ToIResult();

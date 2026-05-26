@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import apiClient from '../lib/apiClient';
 import { cookieService } from '../lib/cookieService';
 
+type GoogleAuthRole = 'Student' | 'Recruiter';
+
 declare global {
   interface Window {
     google: any;
@@ -14,7 +16,7 @@ declare global {
   }
 }
 
-export function useGoogleOneTap() {
+export function useGoogleOneTap(activeRole: GoogleAuthRole = 'Student') {
   const navigate = useNavigate();
 
   const handleGoogleCallback = useCallback(async (response: any) => {
@@ -22,7 +24,9 @@ export function useGoogleOneTap() {
 
     try {
       const result = await apiClient.post('/auth/login-google', {
-        idToken: idToken
+        idToken,
+        // 0 = Student, 1 = Company (backend enum)
+        role: activeRole === 'Recruiter' ? 1 : 0
       });
 
       if (result.data.accessToken && result.data.refreshToken) {
@@ -33,7 +37,7 @@ export function useGoogleOneTap() {
     } catch (error) {
       console.error('Google login failed:', error);
     }
-  }, [navigate]);
+  }, [activeRole, navigate]);
 
   useEffect(() => {
     // Set callback globally

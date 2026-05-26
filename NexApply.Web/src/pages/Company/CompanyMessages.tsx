@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import './CompanyMessages.css';
 import {CompanySidebar} from '../../components/CompanySidebar';
 import {CompanyHeader} from '../../components/CompanyHeader';
 import {ScheduleInterviewModal} from '../../components/modal/ScheduleInterviewModal';
+import { NewMessageModal, type NewMessagePerson } from '../../components/modal/NewMessageModal';
 import { companyInterviewsService } from '../../services/companyInterviewsService';
 import { messageService, type ConversationDto } from '../../services/messageService';
 
@@ -136,6 +137,7 @@ const CompanyMessages: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessageItem[]>([]);
+  const [showNewMessageModal, setShowNewMessageModal] = useState(false);
 
   // Schedule modal state
   const [showScheduleModal, setShowScheduleModal] = useState(false);
@@ -148,6 +150,8 @@ const CompanyMessages: React.FC = () => {
   const [modalInterviewerName] = useState('');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const composeInputRef = useRef<HTMLTextAreaElement>(null);
+  const focusComposeAfterSelectRef = useRef(false);
 
   // Derived
   const unreadCount = conversations.filter((c) => !c.isRead).length;
@@ -168,6 +172,19 @@ const CompanyMessages: React.FC = () => {
       return matchesSearch && matchesTab;
     })
     .sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
+
+  const newMessagePeople: NewMessagePerson[] = useMemo(() => {
+    // Keep it simple + reliable: only allow selecting from conversation partners we already have IDs for.
+    // (This includes all applicants even if there are no messages yet via GetConversationsHandler.)
+    return conversations
+      .filter(c => c.role === 'Candidate' || c.role === 'Team')
+      .map(c => ({
+        userId: c.userId,
+        name: c.name,
+        role: c.role,
+        jobTitle: c.jobTitle || undefined
+      }));
+  }, [conversations]);
 
   // Load conversations on mount
   useEffect(() => {
@@ -210,18 +227,31 @@ const CompanyMessages: React.FC = () => {
   // Auto-open first on mount
   useEffect(() => {
     if (filteredConversations.length > 0 && activeConvId === null && !isLoading) {
-      selectConversation(filteredConversations[0].userId);
+      const saved = window.localStorage.getItem('companyMessages.activeConvId');
+      const preferred = saved && filteredConversations.some(c => c.userId === saved)
+        ? saved
+        : filteredConversations[0].userId;
+      selectConversation(preferred);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading]);
+  }, [isLoading, filteredConversations.length]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [activeConvId, messages.length]);
 
+  // Focus compose input after selecting a recipient from the "New Message" modal
+  useEffect(() => {
+    if (!activeConvId) return;
+    if (!focusComposeAfterSelectRef.current) return;
+    focusComposeAfterSelectRef.current = false;
+    window.setTimeout(() => composeInputRef.current?.focus(), 0);
+  }, [activeConvId]);
+
   function selectConversation(userId: string) {
     setActiveConvId(userId);
+    window.localStorage.setItem('companyMessages.activeConvId', userId);
     setShowTemplates(false);
     setConversations((prev) =>
       prev.map((c) => (c.userId === userId ? { ...c, isRead: true } : c))
@@ -292,18 +322,23 @@ const CompanyMessages: React.FC = () => {
     setShowScheduleModal(true);
   }
 
+  function openNewMessageModal() {
+    setShowNewMessageModal(true);
+  }
+
+  function handleSelectNewMessage(userId: string) {
+    focusComposeAfterSelectRef.current = true;
+    setShowNewMessageModal(false);
+    selectConversation(userId);
+  }
+
   async function handleScheduleConfirm(result: ScheduleResult) {
-    setShowScheduleModal(false);
     if (!activeConvId || !activeConversation?.applicantId) return;
 
     const iv = result.interview;
     const [h, m] = result.interviewTime.split(':').map(Number);
     const scheduledAt = new Date(iv.scheduledAt);
     scheduledAt.setHours(h, m);
-    const endTime = new Date(scheduledAt.getTime() + iv.durationMins * 60000);
-
-    const fmt = (d: Date) =>
-      d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 
     const scheduledResult = await companyInterviewsService.scheduleInterview({
       applicationId: activeConversation.applicantId,
@@ -317,38 +352,33 @@ const CompanyMessages: React.FC = () => {
     });
 
     if (!scheduledResult.isSuccess) {
-      setError(scheduledResult.error || 'Failed to schedule interview');
+      const msg = scheduledResult.error || 'Failed to schedule interview';
+      setError(msg);
+      alert(msg);
       return;
     }
 
-    const inviteMsg: MessageItem = {
-      id: '0',
-      senderId: 'me',
-      type: 'interview-invite',
-      content: `Please find your interview details below. The session will be ${iv.durationMins} minutes${iv.location ? ` via ${iv.format}.` : '.'}`,
-      sentAt: new Date().toISOString(),
-      inviteDetails: {
-        position: iv.jobTitle,
-        dateDisplay: scheduledAt.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
-        timeDisplay: `${fmt(scheduledAt)} – ${fmt(endTime)}`,
-        format: iv.location ? `${iv.format} · ${iv.location}` : iv.format,
-      },
-    };
+    setShowScheduleModal(false);
 
-    setMessages(prev => [...prev, inviteMsg]);
+    // The backend persists an "interview-invite" message as part of scheduling.
+    // Refresh messages + conversation list so both sides see the same invite card/details.
+    const [msgsResult, convsResult] = await Promise.all([
+      messageService.getMessages(activeConvId),
+      messageService.getConversations(),
+    ]);
 
-    setConversations((prev) =>
-      prev.map((c) => {
-        if (c.userId !== activeConvId) return c;
-        return {
-          ...c,
-          lastMessage: '📅 Interview Invitation sent',
-          lastMessageAt: new Date().toISOString(),
-          lastSenderIsMe: true,
-          isRead: true,
-        };
-      })
-    );
+    if (msgsResult.isSuccess && msgsResult.value) {
+      setMessages(msgsResult.value);
+    }
+
+    if (convsResult.isSuccess && convsResult.value) {
+      const conversationsWithMessages = convsResult.value.map((c: ConversationDto) => ({
+        ...c,
+        messages: [] as MessageItem[],
+        get initials() { return getInitials((this as ConversationItem).name); }
+      })) as ConversationItem[];
+      setConversations(conversationsWithMessages);
+    }
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -368,7 +398,7 @@ const CompanyMessages: React.FC = () => {
               <div className="conv-panel-title-row">
                 <h1 className="conv-panel-title">Messages</h1>
                 <button className="compose-btn" title="New message" aria-label="Compose new message"
-                  onClick={() => { /* TODO: open new message modal */ }}>
+                  onClick={openNewMessageModal}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
                     fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 20h9" />
@@ -506,26 +536,21 @@ const CompanyMessages: React.FC = () => {
                         View Profile
                       </a>
                     )}
-                    <button className="chat-hdr-btn chat-hdr-btn--schedule"
-                      title="Schedule interview"
-                      onClick={() => openScheduleModal(activeConversation)}>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                        <line x1="16" y1="2" x2="16" y2="6" />
-                        <line x1="8" y1="2" x2="8" y2="6" />
-                        <line x1="3" y1="10" x2="21" y2="10" />
-                      </svg>
-                      Schedule Interview
-                    </button>
-                    <button className="chat-hdr-icon-btn" title="More options" aria-label="More options">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="5" r="1" />
-                        <circle cx="12" cy="12" r="1" />
-                        <circle cx="12" cy="19" r="1" />
-                      </svg>
-                    </button>
+                    {activeConversation.role === 'Candidate' && activeConversation.applicantId && (
+                      <button className="chat-hdr-btn chat-hdr-btn--schedule"
+                        title="Schedule interview"
+                        onClick={() => openScheduleModal(activeConversation)}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                          fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                          <line x1="16" y1="2" x2="16" y2="6" />
+                          <line x1="8" y1="2" x2="8" y2="6" />
+                          <line x1="3" y1="10" x2="21" y2="10" />
+                        </svg>
+                        Schedule Interview
+                      </button>
+                    )}
+                 
                   </div>
                 </div>
 
@@ -689,6 +714,7 @@ const CompanyMessages: React.FC = () => {
                       placeholder="Type your message…"
                       rows={1}
                       value={composeText}
+                      ref={composeInputRef}
                       onChange={(e) => setComposeText(e.target.value)}
                       onKeyDown={handleComposeKey}
                       aria-label="Message input" />
@@ -799,17 +825,19 @@ const CompanyMessages: React.FC = () => {
                       View Full Profile
                     </a>
                   )}
-                  <button className="ctx-action-btn ctx-action-btn--schedule"
-                    onClick={() => openScheduleModal(activeConversation)}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-                      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                      <line x1="16" y1="2" x2="16" y2="6" />
-                      <line x1="8" y1="2" x2="8" y2="6" />
-                      <line x1="3" y1="10" x2="21" y2="10" />
-                    </svg>
-                    Schedule Interview
-                  </button>
+                  {activeConversation.applicantId && (
+                    <button className="ctx-action-btn ctx-action-btn--schedule"
+                      onClick={() => openScheduleModal(activeConversation)}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                      </svg>
+                      Schedule Interview
+                    </button>
+                  )}
                   <button className="ctx-action-btn ctx-action-btn--shortlist"
                     onClick={useShortlistTemplate}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
@@ -835,6 +863,13 @@ const CompanyMessages: React.FC = () => {
         interviewerName={modalInterviewerName}
         onClose={() => setShowScheduleModal(false)}
         onConfirm={handleScheduleConfirm}
+      />
+
+      <NewMessageModal
+        isVisible={showNewMessageModal}
+        people={newMessagePeople}
+        onClose={() => setShowNewMessageModal(false)}
+        onSelect={handleSelectNewMessage}
       />
     </div>
   );

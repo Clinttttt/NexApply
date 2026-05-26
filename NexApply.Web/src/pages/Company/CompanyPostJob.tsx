@@ -1,8 +1,8 @@
-import { useState, type KeyboardEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {CompanySidebar} from '../../components/CompanySidebar';
 import {CompanyHeader} from '../../components/CompanyHeader';
-import { jobListingService, type CreateJobListingCommand } from '../../services/jobListingService';
+import { jobListingService, type CreateJobListingCommand, type JobListingDetailsDto } from '../../services/jobListingService';
 import './CompanyPostJob.css';
 
 // ── Types ─────────────────────────────────────────────────
@@ -194,6 +194,7 @@ const Stepper: React.FC<StepperProps> = ({ currentStep }) => (
 
 const CompanyPostJob: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -220,6 +221,64 @@ const CompanyPostJob: React.FC = () => {
   const [benefitInput, setBenefitInput] = useState<string>('');
   const [responsibilities, setResponsibilities] = useState<string[]>([]);
   const [responsibilityInput, setResponsibilityInput] = useState<string>('');
+
+  const duplicateFrom = useMemo(() => {
+    const state = location.state as { duplicateFrom?: JobListingDetailsDto } | null;
+    return state?.duplicateFrom ?? null;
+  }, [location.state]);
+
+  const normalizeBullets = (value: string): string[] => {
+    return (value ?? '')
+      .split(/\r?\n/)
+      .map(v => v.replace(/^•\s*/, '').trim())
+      .filter(Boolean);
+  };
+
+  const mapJobTypeToPostKey = (label: string): string => {
+    const normalized = (label ?? '').toLowerCase().replace(/[^a-z]/g, '');
+    if (normalized.includes('fulltime')) return 'FullTime';
+    if (normalized.includes('parttime')) return 'PartTime';
+    if (normalized.includes('intern')) return 'Internship';
+    if (normalized.includes('freelance')) return 'Freelance';
+    if (normalized.includes('remote')) return 'Remote';
+    return '';
+  };
+
+  const mapWorkSetupToPostLabel = (label: string): string => {
+    const normalized = (label ?? '').toLowerCase().replace(/[^a-z]/g, '');
+    if (normalized.includes('onsite')) return 'On-site';
+    if (normalized.includes('hybrid')) return 'Hybrid';
+    if (normalized.includes('remote')) return 'Remote';
+    return '';
+  };
+
+  // Prefill form when duplicating a listing (triggered from Job Details → Quick Actions → Duplicate Listing)
+  useEffect(() => {
+    if (!duplicateFrom) return;
+
+    setCurrentStep(1);
+    setSubmitError(null);
+
+    setForm({
+      jobTitle: duplicateFrom.title ?? '',
+      jobType: mapJobTypeToPostKey(duplicateFrom.jobType),
+      location: duplicateFrom.location ?? '',
+      salaryMin: duplicateFrom.salaryMin?.toString() ?? '',
+      salaryMax: duplicateFrom.salaryMax?.toString() ?? '',
+      deadline: duplicateFrom.deadline ? duplicateFrom.deadline.split('T')[0] : '',
+      selectedWorkSetup: mapWorkSetupToPostLabel(duplicateFrom.workSetup),
+      roleSummary: duplicateFrom.description ?? '',
+      responsibilities: 'prefilled',
+      benefits: '',
+      qualifications: duplicateFrom.qualifications ?? '',
+      experienceLevel: duplicateFrom.experienceLevel ?? '',
+      openings: duplicateFrom.openings ?? 1,
+    });
+
+    setResponsibilities(normalizeBullets(duplicateFrom.responsibilities));
+    setBenefits(normalizeBullets(duplicateFrom.benefits ?? ''));
+    setSkills((duplicateFrom.requiredSkills ?? '').split(',').map(s => s.trim()).filter(Boolean));
+  }, [duplicateFrom]);
 
   // ── Derived ─────────────────────────────────────────────
 
@@ -332,7 +391,7 @@ const CompanyPostJob: React.FC = () => {
 
     if (result.isSuccess) {
       // Redirect to Manage Jobs page
-      navigate('/company/manage-jobs');
+      navigate('/company-manage-jobs');
     } else {
       setSubmitError(result.error || 'Failed to publish job listing');
       setIsSubmitting(false);

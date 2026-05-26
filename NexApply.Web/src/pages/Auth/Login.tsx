@@ -8,8 +8,8 @@ import './auth.css';
 
 export function Login() {
   const navigate = useNavigate();
-  const { renderButton } = useGoogleOneTap();
   const [activeRole, setActiveRole] = useState<'Student' | 'Recruiter'>('Student');
+  const { renderButton } = useGoogleOneTap(activeRole);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -45,7 +45,7 @@ export function Login() {
 
   useEffect(() => {
     renderButton('google-signin-button');
-  }, [renderButton]);
+  }, [renderButton, activeRole]);
 
   const handleForgotPassword = () => {
     navigate('/forgot-password');

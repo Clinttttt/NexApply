@@ -14,11 +14,14 @@ import CompanyDashboard from './pages/Company/CompanyDashboard';
 import CompanyPostJob from './pages/Company/CompanyPostJob';
 import CompanyManageJobs from './pages/Company/CompanyManageJobs';  
 import CompanyApplicants from './pages/Company/CompanyApplicants';
+import CompanyApplicantProfile from './pages/Company/CompanyApplicantProfile';
 import CompanyInterviews from './pages/Company/CompanyInterviews';
 import CompanyMessages from './pages/Company/CompanyMessages';
 import CompanyJobView from './pages/Company/CompanyJobView';
 import CompanyEditJob from './pages/Company/CompanyEditJob';
+import CompanySettings from './pages/Company/CompanySettings';
 import { StudentProfile } from './pages/Students/StudentProfile';
+import StudentMessages from './pages/Students/StudentMessages';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -53,6 +56,8 @@ function App() {
           <Route path="/saved-jobs" element={ <SavedJobs /> } />
           
           <Route path="/student-profile" element={ <StudentProfile /> } />
+
+          <Route path="/messages" element={ <ProtectedRoute> <StudentMessages /> </ProtectedRoute> } />
          
           <Route path="/company-dashboard" element={ <CompanyDashboard /> } />
 
@@ -61,6 +66,7 @@ function App() {
           <Route path="/company-manage-jobs" element={ <CompanyManageJobs /> } />
 
           <Route path="/company-applicants" element={ <CompanyApplicants /> } />
+          <Route path="/company-applicants/:applicationId" element={ <CompanyApplicantProfile /> } />
 
           <Route path="/company-interviews" element={ <CompanyInterviews /> } />
 
@@ -69,6 +75,8 @@ function App() {
           <Route path="/company/jobs/:id" element={ <CompanyJobView /> } />
 
           <Route path="/company/jobs/:id/edit" element={ <CompanyEditJob /> } />
+
+          <Route path="/company/settings" element={ <ProtectedRoute> <CompanySettings /> </ProtectedRoute> } />
 
           <Route path="/" element={<Navigate to="/dashboard" replace />}  />
         </Routes>

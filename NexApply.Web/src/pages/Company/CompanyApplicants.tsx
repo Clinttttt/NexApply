@@ -1,8 +1,10 @@
 import { useState, useMemo, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import './CompanyApplicants.css'
 import {CompanySidebar} from '../../components/CompanySidebar';
 import {CompanyHeader} from '../../components/CompanyHeader';
 import { ScheduleInterviewModal } from '../../components/modal/ScheduleInterviewModal';
+import { ApplicantResumeModal } from '../../components/modal/ApplicantResumeModal';
 import { companyApplicantsService, type ApplicantDto } from '../../services/companyApplicantsService';
 import { companyInterviewsService } from '../../services/companyInterviewsService';
 import { jobListingService, type JobListingSummaryDto } from '../../services/jobListingService';
@@ -50,6 +52,7 @@ const formatDate = (d: Date) =>
 // ─────────────────────────────────────────
 
 export default function CompanyApplicants() {
+  const location = useLocation()
 
   // ── State ──────────────────────────────
   const [jobs, setJobs]                       = useState<JobListingSummaryDto[]>([])
@@ -72,6 +75,15 @@ export default function CompanyApplicants() {
   const [scheduleApplicant, setScheduleApplicant]         = useState<ApplicantDto | null>(null)
 
   const activeJob = jobs.find(j => j.id === selectedJobId) ?? null
+
+  // Optional: deep-link from ManageJobs
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const jobListingId = params.get('jobListingId')
+    if (jobListingId) setSelectedJobId(jobListingId)
+    // Only respond to URL changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search])
 
   // ── Load Jobs ────────────────────────────
   useEffect(() => {
@@ -201,12 +213,15 @@ export default function CompanyApplicants() {
       interviewerNames: interviewerName ? [interviewerName.trim()] : []
     })
 
-    if (scheduledResult.isSuccess) {
-      setApplicants(prev => prev.map(a =>
-        a.applicationId === scheduleApplicant.applicationId ? { ...a, status: 'ForInterview' } : a
-      ))
-      closeScheduleModal()
+    if (!scheduledResult.isSuccess) {
+      alert(scheduledResult.error || 'Failed to schedule interview')
+      return
     }
+
+    setApplicants(prev => prev.map(a =>
+      a.applicationId === scheduleApplicant.applicationId ? { ...a, status: 'ForInterview' } : a
+    ))
+    closeScheduleModal()
   }
 
   // ── Render ─────────────────────────────
@@ -502,13 +517,18 @@ export default function CompanyApplicants() {
                         </div>
 
                         <div className="td td--actions" onClick={e => e.stopPropagation()}>
-                          <a href={`/recruiter/applicants/${app.applicationId}/resume`} className="row-action row-action--resume" title="View Resume">
+                          <button
+                            type="button"
+                            className="row-action row-action--resume"
+                            title="View Resume"
+                            onClick={() => openResumeModal(app)}
+                          >
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                               <polyline points="14 2 14 8 20 8" />
                             </svg>
                             Resume
-                          </a>
+                          </button>
                           <button className="row-action row-action--message" title={`Message ${app.studentName}`} onClick={() => {}}>
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -682,56 +702,13 @@ export default function CompanyApplicants() {
         </div>
       </div>
 
-      {/* ══ Resume Modal ══ */}
-      {showResumeModal && resumeApplicant && (
-        <div className="modal-overlay" onClick={closeResumeModal}>
-          <div className="modal-content modal-content--resume" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <div className="modal-title-block">
-                <h2 className="modal-title">{resumeApplicant.studentName}'s Resume</h2>
-                <p className="modal-subtitle">{resumeApplicant.email}</p>
-              </div>
-              <button className="modal-close" onClick={closeResumeModal} aria-label="Close modal">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            </div>
-            <div className="modal-body modal-body--resume">
-              <div className="resume-viewer">
-                <div className="resume-section">
-                  <h3 className="resume-section-title">Skills</h3>
-                  <div className="resume-skills">
-                    {resumeApplicant.skills.map(s => <span key={s} className="skill-chip">{s}</span>)}
-                  </div>
-                </div>
-                {resumeApplicant.portfolio && (
-                  <div className="resume-section">
-                    <h3 className="resume-section-title">Portfolio</h3>
-                    <a href={resumeApplicant.portfolio} target="_blank" rel="noreferrer" className="detail-link">{resumeApplicant.portfolio}</a>
-                  </div>
-                )}
-                {resumeApplicant.resumeUrl && (
-                  <div className="resume-section">
-                    <h3 className="resume-section-title">Resume Document</h3>
-                    <a href={resumeApplicant.resumeUrl} target="_blank" rel="noreferrer" className="detail-link">View Full Resume</a>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="btn-secondary" onClick={closeResumeModal}>Close</button>
-              <button className="btn-primary" onClick={() => {}}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-                Download PDF
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ApplicantResumeModal
+        isVisible={showResumeModal && !!resumeApplicant}
+        applicationId={resumeApplicant?.applicationId ?? ''}
+        applicantName={resumeApplicant?.studentName ?? ''}
+        applicantEmail={resumeApplicant?.email ?? ''}
+        onClose={closeResumeModal}
+      />
 
       {/* ══ Stage Action Modal ══ */}
       {showStageModal && stageApplicant && (
