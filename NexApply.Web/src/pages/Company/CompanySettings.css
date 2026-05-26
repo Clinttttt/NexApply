@@ -38,6 +38,19 @@
   color: var(--color-slate-600);
 }
 
+.cs-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cs-btn--sm {
+  padding: 8px 10px;
+  font-size: 12px;
+  border-radius: 10px;
+}
+
 .cs-action-list {
   display: flex;
   flex-direction: column;

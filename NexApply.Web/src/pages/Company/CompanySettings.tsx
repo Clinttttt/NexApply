@@ -25,11 +25,7 @@ export default function CompanySettings() {
   const [setupPassword, setSetupPassword] = useState('');
   const [setupConfirmPassword, setSetupConfirmPassword] = useState('');
   const [settingPassword, setSettingPassword] = useState(false);
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
-  const [showSetupPassword, setShowSetupPassword] = useState(false);
-  const [showSetupConfirmPassword, setShowSetupConfirmPassword] = useState(false);
+  const [securityOpen, setSecurityOpen] = useState(true);
 
   const [emailUpdatesEnabled, setEmailUpdatesEnabled] = useState(false);
   const [weeklyDigestEnabled, setWeeklyDigestEnabled] = useState(false);
@@ -287,249 +283,154 @@ export default function CompanySettings() {
 
             {/* Security */}
             <section className="cs-card cs-card--wide">
-              <h3 className="cs-card-title">Security</h3>
-              <p className="cs-card-subtitle">Keep your account protected.</p>
-
-              <div className="cs-note" style={{ marginBottom: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                  <span><strong>Sign-in method:</strong> {signInMethod}</span>
-                  {accountEmail ? <span><strong>Email:</strong> {accountEmail}</span> : null}
+              <div className="cs-card-header">
+                <div>
+                  <h3 className="cs-card-title">Security</h3>
+                  <p className="cs-card-subtitle">Keep your account protected.</p>
                 </div>
+                <button
+                  className="cs-btn cs-btn--ghost cs-btn--sm"
+                  type="button"
+                  onClick={() => setSecurityOpen((v) => !v)}
+                >
+                  {securityOpen ? 'Hide' : 'Show'}
+                </button>
               </div>
 
-              {hasPassword ? (
-                <form className="cs-form" onSubmit={onChangePassword}>
-                  <div className="cs-form-grid">
-                    <label className="cs-field">
-                      <span className="cs-label">Current password</span>
-                      <div className="cs-input-wrap">
-                        <input
-                          className="cs-input cs-input--with-toggle"
-                          type={showCurrentPassword ? 'text' : 'password'}
-                          value={currentPassword}
-                          onChange={(e) => setCurrentPassword(e.target.value)}
-                          required
-                        />
-                        <button
-                          className="cs-eye-toggle"
-                          type="button"
-                          onClick={() => setShowCurrentPassword((v) => !v)}
-                          aria-label={showCurrentPassword ? 'Hide password' : 'Show password'}
-                        >
-                          {showCurrentPassword ? (
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                                 fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                              <line x1="1" y1="1" x2="23" y2="23"/>
-                            </svg>
-                          ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                                 fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                              <circle cx="12" cy="12" r="3"/>
-                            </svg>
-                          )}
-                        </button>
-                      </div>
-                    </label>
-                    <label className="cs-field">
-                      <span className="cs-label">New password</span>
-                      <div className="cs-input-wrap">
-                        <input
-                          className="cs-input cs-input--with-toggle"
-                          type={showNewPassword ? 'text' : 'password'}
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          required
-                        />
-                        <button
-                          className="cs-eye-toggle"
-                          type="button"
-                          onClick={() => setShowNewPassword((v) => !v)}
-                          aria-label={showNewPassword ? 'Hide password' : 'Show password'}
-                        >
-                          {showNewPassword ? (
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                                 fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                              <line x1="1" y1="1" x2="23" y2="23" />
-                            </svg>
-                          ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                                 fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                              <circle cx="12" cy="12" r="3"/>
-                            </svg>
-                          )}
-                        </button>
-                      </div>
-                    </label>
-                    <label className="cs-field">
-                      <span className="cs-label">Confirm new password</span>
-                      <div className="cs-input-wrap">
-                        <input
-                          className="cs-input cs-input--with-toggle"
-                          type={showConfirmNewPassword ? 'text' : 'password'}
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          required
-                        />
-                        <button
-                          className="cs-eye-toggle"
-                          type="button"
-                          onClick={() => setShowConfirmNewPassword((v) => !v)}
-                          aria-label={showConfirmNewPassword ? 'Hide password' : 'Show password'}
-                        >
-                          {showConfirmNewPassword ? (
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                                 fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                              <line x1="1" y1="1" x2="23" y2="23"/>
-                            </svg>
-                          ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                                 fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                              <circle cx="12" cy="12" r="3"/>
-                            </svg>
-                          )}
-                        </button>
-                      </div>
-                    </label>
-                  </div>
-
-                  {(error || message) && (
-                    <div className={`cs-alert ${error ? 'cs-alert--error' : 'cs-alert--ok'}`}>
-                      {error || message}
-                    </div>
-                  )}
-
-                  <div className="cs-actions">
-                    <button className="cs-btn cs-btn--ghost" type="button" onClick={() => authService.logout()}>
-                      Log out
-                    </button>
-                    <button className="cs-btn cs-btn--primary" type="submit" disabled={isSaving}>
-                      {isSaving ? 'Saving…' : 'Update password'}
-                    </button>
-                  </div>
-                </form>
-              ) : (
+              {securityOpen && (
                 <>
                   <div className="cs-note" style={{ marginBottom: 12 }}>
-                    This account was created using Google One Tap and doesn’t have a password yet. To enable email sign-in,
-                    request a verification code and set a password below.
-                  </div>
-
-                  {(securityError || securityMessage) && (
-                    <div className={`cs-alert ${securityError ? 'cs-alert--error' : 'cs-alert--ok'}`}>
-                      {securityError || securityMessage}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                      <span><strong>Sign-in method:</strong> {signInMethod}</span>
+                      {accountEmail ? <span><strong>Email:</strong> {accountEmail}</span> : null}
                     </div>
-                  )}
-
-                  <div className="cs-actions" style={{ justifyContent: 'space-between' }}>
-                    <button className="cs-btn cs-btn--ghost" type="button" onClick={() => authService.logout()}>
-                      Log out
-                    </button>
-                    <button
-                      className="cs-btn cs-btn--primary"
-                      type="button"
-                      disabled={!accountEmail || securitySending}
-                      onClick={onSendPasswordSetupEmail}
-                    >
-                      {securitySending ? 'Sending…' : (passwordSetupStarted ? 'Resend code' : 'Send code')}
-                    </button>
                   </div>
 
-                  {passwordSetupStarted && (
-                    <form className="cs-form" onSubmit={onSetPassword}>
+                  {hasPassword ? (
+                    <form className="cs-form" onSubmit={onChangePassword}>
                       <div className="cs-form-grid">
                         <label className="cs-field">
-                          <span className="cs-label">Verification code</span>
+                          <span className="cs-label">Current password</span>
                           <input
                             className="cs-input"
-                            inputMode="numeric"
-                            placeholder="6-digit code"
-                            value={resetCode}
-                            onChange={(e) => setResetCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                            type="password"
+                            value={currentPassword}
+                            onChange={(e) => setCurrentPassword(e.target.value)}
                             required
                           />
                         </label>
                         <label className="cs-field">
                           <span className="cs-label">New password</span>
-                          <div className="cs-input-wrap">
-                            <input
-                              className="cs-input cs-input--with-toggle"
-                              type={showSetupPassword ? 'text' : 'password'}
-                              value={setupPassword}
-                              onChange={(e) => setSetupPassword(e.target.value)}
-                              required
-                            />
-                            <button
-                              className="cs-eye-toggle"
-                              type="button"
-                              onClick={() => setShowSetupPassword((v) => !v)}
-                              aria-label={showSetupPassword ? 'Hide password' : 'Show password'}
-                            >
-                              {showSetupPassword ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                                     fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                                  <line x1="1" y1="1" x2="23" y2="23"/>
-                                </svg>
-                              ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                                     fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                  <circle cx="12" cy="12" r="3"/>
-                                </svg>
-                              )}
-                            </button>
-                          </div>
+                          <input
+                            className="cs-input"
+                            type="password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            required
+                          />
                         </label>
                         <label className="cs-field">
                           <span className="cs-label">Confirm new password</span>
-                          <div className="cs-input-wrap">
-                            <input
-                              className="cs-input cs-input--with-toggle"
-                              type={showSetupConfirmPassword ? 'text' : 'password'}
-                              value={setupConfirmPassword}
-                              onChange={(e) => setSetupConfirmPassword(e.target.value)}
-                              required
-                            />
-                            <button
-                              className="cs-eye-toggle"
-                              type="button"
-                              onClick={() => setShowSetupConfirmPassword((v) => !v)}
-                              aria-label={showSetupConfirmPassword ? 'Hide password' : 'Show password'}
-                            >
-                              {showSetupConfirmPassword ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                                     fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                                  <line x1="1" y1="1" x2="23" y2="23"/>
-                                </svg>
-                              ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                                     fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                  <circle cx="12" cy="12" r="3"/>
-                                </svg>
-                              )}
-                            </button>
-                          </div>
+                          <input
+                            className="cs-input"
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                          />
                         </label>
                       </div>
 
+                      {(error || message) && (
+                        <div className={`cs-alert ${error ? 'cs-alert--error' : 'cs-alert--ok'}`}>
+                          {error || message}
+                        </div>
+                      )}
+
                       <div className="cs-actions">
-                        <button
-                          className="cs-btn cs-btn--primary"
-                          type="submit"
-                          disabled={settingPassword}
-                        >
-                          {settingPassword ? 'Saving…' : 'Set password'}
+                        <button className="cs-btn cs-btn--ghost" type="button" onClick={() => authService.logout()}>
+                          Log out
+                        </button>
+                        <button className="cs-btn cs-btn--primary" type="submit" disabled={isSaving}>
+                          {isSaving ? 'Saving…' : 'Update password'}
                         </button>
                       </div>
                     </form>
+                  ) : (
+                    <>
+                      <div className="cs-note" style={{ marginBottom: 12 }}>
+                        This account was created using Google One Tap and doesn’t have a password yet. To enable email sign-in,
+                        request a verification code and set a password below.
+                      </div>
+
+                      {(securityError || securityMessage) && (
+                        <div className={`cs-alert ${securityError ? 'cs-alert--error' : 'cs-alert--ok'}`}>
+                          {securityError || securityMessage}
+                        </div>
+                      )}
+
+                      <div className="cs-actions" style={{ justifyContent: 'space-between' }}>
+                        <button className="cs-btn cs-btn--ghost" type="button" onClick={() => authService.logout()}>
+                          Log out
+                        </button>
+                        <button
+                          className="cs-btn cs-btn--primary"
+                          type="button"
+                          disabled={!accountEmail || securitySending}
+                          onClick={onSendPasswordSetupEmail}
+                        >
+                          {securitySending ? 'Sending…' : (passwordSetupStarted ? 'Resend code' : 'Send code')}
+                        </button>
+                      </div>
+
+                      {passwordSetupStarted && (
+                        <form className="cs-form" onSubmit={onSetPassword}>
+                          <div className="cs-form-grid">
+                            <label className="cs-field">
+                              <span className="cs-label">Verification code</span>
+                              <input
+                                className="cs-input"
+                                inputMode="numeric"
+                                placeholder="6-digit code"
+                                value={resetCode}
+                                onChange={(e) => setResetCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                required
+                              />
+                            </label>
+                            <label className="cs-field">
+                              <span className="cs-label">New password</span>
+                              <input
+                                className="cs-input"
+                                type="password"
+                                value={setupPassword}
+                                onChange={(e) => setSetupPassword(e.target.value)}
+                                required
+                              />
+                            </label>
+                            <label className="cs-field">
+                              <span className="cs-label">Confirm new password</span>
+                              <input
+                                className="cs-input"
+                                type="password"
+                                value={setupConfirmPassword}
+                                onChange={(e) => setSetupConfirmPassword(e.target.value)}
+                                required
+                              />
+                            </label>
+                          </div>
+
+                          <div className="cs-actions">
+                            <button
+                              className="cs-btn cs-btn--primary"
+                              type="submit"
+                              disabled={settingPassword}
+                            >
+                              {settingPassword ? 'Saving…' : 'Set password'}
+                            </button>
+                          </div>
+                        </form>
+                      )}
+                    </>
                   )}
                 </>
               )}
