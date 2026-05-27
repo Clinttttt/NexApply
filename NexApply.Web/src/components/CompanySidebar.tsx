@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { companyDashboardService, type CompanyDashboardDto } from '../services/companyDashboardService';
+import { authService } from '../services/authService';
 import './CompanySidebar.css';
 
 const getInitials = (name: string): string => {
@@ -224,7 +225,11 @@ export function CompanySidebar() {
           Settings
         </Link>
 
-        <Link to="/logout" className="rec-nav-item rec-nav-item--logout">
+        <button
+          type="button"
+          className="rec-nav-item rec-nav-item--logout"
+          onClick={() => authService.logout()}
+        >
           <span className="rec-nav-icon" aria-hidden="true">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
               <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"
@@ -232,7 +237,7 @@ export function CompanySidebar() {
             </svg>
           </span>
           Log Out
-        </Link>
+        </button>
       </div>
     </aside>
   );

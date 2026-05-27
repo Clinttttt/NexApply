@@ -191,6 +191,14 @@
     color: var(--color-red-600);
 }
 
+button.rec-nav-item {
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
 .rec-nav-icon {
     display: flex;
     align-items: center;
