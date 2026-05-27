@@ -28,6 +28,7 @@ using NexApply.Api.Features.Notifications;
 using NexApply.Api.Features.Profile;
 using NexApply.Api.Features.SavedJobs;
 using NexApply.Api.Features.StudentDashboard;
+using NexApply.Api.Features.StudentSettings;
 using NexApply.Api.Services;
 using System.Xml.Linq;
 
@@ -172,6 +173,7 @@ app.MapCompanyProfileEndpoints();
 app.MapCompanyDashboardEndpoints();
 app.MapCompanySettingsEndpoints();
 app.MapStudentDashboardEndpoints();
+app.MapStudentSettingsEndpoints();
 app.MapCompanyApplicantsEndpoints();
 app.MapInterviewsEndpoints();
 app.MapGetConversations();

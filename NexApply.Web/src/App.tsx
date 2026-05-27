@@ -22,6 +22,7 @@ import CompanyEditJob from './pages/Company/CompanyEditJob';
 import CompanySettings from './pages/Company/CompanySettings';
 import { StudentProfile } from './pages/Students/StudentProfile';
 import StudentMessages from './pages/Students/StudentMessages';
+import StudentSettings from './pages/Students/StudentSettings';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -77,6 +78,8 @@ function App() {
           <Route path="/company/jobs/:id/edit" element={ <CompanyEditJob /> } />
 
           <Route path="/company/settings" element={ <ProtectedRoute> <CompanySettings /> </ProtectedRoute> } />
+
+          <Route path="/settings" element={ <ProtectedRoute> <StudentSettings /> </ProtectedRoute> } />
 
           <Route path="/" element={<Navigate to="/dashboard" replace />}  />
         </Routes>
