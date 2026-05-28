@@ -10,35 +10,60 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 18px 32px;
+    padding: 20px 32px;
     background-color: var(--color-white);
     border-bottom: 1px solid var(--color-slate-200);
     box-shadow: var(--shadow-sm);
+    min-height: 76px;
 }
 
 .rec-header-left {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: 12px;
+}
+
+.rec-menu-toggle {
+    display: none;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-white);
+    border: 1px solid var(--color-slate-200);
+    border-radius: 10px;
+    color: var(--color-slate-600);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.rec-menu-toggle:hover {
+    background-color: var(--color-slate-50);
+    border-color: var(--color-slate-300);
+    color: var(--color-slate-900);
+}
+
+.rec-menu-toggle:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
 }
 
 .rec-page-title {
     font-family: var(--font-display);
-    font-size: var(--text-6xl);
+    font-size: 26px;
     font-weight: 700;
     color: var(--color-slate-900);
-    line-height: 1;
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
+    line-height: 1.2;
     margin: 0;
 }
 
 .rec-page-subtitle {
     font-family: var(--font-primary);
-    font-size: var(--text-md);
+    font-size: 13px;
     font-weight: 400;
-    color: var(--color-slate-500);
+    color: var(--color-slate-600);
+    line-height: 1.3;
 }
 
 .rec-header-right {
@@ -56,7 +81,7 @@
 
 .rec-search-icon {
     position: absolute;
-    left: 11px;
+    left: 12px;
     color: var(--color-slate-400);
     display: flex;
     align-items: center;
@@ -64,17 +89,17 @@
 }
 
 .rec-search-input {
-    width: 280px;
-    height: 36px;
-    padding: 0 14px 0 34px;
+    width: 300px;
+    height: 40px;
+    padding: 0 14px 0 36px;
     font-family: var(--font-primary);
-    font-size: var(--text-md);
+    font-size: 13px;
     color: var(--color-slate-900);
     background-color: var(--color-slate-50);
     border: 1px solid var(--color-slate-200);
-    border-radius: var(--radius-lg);
+    border-radius: 10px;
     outline: none;
-    transition: border-color var(--transition-base), box-shadow var(--transition-base);
+    transition: all var(--transition-base);
 }
 
 .rec-search-input::placeholder {
@@ -82,29 +107,30 @@
 }
 
 .rec-search-input:focus {
-    border-color: var(--color-primary-light);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-bg);
     background-color: var(--color-white);
 }
 
 /* Icon button (bell) */
 .rec-icon-btn {
     position: relative;
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: none;
+    background: var(--color-white);
     border: 1px solid var(--color-slate-200);
-    border-radius: var(--radius-md);
-    color: var(--color-slate-500);
+    border-radius: 10px;
+    color: var(--color-slate-600);
     cursor: pointer;
-    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+    transition: all var(--transition-fast);
 }
 
 .rec-icon-btn:hover {
-    background-color: var(--color-slate-100);
+    background-color: var(--color-slate-50);
+    border-color: var(--color-slate-300);
     color: var(--color-slate-900);
 }
 
@@ -115,10 +141,10 @@
 
 .rec-notif-dot {
     position: absolute;
-    top: 7px;
-    right: 7px;
-    width: 7px;
-    height: 7px;
+    top: 8px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
     background-color: var(--color-primary);
     border: 2px solid var(--color-white);
     border-radius: 50%;
@@ -126,9 +152,9 @@
 
 /* Header avatar */
 .rec-header-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
     display: flex;
     align-items: center;
@@ -136,12 +162,25 @@
     border: none;
     padding: 0;
     appearance: none;
-    font-size: var(--text-sm);
+    font-size: 14px;
     font-weight: 700;
     color: var(--color-white);
-    letter-spacing: 0.3px;
+    letter-spacing: 0.5px;
     cursor: pointer;
     flex-shrink: 0;
+    transition: all var(--transition-fast);
+    overflow: hidden;
+}
+
+.rec-header-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.rec-header-avatar:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
 }
 
 .rec-header-avatar:focus-visible {
@@ -150,16 +189,84 @@
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .rec-header {
-        padding: 0 16px;
+        padding: 18px 24px;
+    }
+
+    .rec-menu-toggle {
+        display: flex;
     }
 
     .rec-search-input {
-        width: 180px;
+        width: 240px;
+    }
+}
+
+@media (max-width: 768px) {
+    .rec-header {
+        padding: 16px;
+        min-height: 68px;
+    }
+
+    .rec-menu-toggle {
+        width: 38px;
+        height: 38px;
+    }
+
+    .rec-page-title {
+        font-size: 22px;
+    }
+
+    .rec-page-subtitle {
+        font-size: 12px;
+    }
+
+    .rec-search-input {
+        width: 200px;
+        height: 38px;
+        font-size: 13px;
+    }
+
+    .rec-header-avatar,
+    .rec-icon-btn {
+        width: 38px;
+        height: 38px;
+    }
+}
+
+@media (max-width: 640px) {
+    .rec-header {
+        padding: 14px 12px;
+    }
+
+    .rec-menu-toggle {
+        width: 36px;
+        height: 36px;
+    }
+
+    .rec-page-title {
+        font-size: 20px;
     }
 
     .rec-page-subtitle {
         display: none;
+    }
+
+    .rec-search-input {
+        width: 160px;
+        height: 36px;
+        font-size: 12px;
+        padding: 0 12px 0 32px;
+    }
+
+    .rec-header-right {
+        gap: 8px;
+    }
+
+    .rec-header-avatar,
+    .rec-icon-btn {
+        width: 36px;
+        height: 36px;
     }
 }

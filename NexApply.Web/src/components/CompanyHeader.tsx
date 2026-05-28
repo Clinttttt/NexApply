@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import './CompanyHeader.css';
+import { companyProfileService } from '../services/companyProfileService';
 
 interface CompanyHeaderProps {
   title: string;
@@ -7,6 +9,7 @@ interface CompanyHeaderProps {
   searchValue?: string;
   searchPlaceholder?: string;
   onSearchChange?: (value: string) => void;
+  onMenuToggle?: () => void;
 }
 
 export function CompanyHeader({
@@ -15,17 +18,45 @@ export function CompanyHeader({
   searchValue,
   searchPlaceholder,
   onSearchChange,
+  onMenuToggle,
 }: CompanyHeaderProps) {
   const navigate = useNavigate();
   const isSearchControlled = typeof onSearchChange === 'function';
+  const [companyLogo, setCompanyLogo] = useState<string | null>(null);
+  const [companyName, setCompanyName] = useState<string>('');
+
+  useEffect(() => {
+    const loadCompanyProfile = async () => {
+      const result = await companyProfileService.getProfile();
+      if (result.isSuccess && result.value) {
+        setCompanyLogo(result.value.logoUrl || null);
+        setCompanyName(result.value.companyName || '');
+      }
+    };
+    loadCompanyProfile();
+  }, []);
 
   return (
     <header className="rec-header" role="banner">
       <div className="rec-header-left">
-        <h1 className="rec-page-title">
-          {title}
+        {onMenuToggle && (
+          <button
+            type="button"
+            className="rec-menu-toggle"
+            onClick={onMenuToggle}
+            aria-label="Toggle menu"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+        )}
+        <div>
+          <h1 className="rec-page-title">{title}</h1>
           {subtitle && <span className="rec-page-subtitle">{subtitle}</span>}
-        </h1>
+        </div>
       </div>
       <div className="rec-header-right">
         <div className="rec-search-wrap" role="search">
@@ -55,7 +86,11 @@ export function CompanyHeader({
           title="Company profile"
           onClick={() => navigate('/company-profile')}
         >
-          AV
+          {companyLogo ? (
+            <img src={companyLogo} alt={companyName} className="rec-header-avatar-img" />
+          ) : (
+            companyName.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'AV'
+          )}
         </button>
       </div>
     </header>

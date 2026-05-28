@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useState, useMemo, useEffect, useRef } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import './CompanyApplicants.css'
 import {CompanySidebar} from '../../components/CompanySidebar';
 import {CompanyHeader} from '../../components/CompanyHeader';
@@ -8,6 +8,7 @@ import { ApplicantResumeModal } from '../../components/modal/ApplicantResumeModa
 import { companyApplicantsService, type ApplicantDto } from '../../services/companyApplicantsService';
 import { companyInterviewsService } from '../../services/companyInterviewsService';
 import { jobListingService, type JobListingSummaryDto } from '../../services/jobListingService';
+import { CustomSelect } from '../../components/CustomSelect';
 
 // ─────────────────────────────────────────
 //  INTERFACES
@@ -27,6 +28,7 @@ const STAGES: Record<string, StageStyle> = {
   'Shortlisted':  { cssClass: 'shortlisted' },
   'ForInterview':{ cssClass: 'interview' },
   'Declined':     { cssClass: 'declined' },
+  'Passed':       { cssClass: 'passed' },
 }
 
 // ─────────────────────────────────────────
@@ -53,6 +55,7 @@ const formatDate = (d: Date) =>
 
 export default function CompanyApplicants() {
   const location = useLocation()
+  const navigate = useNavigate()
 
   // ── State ──────────────────────────────
   const [jobs, setJobs]                       = useState<JobListingSummaryDto[]>([])
@@ -65,6 +68,11 @@ export default function CompanyApplicants() {
   const [expandedId, setExpandedId]           = useState<string | null>(null)
   const [selectedIds, setSelectedIds]         = useState<Set<string>>(new Set())
   const [showListingsDrop, setShowListingsDrop] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen]     = useState(false)
+
+  // photo cache (applicationId -> objectUrl)
+  const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({})
+  const photoUrlsRef = useRef<Record<string, string>>({})
 
   // Modals
   const [showResumeModal, setShowResumeModal]             = useState(false)
@@ -118,6 +126,50 @@ export default function CompanyApplicants() {
   const filteredApplicants = useMemo(() => {
     return applicants
   }, [applicants])
+
+  // keep a ref so we can revoke object URLs on unmount (without revoking on every state update)
+  useEffect(() => {
+    photoUrlsRef.current = photoUrls
+  }, [photoUrls])
+
+  // Cleanup object urls on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(photoUrlsRef.current).forEach(u => {
+        try { URL.revokeObjectURL(u) } catch { /* ignore */ }
+      })
+    }
+  }, [])
+
+  // Fetch profile photos for visible applicants (best-effort). We key by applicationId because
+  // the Company endpoints authorize via application + company ownership.
+  useEffect(() => {
+    let isCancelled = false
+
+    const loadPhotos = async () => {
+      const targets = filteredApplicants
+        .slice(0, 30) // keep it light; list view only
+        .filter(a => !photoUrls[a.applicationId])
+
+      if (targets.length === 0) return
+
+      for (const a of targets) {
+        const result = await companyApplicantsService.getApplicantProfilePhotoFile(a.applicationId)
+        if (isCancelled) return
+
+        if (result.isSuccess && result.value?.blob) {
+          const url = URL.createObjectURL(result.value.blob)
+          setPhotoUrls(prev => ({ ...prev, [a.applicationId]: url }))
+        }
+      }
+    }
+
+    void loadPhotos()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [filteredApplicants, photoUrls])
 
   // ── Stage update helper ─────────────────
   const updateStage = async (id: string, stage: string) => {
@@ -224,13 +276,80 @@ export default function CompanyApplicants() {
     closeScheduleModal()
   }
 
+  const openMessageThread = (app: ApplicantDto) => {
+    // Deep-link into Company Messages by applicant id (reliable; conversations already include ApplicantId).
+    navigate(`/company-messages?applicantId=${encodeURIComponent(app.applicationId)}`)
+  }
+
+  const exportToCSV = () => {
+    if (filteredApplicants.length === 0) return
+
+    const headers = [
+      'Applicant Name',
+      'Email',
+      'Phone',
+      'Location',
+      'Position',
+      'Job Type',
+      'Status',
+      'Match Score',
+      'Applied Date',
+      'Skills',
+      'LinkedIn',
+      'GitHub',
+      'Portfolio',
+      'Cover Letter',
+      'Recruiter Notes'
+    ]
+
+    const rows = filteredApplicants.map(app => [
+      app.studentName,
+      app.email,
+      app.phone || '',
+      app.location || '',
+      app.jobTitle,
+      app.jobType,
+      app.status,
+      app.matchScore?.toString() || '',
+      new Date(app.appliedAt).toLocaleDateString('en-US'),
+      app.skills.join('; '),
+      app.linkedIn || '',
+      app.gitHub || '',
+      app.portfolio || '',
+      app.coverLetter?.replace(/"/g, '""') || '',
+      app.recruiterNotes?.replace(/"/g, '""') || ''
+    ])
+
+    const csvContent = [
+      headers.map(h => `"${h}"`).join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    const fileName = selectedJobId && activeJob
+      ? `applicants_${activeJob.title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`
+      : `applicants_all_${new Date().toISOString().split('T')[0]}.csv`
+    link.download = fileName
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
   // ── Render ─────────────────────────────
   return (
     <div className="app-shell">
-      <CompanySidebar />
+      <CompanySidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       <div className="main-content">
-        <CompanyHeader title="Applicants" subtitle="Review and manage candidates across your listings" />
+        <CompanyHeader 
+          title="Applicants" 
+          subtitle="Review and manage candidates across your listings"
+          onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+        />
 
         <div className="page-body">
 
@@ -316,7 +435,7 @@ export default function CompanyApplicants() {
                 )}
               </div>
 
-              <button className="btn-compact" onClick={() => {}}>
+              <button className="btn-compact" onClick={exportToCSV}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                   <polyline points="7 10 12 15 17 10" />
@@ -347,25 +466,31 @@ export default function CompanyApplicants() {
               </div>
 
               <div className="filter-controls">
-                <select className="filter-select" value={sortBy} onChange={e => setSortBy(e.target.value)}>
-                  <option value="Newest">Newest First</option>
-                  <option value="Oldest">Oldest First</option>
-                  <option value="NameAsc">Name A-Z</option>
-                  <option value="BestMatch">Best Match</option>
-                </select>
+                <CustomSelect
+                  value={sortBy}
+                  onChange={setSortBy}
+                  options={[
+                    { value: 'Newest', label: 'Newest First' },
+                    { value: 'Oldest', label: 'Oldest First' },
+                    { value: 'NameAsc', label: 'Name A-Z' },
+                    { value: 'BestMatch', label: 'Best Match' }
+                  ]}
+                  className="filter-select"
+                />
               </div>
 
               {selectedIds.size > 0 && (
                 <div className="bulk-actions">
                   <span className="bulk-count">{selectedIds.size} selected</span>
-                  <select
-                    className="filter-select bulk-stage-select"
+                  <CustomSelect
                     value={bulkStageTarget}
-                    onChange={e => { setBulkStageTarget(e.target.value); applyBulkStage(e.target.value) }}
-                  >
-                    <option value="">Move to stage…</option>
-                    {Object.keys(STAGES).map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
+                    onChange={(value) => { setBulkStageTarget(value); applyBulkStage(value) }}
+                    options={[
+                      { value: '', label: 'Move to stage…' },
+                      ...Object.keys(STAGES).map(s => ({ value: s, label: s }))
+                    ]}
+                    className="filter-select bulk-stage-select"
+                  />
                   <button className="btn-danger-ghost" onClick={clearSelection}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -441,7 +566,11 @@ export default function CompanyApplicants() {
 
                         <div className="td td--applicant">
                           <div className={`applicant-avatar applicant-avatar--${getAvatarColor(app.studentId)}`}>
-                            {getInitials(app.studentName)}
+                            {photoUrls[app.applicationId] ? (
+                              <img className="applicant-avatar-img" src={photoUrls[app.applicationId]} alt="" />
+                            ) : (
+                              getInitials(app.studentName)
+                            )}
                           </div>
                           <div className="applicant-info">
                             <span className="applicant-name">{app.studentName}</span>
@@ -509,6 +638,14 @@ export default function CompanyApplicants() {
                               Declined
                             </span>
                           )}
+                          {app.status === 'Passed' && (
+                            <span className="stage-badge stage-badge--passed stage-badge--disabled">
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                              Passed
+                            </span>
+                          )}
                         </div>
 
                         <div className="td td--date">
@@ -529,7 +666,11 @@ export default function CompanyApplicants() {
                             </svg>
                             Resume
                           </button>
-                          <button className="row-action row-action--message" title={`Message ${app.studentName}`} onClick={() => {}}>
+                          <button
+                            className="row-action row-action--message"
+                            title={`Message ${app.studentName}`}
+                            onClick={() => openMessageThread(app)}
+                          >
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                             </svg>
@@ -566,13 +707,7 @@ export default function CompanyApplicants() {
                                 <span className="about-key">Phone</span>
                                 <span className="about-val">{app.phone || <span className="about-val--empty">Not provided</span>}</span>
                                 <span className="about-key">Location</span>
-                                <span className="about-val">{app.location || <span className="about-val--empty">Not provided</span>}</span>
-                                <span className="about-key">Portfolio</span>
-                                <span className="about-val">
-                                  {app.portfolio
-                                    ? <a href={app.portfolio.startsWith('http') ? app.portfolio : `https://${app.portfolio}`} target="_blank" rel="noreferrer" className="detail-link">{app.portfolio}</a>
-                                    : <span className="about-val--empty">Not provided</span>}
-                                </span>
+                                <span className="about-val">{app.location || <span className="about-val--empty">Not provided</span>}</span>                           
                                 <span className="about-key">LinkedIn</span>
                                 <span className="about-val">
                                   {app.linkedIn
@@ -679,6 +814,15 @@ export default function CompanyApplicants() {
                                   </svg>
                                   Decline
                                 </button>
+                                <button
+                                  className={`qbtn qbtn--pass ${app.status === 'Passed' ? 'active' : ''}`}
+                                  onClick={() => quickStage(app, 'Passed')}
+                                >
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="20 6 9 17 4 12" />
+                                  </svg>
+                                  Pass
+                                </button>
                                 {app.status === 'ForInterview' && (
                                   <button className="qbtn qbtn--return" onClick={() => updateStage(app.applicationId, 'Shortlisted')}>
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -759,6 +903,17 @@ export default function CompanyApplicants() {
                 <div className="stage-action-content">
                   <span className="stage-action-title">Decline</span>
                   <span className="stage-action-desc">Not a good fit</span>
+                </div>
+              </button>
+              <button className="stage-action-btn stage-action-btn--pass" onClick={() => moveToStage('Passed')}>
+                <div className="stage-action-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+                <div className="stage-action-content">
+                  <span className="stage-action-title">Pass</span>
+                  <span className="stage-action-desc">Mark candidate as passed / decided</span>
                 </div>
               </button>
             </div>
