@@ -1,7 +1,8 @@
 import './Skeleton.css';
+import type { CSSProperties } from 'react';
 
-export const Skeleton = ({ width, height, className = '' }: { width?: string; height?: string; className?: string }) => (
-  <div className={`skeleton ${className}`} style={{ width, height }} />
+export const Skeleton = ({ width, height, className = '', style }: { width?: string; height?: string; className?: string; style?: CSSProperties }) => (
+  <div className={`skeleton ${className}`} style={{ width, height, ...style }} />
 );
 
 export const SkeletonText = ({ lines = 1 }: { lines?: number }) => (
