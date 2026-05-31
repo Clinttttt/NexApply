@@ -532,7 +532,7 @@ export function StudentProfile() {
 
   // Profile strength calculation
   const hasBasicInfo = fullName && email && phone && location;
-  const hasResume = uploadedFileDataUrl || uploadedFileName || resumeName;
+  const hasResume = uploadedFileDataUrl || uploadedFileName;
   const hasEducation = education.some(e => e.organization && e.title);
   const hasEnoughSkills = skills.filter(s => s.name.trim()).length >= 3;
   const hasAbout = resumeAbout.trim().length > 0;
