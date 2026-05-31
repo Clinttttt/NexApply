@@ -20,7 +20,8 @@ public class GetPublicFeedbackHandler : IRequestHandler<GetPublicFeedbackQuery, 
             .Select(sp => new PublicFeedbackDto(
                 sp.FullName,
                 sp.University ?? "Student",
-                sp.Feedback!.Trim()
+                sp.Feedback!.Trim(),
+                sp.ProfilePictureUrl
             ))
             .ToListAsync(ct);
 
@@ -33,7 +34,8 @@ public class GetPublicFeedbackHandler : IRequestHandler<GetPublicFeedbackQuery, 
             select new PublicFeedbackDto(
                 profile != null && !string.IsNullOrWhiteSpace(profile.CompanyName) ? profile.CompanyName : "Company",
                 (profile != null ? profile.HiringManagerTitle : null) ?? "Company",
-                settings.Testimonial!.Trim()
+                settings.Testimonial!.Trim(),
+                profile != null ? profile.LogoUrl : null
             )
         ).ToListAsync(ct);
 

@@ -449,6 +449,18 @@ body {
     font-weight: 600;
 }
 
+/* For Interview (done) → Filled green circle */
+.step--interview.step--done .step-node,
+.pipeline-step.done.pipeline-step--interview .pipeline-step-dot {
+    background-color: #059669;
+    border-color: #059669;
+}
+
+.step--interview.step--done .step-label,
+.pipeline-step.done.pipeline-step--interview .pipeline-step-label {
+    color: #059669;
+}
+
 /* For Interview (active) → White center with green border + glow */
 .step--interview.step--active .step-node,
 .pipeline-step.active.pipeline-step--interview .pipeline-step-dot {

@@ -6,6 +6,7 @@ export interface TestimonialDto {
   studentName: string;
   role: string;
   testimonial: string;
+  profilePictureUrl?: string;
 }
 
 export const testimonialService = {

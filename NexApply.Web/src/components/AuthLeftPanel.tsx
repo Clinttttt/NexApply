@@ -14,6 +14,7 @@ interface Testimonial {
   name: string;
   role: string;
   color: 'blue' | 'green' | 'amber' | 'purple';
+  profilePictureUrl?: string;
 }
 
 const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase();
@@ -38,6 +39,7 @@ export function AuthLeftPanel({ eyebrow, title, subtitle }: AuthLeftPanelProps) 
           name: t.studentName,
           role: t.role,
           color: getColor(i),
+          profilePictureUrl: t.profilePictureUrl,
         }));
         setTestimonials(mapped);
       }
@@ -118,7 +120,13 @@ export function AuthLeftPanel({ eyebrow, title, subtitle }: AuthLeftPanelProps) 
               {testimonials.map((t, i) => (
                 <div key={i} className="ticker-card">
                   <div className="ticker-author">
-                    <div className={`ticker-avatar ticker-avatar--${t.color}`}>{t.initials}</div>
+                    <div className={`ticker-avatar ticker-avatar--${t.color}`}>
+                      {t.profilePictureUrl ? (
+                        <img src={t.profilePictureUrl} alt={t.name} className="ticker-avatar-img" />
+                      ) : (
+                        t.initials
+                      )}
+                    </div>
                     <div>
                       <span className="ticker-name">{t.name}</span>
                       <span className="ticker-role">{t.role}</span>
@@ -131,7 +139,13 @@ export function AuthLeftPanel({ eyebrow, title, subtitle }: AuthLeftPanelProps) 
               {testimonials.length > 1 && testimonials.map((t, i) => (
                 <div key={`dup-${i}`} className="ticker-card">
                   <div className="ticker-author">
-                    <div className={`ticker-avatar ticker-avatar--${t.color}`}>{t.initials}</div>
+                    <div className={`ticker-avatar ticker-avatar--${t.color}`}>
+                      {t.profilePictureUrl ? (
+                        <img src={t.profilePictureUrl} alt={t.name} className="ticker-avatar-img" />
+                      ) : (
+                        t.initials
+                      )}
+                    </div>
                     <div>
                       <span className="ticker-name">{t.name}</span>
                       <span className="ticker-role">{t.role}</span>

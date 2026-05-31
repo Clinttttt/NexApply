@@ -384,6 +384,10 @@
   background: var(--color-green-500);
 }
 
+.app-stage-bar--blue {
+  background: var(--color-primary);
+}
+
 /* Company logo avatar */
 .app-logo {
   width: 32px;
@@ -473,6 +477,11 @@
   color: var(--color-green-700);
 }
 
+.app-status--blue {
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+}
+
 .app-date {
   font-size: var(--text-xs);
   color: var(--color-slate-400);
@@ -510,6 +519,10 @@
 
 .timeline-seg--filled.timeline-seg--green {
   background: var(--color-green-500);
+}
+
+.timeline-seg--filled.timeline-seg--blue {
+  background: var(--color-primary);
 }
 
 .timeline-label {

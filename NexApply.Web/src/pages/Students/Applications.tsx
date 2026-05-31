@@ -57,7 +57,7 @@ const getStatusBadgeClass = (status: string): string => ({
   'Shortlisted':  'status-badge--shortlisted',
   'For Interview':'status-badge--interview',
   'Declined':     'status-badge--declined',
-  'Decided':      'status-badge--declined',
+  'Decided':      'status-badge--decided',
 }[status] ?? '')
 
 const normalizeStatus = (status: unknown): string => {
@@ -89,8 +89,8 @@ const getAvatarClass = (company: string): string => ({
 const getStepMod = (stepName: string, isDone: boolean, isActive: boolean): string => {
   if (stepName === 'Under Review'  && (isDone || isActive)) return 'step--review'
   if (stepName === 'Shortlisted'   && (isDone || isActive)) return 'step--shortlisted'
-  if (stepName === 'For Interview' && isActive)             return 'step--interview'
-  if (stepName === 'Decided'       && (isDone || isActive)) return 'step--declined'
+  if (stepName === 'For Interview' && (isDone || isActive)) return 'step--interview'
+  if (stepName === 'Decided'       && (isDone || isActive)) return 'step--decided'
   return ''
 }
 
@@ -240,8 +240,8 @@ export default function Applications() {
             </div>
             <div className="stat-divider"></div>
             <div className="stat-item">
-              <span className="stat-item__value stat-item__value--declined">
-                {applications.filter(a => a.status === 'Declined' || a.status === 'Decided').length}
+              <span className="stat-item__value stat-item__value--decided">
+                {applications.filter(a => a.status === 'Decided').length}
               </span>
               <span className="stat-item__label">Decided</span>
             </div>

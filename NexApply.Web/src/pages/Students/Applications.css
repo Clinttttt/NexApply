@@ -78,6 +78,10 @@
     color: #059669;
 }
 
+.stat-item__value--decided {
+    color: #059669;
+}
+
 .stat-item__value--declined {
     color: #DC2626;
 }
@@ -446,6 +450,11 @@
     color: #DC2626;
 }
 
+.status-badge--decided {
+    background-color: #D1FAE5;
+    color: #059669;
+}
+
 /* ── View Button ── */
 .btn-view {
     display: inline-block;
@@ -594,12 +603,18 @@
 }
 
 /* ── Color Overrides: For Interview (green) ── */
+.pipeline__step.step--interview.step--done .pipeline__node {
+    border-color: #059669;
+    background-color: #059669;
+}
+
 .pipeline__step.step--interview.step--active .pipeline__node {
     border-color: #059669;
     background-color: var(--color-white);
     box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
 }
 
+.pipeline__step.step--interview.step--done .pipeline__label,
 .pipeline__step.step--interview.step--active .pipeline__label {
     color: #059669;
 }
@@ -619,6 +634,23 @@
 .pipeline__step.step--declined.step--done .pipeline__label,
 .pipeline__step.step--declined.step--active .pipeline__label {
     color: #DC2626;
+}
+
+/* ── Color Overrides: Decided (green) ── */
+.pipeline__step.step--decided.step--done .pipeline__node {
+    border-color: #059669;
+    background-color: #059669;
+}
+
+.pipeline__step.step--decided.step--active .pipeline__node {
+    border-color: #059669;
+    background-color: var(--color-white);
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
+}
+
+.pipeline__step.step--decided.step--done .pipeline__label,
+.pipeline__step.step--decided.step--active .pipeline__label {
+    color: #059669;
 }
 
 @media (max-width: 768px) {

@@ -8,5 +8,6 @@ public record GetPublicFeedbackQuery : IRequest<Result<List<PublicFeedbackDto>>>
 public record PublicFeedbackDto(
     string StudentName,
     string Role,
-    string Testimonial
+    string Testimonial,
+    string? ProfilePictureUrl
 );

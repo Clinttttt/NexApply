@@ -38,18 +38,21 @@ const getFirstName = (fullName: string) => fullName.trim().split(/\s+/)[0] || 't
 const getStatusClass = (status: string) => {
   if (status === 'Shortlisted') return 'app-status--green';
   if (status === 'Under Review') return 'app-status--amber';
+  if (status === 'Decided') return 'app-status--green';
   return 'app-status--slate';
 };
 
 const getStageClass = (status: string) => {
   if (status === 'Shortlisted') return 'app-stage-bar--green';
   if (status === 'Under Review') return 'app-stage-bar--amber';
+  if (status === 'Decided') return 'app-stage-bar--green';
   return 'app-stage-bar--slate';
 };
 
 const getLogoClass = (index: number, status?: string) => {
   if (status === 'Shortlisted') return 'app-logo--green';
   if (status === 'Under Review') return 'app-logo--blue';
+  if (status === 'Decided') return 'app-logo--green';
   return index % 2 === 0 ? 'app-logo--slate' : 'app-logo--blue';
 };
 
@@ -73,7 +76,8 @@ const getMatchBadgeClass = (match: StudentDashboardJobMatchDto) => {
 };
 
 const getTimelineStage = (applications: StudentDashboardApplicationDto[]) => {
-  const featured = applications.find(application => application.status === 'Shortlisted')
+  const featured = applications.find(application => application.status === 'Decided')
+    ?? applications.find(application => application.status === 'Shortlisted')
     ?? applications.find(application => application.status === 'Under Review')
     ?? applications[0];
 
@@ -86,6 +90,7 @@ const getTimelineStage = (applications: StudentDashboardApplicationDto[]) => {
     'Under Review': 2,
     Shortlisted: 3,
     Interview: 4,
+    Decided: 5,
     Declined: 1
   };
 
@@ -225,7 +230,7 @@ export function Dashboard() {
                 </svg>
               </div>
               <div className={`bp-item ${dashboard.interviewCount === 0 ? 'bp-item--dim' : ''}`}>
-                <span className={`bp-num ${dashboard.interviewCount === 0 ? 'bp-num--dim' : ''}`}>{dashboard.interviewCount}</span>
+                <span className={`bp-num ${dashboard.interviewCount === 0 ? 'bp-num--dim' : 'bp-num--green'}`}>{dashboard.interviewCount}</span>
                 <span className="bp-label">Interview</span>
               </div>
             </div>
@@ -306,7 +311,7 @@ export function Dashboard() {
                       {[1, 2, 3, 4, 5].map(stage => (
                         <div
                           key={stage}
-                          className={`timeline-seg ${stage <= timeline.reached ? 'timeline-seg--filled' : ''} ${stage === 2 && stage <= timeline.reached ? 'timeline-seg--amber' : ''} ${stage === 3 && stage <= timeline.reached ? 'timeline-seg--green' : ''}`}
+                          className={`timeline-seg ${stage <= timeline.reached ? 'timeline-seg--filled' : ''} ${stage === 2 && stage <= timeline.reached ? 'timeline-seg--amber' : ''} ${(stage === 3 || stage === 4 || stage === 5) && stage <= timeline.reached ? 'timeline-seg--green' : ''}`}
                         ></div>
                       ))}
                     </div>

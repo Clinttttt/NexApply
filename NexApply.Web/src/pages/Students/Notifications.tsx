@@ -133,8 +133,11 @@ function getIconFor(dto: NotificationDto): { iconSvg: string; iconBg: string; ba
   if (actionLabel === "Submitted") {
     return { iconSvg: IconApplication, iconBg: "notif-icon--slate", badgeCss: "badge--slate", actionTagCss: "tag--submitted" };
   }
-  if (actionLabel === "Declined" || actionLabel === "Decided") {
+  if (actionLabel === "Declined") {
     return { iconSvg: IconApplication, iconBg: "notif-icon--red", badgeCss: "badge--red", actionTagCss: "tag--danger" };
+  }
+  if (actionLabel === "Decided") {
+    return { iconSvg: IconCheck, iconBg: "notif-icon--green", badgeCss: "badge--green", actionTagCss: "tag--decided" };
   }
 
   return { iconSvg: IconApplication, iconBg: "notif-icon--blue", badgeCss: "badge--blue", actionTagCss: "tag--match" };

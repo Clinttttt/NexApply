@@ -477,6 +477,11 @@
     color: var(--color-green-700);
 }
 
+.tag--decided {
+    background: var(--color-green-100);
+    color: var(--color-green-700);
+}
+
 .tag--review {
     background: var(--color-amber-100);
     color: var(--color-amber-700);
