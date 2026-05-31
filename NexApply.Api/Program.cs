@@ -89,9 +89,17 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins(
+                  "http://localhost:5173",
+                  "http://localhost:7181",
+                  "http://localhost:5076",
+                  "http://localhost:3000",
+                  "https://nice-bay-046df3600.7.azurestaticapps.net",
+                  "https://www.next-apply.cloud-ip.cc"
+              )
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 builder.Services.AddSwaggerGen(options =>
