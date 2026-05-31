@@ -2,7 +2,7 @@ import axios from 'axios';
 import { cookieService } from './cookieService';
 
 const apiClient = axios.create({
-  baseURL: '/api',
+  baseURL: 'https://nexapply-clint-villanueva-hfamdpa2fma3fndr.southeastasia-01.azurewebsites.net/api',
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true, // Important: Send cookies with requests
 });
