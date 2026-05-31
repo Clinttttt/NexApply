@@ -1,3 +1,4 @@
+import type { AxiosError } from 'axios';
 import apiClient from '../lib/apiClient';
 import type { Result } from '../types';
 import type { ResumeContentDto } from './studentProfileService';
@@ -63,11 +64,12 @@ export const companyApplicantsService = {
     try {
       const response = await apiClient.get<ApplicantDto>(`/company/applicants/${applicationId}`);
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || error.response?.data?.message || 'Failed to load applicant',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to load applicant',
+        statusCode: axiosError.response?.status
       };
     }
   },
@@ -82,11 +84,12 @@ export const companyApplicantsService = {
 
       const response = await apiClient.get<ApplicantDto[]>(`/company/applicants?${params.toString()}`);
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || error.response?.data?.message || 'Failed to load applicants',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to load applicants',
+        statusCode: axiosError.response?.status
       };
     }
   },
@@ -95,11 +98,12 @@ export const companyApplicantsService = {
     try {
       const response = await apiClient.patch<boolean>(`/company/applicants/${applicationId}/status`, { status });
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || error.response?.data?.message || 'Failed to update application status',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to update application status',
+        statusCode: axiosError.response?.status
       };
     }
   },
@@ -108,11 +112,12 @@ export const companyApplicantsService = {
     try {
       const response = await apiClient.patch<boolean>(`/company/applicants/${applicationId}/notes`, { recruiterNotes: notes });
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || error.response?.data?.message || 'Failed to update application notes',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to update application notes',
+        statusCode: axiosError.response?.status
       };
     }
   },
@@ -131,11 +136,12 @@ export const companyApplicantsService = {
       const fileName = parseFileNameFromContentDisposition(contentDisposition);
 
       return { isSuccess: true, value: { blob: response.data, fileName, contentType } };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || error.response?.data?.message || 'No uploaded resume found',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'No uploaded resume found',
+        statusCode: axiosError.response?.status
       };
     }
   },
@@ -144,11 +150,12 @@ export const companyApplicantsService = {
     try {
       const response = await apiClient.get<ResumeContentDto>(`/company/applicants/${applicationId}/resume/content`);
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || error.response?.data?.message || 'Failed to load profile resume',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to load profile resume',
+        statusCode: axiosError.response?.status
       };
     }
   }

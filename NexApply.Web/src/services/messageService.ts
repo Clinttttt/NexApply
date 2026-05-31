@@ -1,3 +1,4 @@
+import type { AxiosError } from 'axios';
 import apiClient from '../lib/apiClient';
 import type { Result } from '../types';
 
@@ -44,11 +45,12 @@ export const messageService = {
     try {
       const response = await apiClient.get<ConversationDto[]>('/messages/conversations');
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || error.response?.data?.message || 'Failed to load conversations',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to load conversations',
+        statusCode: axiosError.response?.status
       };
     }
   },
@@ -57,11 +59,12 @@ export const messageService = {
     try {
       const response = await apiClient.get<MessageDto[]>(`/messages/${otherUserId}`);
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || error.response?.data?.message || 'Failed to load messages',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to load messages',
+        statusCode: axiosError.response?.status
       };
     }
   },
@@ -70,11 +73,12 @@ export const messageService = {
     try {
       const response = await apiClient.post<MessageDto>('/messages', command);
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || error.response?.data?.message || 'Failed to send message',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to send message',
+        statusCode: axiosError.response?.status
       };
     }
   }

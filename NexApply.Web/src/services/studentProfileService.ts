@@ -1,3 +1,4 @@
+import type { AxiosError } from 'axios';
 import apiClient from '../lib/apiClient';
 import type { Result } from '../types';
 
@@ -12,6 +13,7 @@ export interface StudentProfileDto {
   gitHub?: string;
   portfolio?: string;
   resumeFilePath?: string;
+  profilePictureUrl?: string;
 }
 
 export interface UpdateStudentProfileCommand {
@@ -24,6 +26,7 @@ export interface UpdateStudentProfileCommand {
   linkedIn?: string;
   gitHub?: string;
   portfolio?: string;
+  profilePictureUrl?: string;
 }
 
 export interface UploadResumeCommand {
@@ -83,11 +86,12 @@ export const studentProfileService = {
     try {
       const response = await apiClient.get<StudentProfileDto>('/profile/student');
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || error.response?.data?.message || 'Failed to load profile',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to load profile',
+        statusCode: axiosError.response?.status
       };
     }
   },
@@ -96,30 +100,39 @@ export const studentProfileService = {
     try {
       const response = await apiClient.put<StudentProfileDto>('/profile/student', command);
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || error.response?.data?.message || 'Failed to update profile',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to update profile',
+        statusCode: axiosError.response?.status
       };
     }
   },
 
-  async uploadResume(file: File): Promise<Result<ResumeUploadDto>> {
+  async uploadResume(file: File, onProgress?: (percent: number) => void): Promise<Result<ResumeUploadDto>> {
     try {
       const formData = new FormData();
       formData.append('file', file);
 
       const response = await apiClient.post<ResumeUploadDto>('/profile/resume/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (event) => {
+          if (!onProgress) return;
+          const total = event.total ?? file.size;
+          if (!total) return;
+          const percent = Math.round((event.loaded / total) * 100);
+          onProgress(Number.isFinite(percent) ? Math.min(100, Math.max(0, percent)) : 0);
+        },
       });
 
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || error.response?.data?.message || 'Failed to upload resume',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to upload resume',
+        statusCode: axiosError.response?.status
       };
     }
   },
@@ -130,11 +143,12 @@ export const studentProfileService = {
         responseType: 'blob'
       });
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || error.response?.data?.message || 'Failed to load uploaded resume',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to load uploaded resume',
+        statusCode: axiosError.response?.status
       };
     }
   },
@@ -143,11 +157,12 @@ export const studentProfileService = {
     try {
       const response = await apiClient.get<ResumeContentDto>('/profile/resume/content');
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || error.response?.data?.message || 'Failed to load resume content',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to load resume content',
+        statusCode: axiosError.response?.status
       };
     }
   },
@@ -156,11 +171,12 @@ export const studentProfileService = {
     try {
       const response = await apiClient.put<ResumeContentDto>('/profile/resume', command);
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || error.response?.data?.message || 'Failed to update resume',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to update resume',
+        statusCode: axiosError.response?.status
       };
     }
   }

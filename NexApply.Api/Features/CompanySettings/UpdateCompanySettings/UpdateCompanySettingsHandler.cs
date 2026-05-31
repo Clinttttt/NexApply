@@ -48,6 +48,7 @@ public class UpdateCompanySettingsHandler : IRequestHandler<UpdateCompanySetting
         {
             ApplicantUpdatesEnabled = settings.ApplicantUpdatesEnabled,
             WeeklyDigestEnabled = settings.WeeklyDigestEnabled,
+            Testimonial = settings.Testimonial,
             Email = user.Email,
             HasPassword = hasPassword,
             SignInMethod = hasPassword ? "Email & Password" : "Google One Tap"

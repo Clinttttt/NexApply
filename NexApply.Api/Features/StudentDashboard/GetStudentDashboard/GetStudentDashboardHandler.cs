@@ -59,6 +59,7 @@ public class GetStudentDashboardHandler(AppDbContext context, CurrentUser curren
         var dashboard = new StudentDashboardDto
         {
             StudentName = student.FullName,
+            ProfilePictureUrl = student.ProfilePictureUrl,
             AppliedCount = applications.Count,
             UnderReviewCount = applications.Count(a => a.Status == ApplicationStatus.UnderReview),
             ShortlistedCount = applications.Count(a => a.Status == ApplicationStatus.Shortlisted),
@@ -287,6 +288,7 @@ public class GetStudentDashboardHandler(AppDbContext context, CurrentUser curren
         ApplicationStatus.Shortlisted => "Shortlisted",
         ApplicationStatus.ForInterview => "Interview",
         ApplicationStatus.Declined => "Declined",
+        ApplicationStatus.Decided => "Decided",
         _ => status.ToString()
     };
 

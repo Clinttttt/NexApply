@@ -59,6 +59,13 @@ const getRingClass = (score: number) => {
   return 'fair';
 };
 
+const getResumeStrengthMeta = (score: number) => {
+  if (score >= 90) return { label: 'Excellent', tone: 'excellent' as const, caption: 'Ready to apply to top matches.' };
+  if (score >= 75) return { label: 'Strong', tone: 'strong' as const, caption: 'A few tweaks can boost your match score.' };
+  if (score >= 55) return { label: 'Improving', tone: 'improving' as const, caption: 'Add details to unlock better recommendations.' };
+  return { label: 'Needs work', tone: 'needs-work' as const, caption: 'Strengthen your profile.' };
+};
+
 const getMatchBadgeClass = (match: StudentDashboardJobMatchDto) => {
   if (match.jobType === 'Internship') return 'match-type-badge--intern';
   if (match.workSetup === 'Remote') return 'match-type-badge--remote';
@@ -82,9 +89,11 @@ const getTimelineStage = (applications: StudentDashboardApplicationDto[]) => {
     Declined: 1
   };
 
+  const stageName = featured.status === 'Declined' ? 'Application Declined' : featured.status;
+
   return {
     reached: stageMap[featured.status] ?? 1,
-    label: `${stageMap[featured.status] ?? 1} of 5 stages reached - ${featured.title}`
+    label: `${stageName} - ${featured.title}`
   };
 };
 
@@ -108,6 +117,7 @@ export function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     const loadDashboard = async () => {
@@ -141,14 +151,20 @@ export function Dashboard() {
 
   const timeline = getTimelineStage(dashboard.recentApplications);
   const resumeOffset = 125 - (125 * Math.min(dashboard.resumeStrength.score, 100) / 100);
+  const resumeScore = Math.min(dashboard.resumeStrength.score, 100);
+  const resumeMeta = getResumeStrengthMeta(resumeScore);
   const hasNotification = dashboard.awaitingUpdateCount > 0;
 
   return (
     <div className="app-shell">
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       <main className="main-content">
-        <PageHeader title="Dashboard" subtitle={`Welcome back, ${getFirstName(dashboard.studentName)} - here's your job hunt at a glance.`}>
+        <PageHeader
+          title="Dashboard"
+          subtitle={`Welcome back, ${getFirstName(dashboard.studentName)} - here's your job hunt at a glance.`}
+          onMenuToggle={() => setIsSidebarOpen((value) => !value)}
+        >
           <div className="search-wrap">
             <svg className="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none">
               <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" />
@@ -364,19 +380,28 @@ export function Dashboard() {
                 <Link to="/student-profile" className="panel-link">Edit {'->'}</Link>
               </div>
               <div className="resume-strength-body">
-                <div className="rs-arc-wrap">
-                  <svg viewBox="0 0 100 60" className="rs-arc-svg">
-                    <path className="rs-arc-bg"
-                          d="M 10 55 A 40 40 0 0 1 90 55"
-                          fill="none" strokeWidth="8" strokeLinecap="round" />
-                    <path className="rs-arc-fill"
-                          d="M 10 55 A 40 40 0 0 1 90 55"
-                          fill="none" strokeWidth="8" strokeLinecap="round"
-                          strokeDasharray="125" strokeDashoffset={resumeOffset} />
-                  </svg>
-                  <div className="rs-arc-label">
-                    <span className="rs-value">{dashboard.resumeStrength.score}</span>
-                    <span className="rs-unit">/ 100</span>
+                <div className="rs-summary">
+                  <div className="rs-arc-wrap">
+                    <svg viewBox="0 0 100 60" className="rs-arc-svg">
+                      <path className="rs-arc-bg"
+                            d="M 10 55 A 40 40 0 0 1 90 55"
+                            fill="none" strokeWidth="8" strokeLinecap="round" />
+                      <path className="rs-arc-fill"
+                            d="M 10 55 A 40 40 0 0 1 90 55"
+                            fill="none" strokeWidth="8" strokeLinecap="round"
+                            strokeDasharray="125" strokeDashoffset={resumeOffset} />
+                    </svg>
+                    <div className="rs-arc-label">
+                      <span className="rs-value">{resumeScore}</span>
+                      <span className="rs-unit">/ 100</span>
+                    </div>
+                  </div>
+                  <div className="rs-meta">
+                    <span className={`rs-grade rs-grade--${resumeMeta.tone}`}>{resumeMeta.label}</span>
+                    <div className="rs-bar" aria-hidden="true">
+                      <div className="rs-bar-fill" style={{ width: `${resumeScore}%` }} />
+                    </div>
+                    <span className="rs-caption">{resumeMeta.caption}</span>
                   </div>
                 </div>
                 <div className="rs-checklist">

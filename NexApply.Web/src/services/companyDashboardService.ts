@@ -1,3 +1,4 @@
+import type { AxiosError } from 'axios';
 import apiClient from '../lib/apiClient';
 import type { Result } from '../types';
 
@@ -36,11 +37,12 @@ export const companyDashboardService = {
     try {
       const response = await apiClient.get<CompanyDashboardDto>('/company/dashboard');
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || 'Failed to load dashboard',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to load dashboard',
+        statusCode: axiosError.response?.status
       };
     }
   }

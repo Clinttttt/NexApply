@@ -54,7 +54,8 @@ export function ApplicantResumeModal({
 
   useEffect(() => {
     if (!isVisible) return
-    setActiveTab(initialTab)
+    const timer = window.setTimeout(() => setActiveTab(initialTab), 0)
+    return () => window.clearTimeout(timer)
   }, [isVisible, initialTab])
 
   // Load uploaded resume
@@ -102,10 +103,13 @@ export function ApplicantResumeModal({
   // Cleanup blob url when modal closes / unmounts
   useEffect(() => {
     if (isVisible) return
-    setUploadedFileUrl(prev => {
-      if (prev) URL.revokeObjectURL(prev)
-      return null
-    })
+    const timer = window.setTimeout(() => {
+      setUploadedFileUrl(prev => {
+        if (prev) URL.revokeObjectURL(prev)
+        return null
+      })
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [isVisible])
 
   // Load profile/templated resume
@@ -317,4 +321,3 @@ export function ApplicantResumeModal({
     </div>
   )
 }
-

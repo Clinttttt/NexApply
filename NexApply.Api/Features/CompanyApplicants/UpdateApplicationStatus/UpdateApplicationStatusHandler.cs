@@ -53,6 +53,9 @@ public class UpdateApplicationStatusHandler : IRequestHandler<UpdateApplicationS
             case ApplicationStatus.Declined:
                 application.Decline();
                 break;
+            case ApplicationStatus.Decided:
+                application.MarkAsDecided();
+                break;
             default:
                 return Result<bool>.Failure("Invalid application status.");
         }

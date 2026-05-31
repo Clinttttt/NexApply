@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import './CompanyApplicants.css'
 import {CompanySidebar} from '../../components/CompanySidebar';
@@ -9,6 +9,7 @@ import { companyApplicantsService, type ApplicantDto } from '../../services/comp
 import { companyInterviewsService } from '../../services/companyInterviewsService';
 import { jobListingService, type JobListingSummaryDto } from '../../services/jobListingService';
 import { CustomSelect } from '../../components/CustomSelect';
+import { CustomDropdown, type CustomDropdownOption } from '../../components/ui/CustomDropdown';
 
 // ─────────────────────────────────────────
 //  INTERFACES
@@ -16,6 +17,18 @@ import { CustomSelect } from '../../components/CustomSelect';
 
 interface StageStyle {
   cssClass: string
+}
+
+interface ScheduleResult {
+  interview: {
+    scheduledAt: string
+    durationMins: number
+    format: string
+    location: string
+    notes: string
+  }
+  interviewTime: string
+  interviewerName: string
 }
 
 // ─────────────────────────────────────────
@@ -67,12 +80,7 @@ export default function CompanyApplicants() {
   const [bulkStageTarget, setBulkStageTarget] = useState('')
   const [expandedId, setExpandedId]           = useState<string | null>(null)
   const [selectedIds, setSelectedIds]         = useState<Set<string>>(new Set())
-  const [showListingsDrop, setShowListingsDrop] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen]     = useState(false)
-
-  // photo cache (applicationId -> objectUrl)
-  const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({})
-  const photoUrlsRef = useRef<Record<string, string>>({})
 
   // Modals
   const [showResumeModal, setShowResumeModal]             = useState(false)
@@ -88,9 +96,9 @@ export default function CompanyApplicants() {
   useEffect(() => {
     const params = new URLSearchParams(location.search)
     const jobListingId = params.get('jobListingId')
-    if (jobListingId) setSelectedJobId(jobListingId)
-    // Only respond to URL changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!jobListingId) return
+    const timer = window.setTimeout(() => setSelectedJobId(jobListingId), 0)
+    return () => window.clearTimeout(timer)
   }, [location.search])
 
   // ── Load Jobs ────────────────────────────
@@ -127,49 +135,31 @@ export default function CompanyApplicants() {
     return applicants
   }, [applicants])
 
-  // keep a ref so we can revoke object URLs on unmount (without revoking on every state update)
-  useEffect(() => {
-    photoUrlsRef.current = photoUrls
-  }, [photoUrls])
+  // ── Dropdown Options ────────────────────
+  const jobDropdownOptions = useMemo<CustomDropdownOption<string | null>[]>(() => {
+    const allOption: CustomDropdownOption<string | null> = {
+      value: null,
+      label: 'All Listings',
+      count: applicants.length,
+    };
 
-  // Cleanup object urls on unmount
-  useEffect(() => {
-    return () => {
-      Object.values(photoUrlsRef.current).forEach(u => {
-        try { URL.revokeObjectURL(u) } catch { /* ignore */ }
-      })
-    }
-  }, [])
+    const jobOptions: CustomDropdownOption<string | null>[] = jobs.map(job => {
+      const appCount = applicants.filter(a => a.jobListingId === job.id).length;
+      return {
+        value: job.id,
+        label: job.title,
+        count: appCount,
+        meta: (
+          <>
+            <span className="ldi-badge">{job.jobType}</span>
+            <span className="ldi-loc">{job.location}</span>
+          </>
+        ),
+      };
+    });
 
-  // Fetch profile photos for visible applicants (best-effort). We key by applicationId because
-  // the Company endpoints authorize via application + company ownership.
-  useEffect(() => {
-    let isCancelled = false
-
-    const loadPhotos = async () => {
-      const targets = filteredApplicants
-        .slice(0, 30) // keep it light; list view only
-        .filter(a => !photoUrls[a.applicationId])
-
-      if (targets.length === 0) return
-
-      for (const a of targets) {
-        const result = await companyApplicantsService.getApplicantProfilePhotoFile(a.applicationId)
-        if (isCancelled) return
-
-        if (result.isSuccess && result.value?.blob) {
-          const url = URL.createObjectURL(result.value.blob)
-          setPhotoUrls(prev => ({ ...prev, [a.applicationId]: url }))
-        }
-      }
-    }
-
-    void loadPhotos()
-
-    return () => {
-      isCancelled = true
-    }
-  }, [filteredApplicants, photoUrls])
+    return [allOption, ...jobOptions];
+  }, [jobs, applicants]);
 
   // ── Stage update helper ─────────────────
   const updateStage = async (id: string, stage: string) => {
@@ -193,7 +183,8 @@ export default function CompanyApplicants() {
   const toggleSelect = (id: string) =>
     setSelectedIds(prev => {
       const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
       return next
     })
 
@@ -216,7 +207,6 @@ export default function CompanyApplicants() {
   const selectJobFromDropdown = (id: string | null) => {
     setSelectedJobId(id)
     setExpandedId(null)
-    setShowListingsDrop(false)
   }
 
   // Resume modal
@@ -246,7 +236,7 @@ export default function CompanyApplicants() {
   const openScheduleModal  = (app: ApplicantDto) => { setScheduleApplicant(app); setShowScheduleModal(true) }
   const closeScheduleModal = () => { setShowScheduleModal(false); setScheduleApplicant(null) }
 
-  const handleConfirmSchedule = async (result: any) => {
+  const handleConfirmSchedule = async (result: ScheduleResult) => {
     if (!scheduleApplicant) return
 
     const { interview, interviewTime, interviewerName } = result
@@ -389,51 +379,19 @@ export default function CompanyApplicants() {
 
             <div className="pipeline-actions">
               {/* Listings Dropdown */}
-              <div className="listings-dropdown">
-                <button className="btn-compact" onClick={() => setShowListingsDrop(p => !p)}>
+              <CustomDropdown<string | null>
+                options={jobDropdownOptions}
+                value={selectedJobId}
+                onChange={selectJobFromDropdown}
+                placeholder="All Listings"
+                icon={
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
                     <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
                   </svg>
-                  <span className="listings-dropdown-text">
-                    {selectedJobId && activeJob ? activeJob.title : 'All Listings'}
-                  </span>
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
-                </button>
-
-                {showListingsDrop && (
-                  <div className="listings-dropdown-menu">
-                    <button
-                      className={`listings-dropdown-item ${selectedJobId === null ? 'active' : ''}`}
-                      onClick={() => selectJobFromDropdown(null)}
-                    >
-                      <span className="ldi-title">All Listings</span>
-                      <span className="ldi-count">{applicants.length}</span>
-                    </button>
-                    {jobs.map(job => {
-                      const appCount = applicants.filter(a => a.jobListingId === job.id).length
-                      return (
-                        <button
-                          key={job.id}
-                          className={`listings-dropdown-item ${selectedJobId === job.id ? 'active' : ''}`}
-                          onClick={() => selectJobFromDropdown(job.id)}
-                        >
-                          <div className="ldi-inner">
-                            <span className="ldi-title">{job.title}</span>
-                            <div className="ldi-meta">
-                              <span className="ldi-badge">{job.jobType}</span>
-                              <span className="ldi-loc">{job.location}</span>
-                            </div>
-                          </div>
-                          <span className="ldi-count">{appCount}</span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
+                }
+                className="listings-dropdown"
+              />
 
               <button className="btn-compact" onClick={exportToCSV}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -482,13 +440,14 @@ export default function CompanyApplicants() {
               {selectedIds.size > 0 && (
                 <div className="bulk-actions">
                   <span className="bulk-count">{selectedIds.size} selected</span>
-                  <CustomSelect
+                  <CustomDropdown
                     value={bulkStageTarget}
-                    onChange={(value) => { setBulkStageTarget(value); applyBulkStage(value) }}
+                    onChange={(value) => { setBulkStageTarget(value as string); applyBulkStage(value as string) }}
                     options={[
                       { value: '', label: 'Move to stage…' },
                       ...Object.keys(STAGES).map(s => ({ value: s, label: s }))
                     ]}
+                    placeholder="Move to stage…"
                     className="filter-select bulk-stage-select"
                   />
                   <button className="btn-danger-ghost" onClick={clearSelection}>
@@ -566,11 +525,7 @@ export default function CompanyApplicants() {
 
                         <div className="td td--applicant">
                           <div className={`applicant-avatar applicant-avatar--${getAvatarColor(app.studentId)}`}>
-                            {photoUrls[app.applicationId] ? (
-                              <img className="applicant-avatar-img" src={photoUrls[app.applicationId]} alt="" />
-                            ) : (
-                              getInitials(app.studentName)
-                            )}
+                            {getInitials(app.studentName)}
                           </div>
                           <div className="applicant-info">
                             <span className="applicant-name">{app.studentName}</span>
@@ -927,7 +882,7 @@ export default function CompanyApplicants() {
         interview={scheduleApplicant ? {
           candidateName: scheduleApplicant.studentName,
           jobTitle: activeJob?.title ?? scheduleApplicant.jobTitle,
-          scheduledAt: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+          scheduledAt: new Date().toISOString().split('T')[0],
           durationMins: 60,
           format: '',
           location: '',

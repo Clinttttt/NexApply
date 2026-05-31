@@ -1,0 +1,319 @@
+/* =========================================
+   Professional Mobile Responsive System
+   Clean, Consistent, Modern
+   ========================================= */
+
+@media (max-width: 768px) {
+    /* Layout & Containers */
+    .main-content,
+    .page-container,
+    .dashboard-container,
+    .browse-container,
+    .company-dashboard-container,
+    .applicants-container,
+    .post-job-container,
+    .manage-jobs-container,
+    .interviews-container,
+    .messages-container,
+    .profile-container,
+    .settings-container,
+    .job-view-container,
+    .edit-job-container,
+    .applicant-profile-container {
+        margin-left: 0 !important;
+        padding: 72px 24px 24px !important;
+    }
+
+    /* Headers */
+    .page-header,
+    .dashboard-header,
+    .browse-header,
+    .company-dashboard-header,
+    .applicants-header,
+    .topbar,
+    .section-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 20px !important;
+        padding: 24px !important;
+        margin-bottom: 24px !important;
+    }
+
+    .page-header h1,
+    .dashboard-header h1,
+    .topbar h1,
+    .page-title {
+        font-size: 2rem !important;
+        line-height: 1.2 !important;
+    }
+
+    /* Action Buttons */
+    .topbar-actions,
+    .page-actions,
+    .header-actions,
+    .company-dashboard-actions {
+        width: 100% !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+
+    .topbar-actions button,
+    .topbar-actions a,
+    .page-actions button,
+    .page-actions a {
+        width: 100% !important;
+        justify-content: center !important;
+        padding: 12px 20px !important;
+    }
+
+    /* Grids */
+    .stats-grid,
+    .stats-row,
+    .cards-grid,
+    .jobs-grid,
+    .applicants-grid,
+    .company-stats-grid,
+    .company-content-grid,
+    .dash-grid {
+        grid-template-columns: 1fr !important;
+        gap: 20px !important;
+    }
+
+    /* Cards */
+    .card,
+    .stat-card,
+    .job-card,
+    .dash-card,
+    .company-card,
+    .applicant-card {
+        padding: 24px !important;
+        border-radius: 12px !important;
+    }
+
+    .card-header,
+    .dash-card-header,
+    .company-card-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+        margin-bottom: 20px !important;
+    }
+
+    /* List Items */
+    .app-item,
+    .match-item,
+    .job-item,
+    .applicant-item,
+    .company-item {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 16px !important;
+        padding: 20px !important;
+    }
+
+    .app-left,
+    .match-left,
+    .job-left,
+    .applicant-left {
+        width: 100% !important;
+    }
+
+    .app-right,
+    .match-right,
+    .job-right,
+    .applicant-right {
+        width: 100% !important;
+    }
+
+    /* Buttons in Items */
+    .app-btn,
+    .match-btn,
+    .job-btn,
+    .applicant-btn {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+
+    /* Action Groups */
+    .applicant-actions,
+    .job-actions,
+    .interview-actions,
+    .item-actions {
+        width: 100% !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+
+    .applicant-actions button,
+    .job-actions button {
+        width: 100% !important;
+    }
+
+    /* Tables */
+    .table-container,
+    .company-table-container,
+    .jobs-table-container {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        margin: 0 -24px !important;
+        padding: 0 24px !important;
+    }
+
+    table,
+    .company-table,
+    .jobs-table {
+        min-width: 640px !important;
+    }
+
+    /* Forms */
+    .form-row {
+        flex-direction: column !important;
+        gap: 20px !important;
+    }
+
+    .form-group {
+        width: 100% !important;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+        padding: 12px 16px !important;
+        font-size: 1rem !important;
+    }
+
+    .form-actions {
+        flex-direction: column !important;
+        gap: 12px !important;
+        margin-top: 24px !important;
+    }
+
+    .form-actions button {
+        width: 100% !important;
+    }
+
+    /* Filters */
+    .filters,
+    .browse-filters,
+    .applicants-filters,
+    .jobs-filters {
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 12px !important;
+    }
+
+    .filters input,
+    .filters select,
+    .browse-filters input,
+    .browse-filters select {
+        width: 100% !important;
+        padding: 12px 16px !important;
+    }
+
+    /* Sidebars */
+    .browse-sidebar,
+    .messages-sidebar {
+        width: 100% !important;
+        position: static !important;
+        height: auto !important;
+        padding: 24px !important;
+        margin-bottom: 24px !important;
+        border-right: none !important;
+        border-bottom: 1px solid var(--color-slate-200) !important;
+    }
+
+    .browse-main,
+    .messages-main {
+        width: 100% !important;
+        padding: 0 !important;
+    }
+
+    .browse-layout,
+    .messages-layout {
+        flex-direction: column !important;
+    }
+
+    /* Messages */
+    .message-input-area {
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+
+    /* Modals */
+    .modal-content {
+        width: 95% !important;
+        max-width: 95% !important;
+        margin: 20px auto !important;
+        padding: 24px !important;
+    }
+
+    /* Resume */
+    .resume-ring-wrap {
+        flex-direction: column !important;
+        gap: 24px !important;
+        align-items: center !important;
+    }
+
+    .resume-checklist {
+        width: 100% !important;
+    }
+
+    .timeline-track {
+        flex-direction: column !important;
+        gap: 16px !important;
+    }
+
+    .timeline-connector {
+        display: none !important;
+    }
+}
+
+@media (max-width: 1024px) {
+    .main-content {
+        margin-left: 0 !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-content,
+    .page-container,
+    .dashboard-container {
+        padding: 72px 16px 16px !important;
+    }
+
+    .page-header,
+    .dashboard-header,
+    .topbar {
+        padding: 20px !important;
+    }
+
+    .page-header h1,
+    .page-title {
+        font-size: 1.75rem !important;
+    }
+
+    .card,
+    .stat-card,
+    .dash-card {
+        padding: 20px !important;
+    }
+
+    .table-container {
+        margin: 0 -16px !important;
+        padding: 0 16px !important;
+    }
+}
+
+.mobile-only {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .mobile-only {
+        display: block !important;
+    }
+
+    .desktop-only {
+        display: none !important;
+    }
+}

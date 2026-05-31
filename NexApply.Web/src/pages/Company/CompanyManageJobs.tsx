@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {CompanySidebar} from '../../components/CompanySidebar';
 import {CompanyHeader} from '../../components/CompanyHeader';
+import { CustomDropdown } from '../../components/ui/CustomDropdown';
 import { jobListingService, type JobListingSummaryDto } from '../../services/jobListingService';
 import './CompanyManageJobs.css';
 
@@ -126,6 +127,7 @@ const IconBriefcase = () => (
 );
 
 const CompanyManageJobs: React.FC = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [jobs, setJobs] = useState<JobListingSummaryDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -197,9 +199,13 @@ const CompanyManageJobs: React.FC = () => {
   if (isLoading) {
     return (
       <div className="cmj-page">
-        <CompanySidebar />
+        <CompanySidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         <div className="cmj-main">
-          <CompanyHeader title="Manage Jobs" subtitle="Loading..." />
+          <CompanyHeader
+            title="Manage Jobs"
+            subtitle="Loading..."
+            onMenuToggle={() => setIsSidebarOpen((value) => !value)}
+          />
           <div className="cmj-body">
             {/* Summary Stats Skeleton */}
             <div className="cmj-summary-stats">
@@ -264,9 +270,13 @@ const CompanyManageJobs: React.FC = () => {
   if (error) {
     return (
       <div className="cmj-page">
-        <CompanySidebar />
+        <CompanySidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         <div className="cmj-main">
-          <CompanyHeader title="Manage Jobs" subtitle="Error" />
+          <CompanyHeader
+            title="Manage Jobs"
+            subtitle="Error"
+            onMenuToggle={() => setIsSidebarOpen((value) => !value)}
+          />
           <div className="cmj-body" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
             <div style={{ textAlign: 'center', color: '#DC2626' }}>{error}</div>
           </div>
@@ -277,10 +287,14 @@ const CompanyManageJobs: React.FC = () => {
 
   return (
     <div className="cmj-page">
-      <CompanySidebar />
+      <CompanySidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       <div className="cmj-main">
-        <CompanyHeader title="Manage Jobs" subtitle="View, edit, and manage your active listings" />
+        <CompanyHeader
+          title="Manage Jobs"
+          subtitle="View, edit, and manage your active listings"
+          onMenuToggle={() => setIsSidebarOpen((value) => !value)}
+        />
 
         <div className="cmj-body">
           {/* Summary Stats */}
@@ -330,26 +344,41 @@ const CompanyManageJobs: React.FC = () => {
               />
             </div>
             <div className="cmj-filter-controls">
-              <select className="cmj-filter-select" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-                <option value="">All Statuses</option>
-                <option value="Active">Active</option>
-                <option value="Paused">Paused</option>
-                <option value="Closed">Closed</option>
-              </select>
-              <select className="cmj-filter-select" value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
-                <option value="">All Types</option>
-                <option value="FullTime">Full-Time</option>
-                <option value="PartTime">Part-Time</option>
-                <option value="Internship">Internship</option>
-                <option value="Freelance">Freelance</option>
-                <option value="Remote">Remote</option>
-              </select>
-              <select className="cmj-filter-select" value={sortBy} onChange={e => setSortBy(e.target.value)}>
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-                <option value="applicants">Most Applicants</option>
-                <option value="title">Title A–Z</option>
-              </select>
+              <CustomDropdown
+                options={[
+                  { value: '', label: 'All Statuses' },
+                  { value: 'Active', label: 'Active' },
+                  { value: 'Paused', label: 'Paused' },
+                  { value: 'Closed', label: 'Closed' },
+                ]}
+                value={statusFilter}
+                onChange={(val) => setStatusFilter(val as string)}
+                className="cmj-filter-select"
+              />
+              <CustomDropdown
+                options={[
+                  { value: '', label: 'All Types' },
+                  { value: 'FullTime', label: 'Full-Time' },
+                  { value: 'PartTime', label: 'Part-Time' },
+                  { value: 'Internship', label: 'Internship' },
+                  { value: 'Freelance', label: 'Freelance' },
+                  { value: 'Remote', label: 'Remote' },
+                ]}
+                value={typeFilter}
+                onChange={(val) => setTypeFilter(val as string)}
+                className="cmj-filter-select"
+              />
+              <CustomDropdown
+                options={[
+                  { value: 'newest', label: 'Newest First' },
+                  { value: 'oldest', label: 'Oldest First' },
+                  { value: 'applicants', label: 'Most Applicants' },
+                  { value: 'title', label: 'Title A–Z' },
+                ]}
+                value={sortBy}
+                onChange={(val) => setSortBy(val as string)}
+                className="cmj-filter-select"
+              />
             </div>
           </div>
 

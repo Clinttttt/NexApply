@@ -143,6 +143,7 @@ export function StudentProfile() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   // Profile state
   const [fullName, setFullName] = useState('');
@@ -151,6 +152,7 @@ export function StudentProfile() {
   const [location, setLocation] = useState('');
   const [linkedIn, setLinkedIn] = useState('');
   const [gitHub, setGitHub] = useState('');
+  const [profilePictureUrl, setProfilePictureUrl] = useState('');
   
   // Snapshot for cancel
   const [snapshot, setSnapshot] = useState({
@@ -161,6 +163,7 @@ export function StudentProfile() {
   const [resumeMode, setResumeMode] = useState<'upload' | 'build'>('build');
   const [isEditingResume, setIsEditingResume] = useState(false);
   const [isUploadingResume, setIsUploadingResume] = useState(false);
+  const [resumeUploadPercent, setResumeUploadPercent] = useState<number | null>(null);
   const [uploadMessage, setUploadMessage] = useState('');
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadedFileDataUrl, setUploadedFileDataUrl] = useState('');
@@ -179,6 +182,7 @@ export function StudentProfile() {
   const [skills, setSkills] = useState<SkillItem[]>([]);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const profilePhotoInputRef = useRef<HTMLInputElement>(null);
 
   const loadProfileData = async () => {
     setIsLoading(true);
@@ -187,12 +191,12 @@ export function StudentProfile() {
     const result = await studentProfileService.getProfile();
     if (result.isSuccess && result.value) {
       const profile = result.value;
-      console.log('Loaded profile:', profile);
       setFullName(profile.fullName);
       setPhone(profile.phone || '');
       setLocation(profile.location || '');
       setLinkedIn(profile.linkedIn || '');
       setGitHub(profile.gitHub || '');
+      setProfilePictureUrl(profile.profilePictureUrl || '');
       
       if (profile.resumeFilePath) {
         setResumeMode('upload');
@@ -206,10 +210,8 @@ export function StudentProfile() {
     
     // Load resume content (includes email)
     const resumeResult = await studentProfileService.getResumeContent();
-    console.log('Resume result:', resumeResult);
     if (resumeResult.isSuccess && resumeResult.value) {
       const resume = resumeResult.value;
-      console.log('Loaded resume:', resume);
       setEmail(resume.email || '');
       setResumeName(resume.fullName || '');
       setResumeHeadline(resume.headline || '');
@@ -279,6 +281,7 @@ export function StudentProfile() {
       location: location || undefined,
       linkedIn: linkedIn || undefined,
       gitHub: gitHub || undefined,
+      profilePictureUrl: profilePictureUrl || undefined,
     };
     
     const result = await studentProfileService.updateProfile(command);
@@ -291,6 +294,55 @@ export function StudentProfile() {
 
   const triggerFileUpload = () => {
     fileInputRef.current?.click();
+  };
+
+  const triggerProfilePhotoUpload = () => {
+    profilePhotoInputRef.current?.click();
+  };
+
+  const handleProfilePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Only image files are accepted.');
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Profile photo must be under 2 MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const dataUrl = typeof reader.result === 'string' ? reader.result : '';
+      if (!dataUrl) return;
+      const previousUrl = profilePictureUrl;
+      setProfilePictureUrl(dataUrl);
+
+      const result = await studentProfileService.updateProfile({
+        fullName,
+        phone: phone || undefined,
+        location: location || undefined,
+        linkedIn: linkedIn || undefined,
+        gitHub: gitHub || undefined,
+        profilePictureUrl: dataUrl,
+      });
+
+      if (result.isSuccess) {
+        window.dispatchEvent(
+          new CustomEvent('nexapply:profilePictureUpdated', {
+            detail: { profilePictureUrl: dataUrl }
+          })
+        );
+      } else {
+        setProfilePictureUrl(previousUrl);
+        alert(result.error || 'Failed to save profile photo');
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
   };
 
   const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -315,6 +367,7 @@ export function StudentProfile() {
     }
 
     setIsUploadingResume(true);
+    setResumeUploadPercent(0);
     setUploadMessage('');
 
     try {
@@ -338,7 +391,7 @@ export function StudentProfile() {
         fileType = 'docx';
       }
 
-      const result = await studentProfileService.uploadResume(file);
+      const result = await studentProfileService.uploadResume(file, setResumeUploadPercent);
 
       if (result.isSuccess) {
         const base64 = bytesToBase64(fileBytes);
@@ -357,6 +410,7 @@ export function StudentProfile() {
       setUploadMessage('An error occurred while uploading the file.');
     } finally {
       setIsUploadingResume(false);
+      setResumeUploadPercent(null);
       setTimeout(() => setUploadMessage(''), 5000);
     }
   };
@@ -491,12 +545,23 @@ export function StudentProfile() {
     (hasAbout ? 20 : 0);
 
   const uploadedFileDisplayName = uploadedFileName.split(/[\\/]/).pop() || uploadedFileName;
+  const profileInitials = fullName
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map(part => part[0]?.toUpperCase())
+    .join('') || 'CV';
 
   if (isLoading) {
     return (
       <div className="app-shell">
-        <Sidebar />
+        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         <main className="main-content">
+          <PageHeader
+            title="Resume & Profile"
+            subtitle="Loading..."
+            onMenuToggle={() => setIsSidebarOpen((value) => !value)}
+          />
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px', color: '#64748B' }}>
             <div style={{ textAlign: 'center' }}>
               <svg className="spin-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -513,8 +578,13 @@ export function StudentProfile() {
   if (loadError) {
     return (
       <div className="app-shell">
-        <Sidebar />
+        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         <main className="main-content">
+          <PageHeader
+            title="Resume & Profile"
+            subtitle="We couldn't load your profile"
+            onMenuToggle={() => setIsSidebarOpen((value) => !value)}
+          />
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px', color: '#DC2626' }}>
             <div style={{ textAlign: 'center' }}>
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -540,11 +610,22 @@ export function StudentProfile() {
         style={{ display: 'none' }}
         onChange={handleResumeUpload}
       />
+      <input
+        ref={profilePhotoInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handleProfilePhotoUpload}
+      />
 
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       <main className="main-content">
-        <PageHeader title="Resume & Profile" subtitle="Manage your professional information and resume">
+        <PageHeader
+          title="Resume & Profile"
+          subtitle="Manage your professional information and resume"
+          onMenuToggle={() => setIsSidebarOpen((value) => !value)}
+        >
           {!isEditingProfile ? (
             <Link to="/browse-jobs" className="btn-browse">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -576,20 +657,35 @@ export function StudentProfile() {
               <div className="card profile-card">
                 <div className="avatar-section">
                   <div className="avatar-wrap">
-                    <div className="avatar-circle">CV</div>
+                    <div className="avatar-circle">
+                      {profilePictureUrl ? (
+                        <img className="avatar-photo" src={profilePictureUrl} alt={`${fullName} profile`} />
+                      ) : (
+                        profileInitials
+                      )}
+                    </div>
                   </div>
                   <div className="identity-meta">
                     <div className="identity-name">{fullName || 'Your Name'}</div>
                     <span className="identity-role-badge">Student</span>
                   </div>
                   {!isEditingProfile && (
-                    <button className="edit-profile-btn" onClick={startEditProfile}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-                      </svg>
-                      Edit
-                    </button>
+                    <div className="profile-actions">
+                      <button className="photo-upload-btn" onClick={triggerProfilePhotoUpload}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                          <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V7a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                          <circle cx="12" cy="13" r="4" />
+                        </svg>
+                        Photo
+                      </button>
+                      <button className="edit-profile-btn" onClick={startEditProfile}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                        Edit
+                      </button>
+                    </div>
                   )}
                 </div>
 
@@ -831,7 +927,7 @@ export function StudentProfile() {
                             <svg className="spin-icon" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M21 12a9 9 0 11-6.219-8.56" />
                             </svg>
-                            Uploading...
+                            Uploading{resumeUploadPercent === null ? '...' : ` ${resumeUploadPercent}%`}
                           </span>
                         )}
                         {!isUploadingResume && uploadedFileName && (
@@ -889,6 +985,19 @@ export function StudentProfile() {
                       </svg>
                     )}
                     {uploadMessage}
+                  </div>
+                )}
+
+                {isUploadingResume && resumeUploadPercent !== null && (
+                  <div
+                    className="resume-upload-progress"
+                    role="progressbar"
+                    aria-label="Resume upload progress"
+                    aria-valuenow={resumeUploadPercent}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  >
+                    <div className="resume-upload-progress-bar" style={{ width: `${resumeUploadPercent}%` }} />
                   </div>
                 )}
 

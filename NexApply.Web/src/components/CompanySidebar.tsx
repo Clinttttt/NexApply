@@ -1,7 +1,9 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
 import { companyDashboardService, type CompanyDashboardDto } from '../services/companyDashboardService';
 import { authService } from '../services/authService';
+import { lockBodyScroll } from '../lib/bodyScrollLock';
 import './CompanySidebar.css';
 
 const getInitials = (name: string): string => {
@@ -21,8 +23,41 @@ const fetchCompanyDashboard = async (): Promise<CompanyDashboardDto> => {
   throw new Error(result.error || 'Failed to load company dashboard');
 };
 
-export function CompanySidebar() {
+interface CompanySidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export function CompanySidebar({ isOpen = false, onClose }: CompanySidebarProps) {
   const location = useLocation();
+  const prevPathnameRef = useRef(location.pathname);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    return lockBodyScroll();
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (prevPathnameRef.current !== location.pathname) {
+      if (isOpen) onClose?.();
+      prevPathnameRef.current = location.pathname;
+    }
+  }, [location.pathname, isOpen, onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose?.();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
+  const handleNavClick = () => {
+    if (isOpen) onClose?.();
+  };
 
   const isActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
@@ -31,13 +66,16 @@ export function CompanySidebar() {
   const { data: dashboard } = useQuery({
     queryKey: ['companyDashboard'],
     queryFn: fetchCompanyDashboard,
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
+    refetchOnMount: false,
   });
 
   const companyName = dashboard?.companyName?.trim() ? dashboard.companyName : 'Company';
   const hiringManagerTitle = dashboard?.hiringManagerTitle?.trim()
     ? dashboard.hiringManagerTitle
     : 'Recruiter';
+  const companyLogoUrl = dashboard?.companyLogoUrl?.trim() ? dashboard.companyLogoUrl : null;
 
   const activeJobsCount = dashboard?.activeJobsCount ?? 0;
   const unreadMessages = dashboard?.unreadMessages ?? 0;
@@ -50,7 +88,14 @@ export function CompanySidebar() {
     awaitingReview > 0 ? `${awaitingReview} awaiting review` : `${totalApplicants} applicants`;
 
   return (
-    <aside className="rec-sidebar" aria-label="Recruiter navigation">
+    <>
+      <button
+        type="button"
+        className={`rec-sidebar-overlay ${isOpen ? 'is-visible' : ''}`}
+        onClick={onClose}
+        aria-label="Close recruiter navigation menu"
+      />
+      <aside className={`rec-sidebar ${isOpen ? 'is-open' : ''}`} aria-label="Recruiter navigation">
       {/* Brand */}
       <div className="rec-brand">
         <div className="rec-brand-icon" aria-hidden="true">
@@ -67,7 +112,11 @@ export function CompanySidebar() {
       {/* Company Card */}
       <div className="rec-company-card">
         <div className="rec-company-avatar" aria-label={`${companyName} logo`}>
-          <span>{getInitials(companyName)}</span>
+          {companyLogoUrl ? (
+            <img className="rec-company-logo" src={companyLogoUrl} alt={`${companyName} logo`} />
+          ) : (
+            <span>{getInitials(companyName)}</span>
+          )}
         </div>
         <div className="rec-company-meta">
           <span className="rec-company-name">{companyName}</span>
@@ -78,6 +127,7 @@ export function CompanySidebar() {
           className="rec-company-chevron"
           title="Company profile"
           aria-label="Open company profile"
+          onClick={handleNavClick}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -93,6 +143,7 @@ export function CompanySidebar() {
           to="/company-dashboard" 
           className={`rec-nav-item ${isActive('/company-dashboard') ? 'is-active' : ''}`}
           aria-current={isActive('/company-dashboard') ? 'page' : undefined}
+          onClick={handleNavClick}
         >
           <span className="rec-nav-icon" aria-hidden="true">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
@@ -108,6 +159,7 @@ export function CompanySidebar() {
         <Link 
           to="/company-post-job" 
           className={`rec-nav-item ${isActive('/company-post-job') ? 'is-active' : ''}`}
+          onClick={handleNavClick}
         >
           <span className="rec-nav-icon" aria-hidden="true">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
@@ -122,6 +174,7 @@ export function CompanySidebar() {
         <Link 
           to="/company-manage-jobs" 
           className={`rec-nav-item ${isActive('/company-manage-jobs') ? 'is-active' : ''}`}
+          onClick={handleNavClick}
         >
           <span className="rec-nav-icon" aria-hidden="true">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
@@ -138,6 +191,7 @@ export function CompanySidebar() {
         <Link 
           to="/company-applicants" 
           className={`rec-nav-item ${isActive('/company-applicants') ? 'is-active' : ''}`}
+          onClick={handleNavClick}
         >
           <span className="rec-nav-icon" aria-hidden="true">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
@@ -158,6 +212,7 @@ export function CompanySidebar() {
         <Link 
           to="/company-interviews" 
           className={`rec-nav-item ${isActive('/company-interviews') ? 'is-active' : ''}`}
+          onClick={handleNavClick}
         >
           <span className="rec-nav-icon" aria-hidden="true">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
@@ -177,6 +232,7 @@ export function CompanySidebar() {
         <Link 
           to="/company-messages" 
           className={`rec-nav-item ${isActive('/company-messages') ? 'is-active' : ''}`}
+          onClick={handleNavClick}
         >
           <span className="rec-nav-icon" aria-hidden="true">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
@@ -197,6 +253,7 @@ export function CompanySidebar() {
         <Link 
           to="/company-profile" 
           className={`rec-nav-item ${isActive('/company-profile') ? 'is-active' : ''}`}
+          onClick={handleNavClick}
         >
           <span className="rec-nav-icon" aria-hidden="true">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
@@ -214,6 +271,7 @@ export function CompanySidebar() {
           to="/company/settings"
           className={`rec-nav-item ${isActive('/company/settings') ? 'is-active' : ''}`}
           aria-current={isActive('/company/settings') ? 'page' : undefined}
+          onClick={handleNavClick}
         >
           <span className="rec-nav-icon" aria-hidden="true">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
@@ -240,5 +298,6 @@ export function CompanySidebar() {
         </button>
       </div>
     </aside>
+    </>
   );
 }

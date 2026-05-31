@@ -127,6 +127,7 @@ const MESSAGE_TEMPLATES: MessageTemplate[] = [
 
 const CompanyMessages: React.FC = () => {
 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const [convSearch, setConvSearch] = useState('');
   const [convTab, setConvTab] = useState('All');
@@ -294,7 +295,7 @@ const CompanyMessages: React.FC = () => {
     }
   }
 
-  function useTemplate(tmpl: MessageTemplate) {
+  function applyTemplate(tmpl: MessageTemplate) {
     if (!activeConversation) return;
     setComposeText(
       tmpl.body
@@ -306,7 +307,7 @@ const CompanyMessages: React.FC = () => {
 
   function useShortlistTemplate() {
     const tmpl = MESSAGE_TEMPLATES.find((t) => t.name === 'Shortlist Notification');
-    if (tmpl) useTemplate(tmpl);
+    if (tmpl) applyTemplate(tmpl);
   }
 
   function openScheduleModal(conv: ConversationItem | null) {
@@ -385,10 +386,14 @@ const CompanyMessages: React.FC = () => {
 
   return (
     <div className="app-shell">
-      <CompanySidebar />
+      <CompanySidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       <div className="main-content">
-        <CompanyHeader title="Messages" subtitle="Communicate with candidates and your team" />
+        <CompanyHeader
+          title="Messages"
+          subtitle="Communicate with candidates and your team"
+          onMenuToggle={() => setIsSidebarOpen((value) => !value)}
+        />
 
         <div className="messages-shell">
 
@@ -701,7 +706,7 @@ const CompanyMessages: React.FC = () => {
                         </button>
                       </div>
                       {MESSAGE_TEMPLATES.map((tmpl) => (
-                        <button key={tmpl.name} className="template-item" onClick={() => useTemplate(tmpl)}>
+                        <button key={tmpl.name} className="template-item" onClick={() => applyTemplate(tmpl)}>
                           <span className="template-name">{tmpl.name}</span>
                           <span className="template-preview">{tmpl.body}</span>
                         </button>

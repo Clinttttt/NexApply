@@ -1,3 +1,4 @@
+import type { AxiosError } from 'axios';
 import apiClient from '../lib/apiClient';
 import type { Result } from '../types';
 
@@ -119,6 +120,7 @@ export interface JobBoardJobDto {
   postedAt: string;
   applicants: number;
   salary: string;
+  matchPercentage: number;
   skills: string[];
   about: string;
   responsibilities: string[];
@@ -153,21 +155,28 @@ export const jobListingService = {
     try {
       const response = await apiClient.post<JobListingDto>('/jobs', command);
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
-      // Log full error details to console
+    } catch (error) {
+      const axiosError = error as AxiosError<{
+        error?: string;
+        message?: string;
+        title?: string;
+        validationErrors?: Record<string, string[]>;
+        errors?: Record<string, string[]>;
+      }>;
+
       console.error('Job Listing Creation Error:', {
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        headers: error.response?.headers,
-        request: error.config?.data
+        status: axiosError.response?.status,
+        statusText: axiosError.response?.statusText,
+        data: axiosError.response?.data,
+        headers: axiosError.response?.headers,
+        request: axiosError.config?.data
       });
 
       return {
         isSuccess: false,
-        error: error.response?.data?.error || error.response?.data?.title || 'Failed to create job listing',
-        statusCode: error.response?.status,
-        validationErrors: error.response?.data?.validationErrors || error.response?.data?.errors
+        error: axiosError.response?.data?.error || axiosError.response?.data?.title || axiosError.response?.data?.message || 'Failed to create job listing',
+        statusCode: axiosError.response?.status,
+        validationErrors: axiosError.response?.data?.validationErrors || axiosError.response?.data?.errors
       };
     }
   },
@@ -176,11 +185,12 @@ export const jobListingService = {
     try {
       const response = await apiClient.get<JobListingDto[]>('/jobs');
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || 'Failed to load job listings',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to load job listings',
+        statusCode: axiosError.response?.status
       };
     }
   },
@@ -189,11 +199,12 @@ export const jobListingService = {
     try {
       const response = await apiClient.get<JobListingDto>(`/jobs/${id}`);
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || 'Failed to load job listing',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to load job listing',
+        statusCode: axiosError.response?.status
       };
     }
   },
@@ -202,11 +213,12 @@ export const jobListingService = {
     try {
       const response = await apiClient.get<JobListingDetailsDto>(`/job-listings/${id}/details`);
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || 'Failed to load job listing details',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to load job listing details',
+        statusCode: axiosError.response?.status
       };
     }
   },
@@ -215,12 +227,13 @@ export const jobListingService = {
     try {
       const response = await apiClient.put<JobListingDto>(`/jobs/${id}`, command);
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.message || 'Failed to update job listing',
-        statusCode: error.response?.status,
-        validationErrors: error.response?.data?.error
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to update job listing',
+        statusCode: axiosError.response?.status,
+        validationErrors: axiosError.response?.data?.error ? { error: [axiosError.response.data.error] } : undefined
       };
     }
   },
@@ -229,11 +242,12 @@ export const jobListingService = {
     try {
       const response = await apiClient.patch<boolean>(`/jobs/${id}/status`, { status });
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.message || 'Failed to update job status',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to update job status',
+        statusCode: axiosError.response?.status
       };
     }
   },
@@ -242,11 +256,12 @@ export const jobListingService = {
     try {
       const response = await apiClient.delete<boolean>(`/jobs/${id}`);
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || error.response?.data?.message || 'Failed to delete job listing',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to delete job listing',
+        statusCode: axiosError.response?.status
       };
     }
   },
@@ -255,11 +270,12 @@ export const jobListingService = {
     try {
       const response = await apiClient.get<JobListingSummaryDto[]>('/jobs/company');
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || 'Failed to load job listings',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to load job listings',
+        statusCode: axiosError.response?.status
       };
     }
   },
@@ -276,11 +292,12 @@ export const jobListingService = {
 
       const response = await apiClient.get<CursorPagedResult<StudentBrowseJobDto>>(url);
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || error.response?.data?.message || 'Failed to load matched jobs',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to load matched jobs',
+        statusCode: axiosError.response?.status
       };
     }
   },
@@ -289,11 +306,12 @@ export const jobListingService = {
     try {
       const response = await apiClient.get<JobBoardJobDto[]>('/jobs/board');
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || error.response?.data?.message || 'Failed to load job board',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to load job board',
+        statusCode: axiosError.response?.status
       };
     }
   }

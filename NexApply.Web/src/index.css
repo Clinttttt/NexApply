@@ -102,12 +102,22 @@
     box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+    min-width: 0;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+}
+
 body {
     font-family: var(--font-primary);
     color: var(--color-slate-900);
     background-color: var(--color-white);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
 }
 
 /* ---- Global Scrollbar Hiding ---- */
@@ -163,6 +173,12 @@ body {
     flex-direction: column;
     overflow-y: auto;
     background-color: var(--color-slate-50);
+}
+
+@media (max-width: 1024px) {
+    .main-content {
+        margin-left: 0;
+    }
 }
 
 /* =========================================
@@ -526,4 +542,46 @@ body {
 
 .spin-icon {
     animation: spin 1s linear infinite;
+}
+
+/* ---- Mobile shell guard ----
+   Page styles in this app are global CSS files, and several legacy pages
+   redefine .main-content with the desktop sidebar offset. Keep the mobile
+   shell behavior authoritative here so route-level CSS cannot squeeze pages. */
+@media (max-width: 1024px) {
+    .app-shell,
+    .rec-shell {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: hidden;
+    }
+
+    .app-shell > .main-content,
+    .rec-shell > .rec-main,
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .sidebar,
+    .rec-sidebar {
+        transform: translateX(-100%) !important;
+    }
+
+    .sidebar.is-open,
+    .rec-sidebar.is-open {
+        transform: translateX(0) !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .page-body,
+    .rec-body {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
 }

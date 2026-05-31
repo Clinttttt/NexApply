@@ -14,6 +14,8 @@ public class StudentProfile : BaseEntity
     public string? Portfolio { get; private set; }
     public string? ResumeFilePath { get; private set; }
     public string? ParsedResumeText { get; private set; }
+    public string? Feedback { get; private set; }
+    public string? ProfilePictureUrl { get; private set; }
 
     // Navigation properties
     public User User { get; private set; } = null!;
@@ -41,7 +43,8 @@ public class StudentProfile : BaseEntity
         int? graduationYear,
         string? linkedIn,
         string? gitHub,
-        string? portfolio)
+        string? portfolio,
+        string? profilePictureUrl)
     {
         FullName = fullName;
         Phone = phone;
@@ -52,6 +55,7 @@ public class StudentProfile : BaseEntity
         LinkedIn = linkedIn;
         GitHub = gitHub;
         Portfolio = portfolio;
+        ProfilePictureUrl = profilePictureUrl;
         MarkAsUpdated();
     }
 
@@ -66,6 +70,12 @@ public class StudentProfile : BaseEntity
     {
         ResumeFilePath = null;
         ParsedResumeText = null;
+        MarkAsUpdated();
+    }
+
+    public void UpdateFeedback(string? feedback)
+    {
+        Feedback = feedback;
         MarkAsUpdated();
     }
 }

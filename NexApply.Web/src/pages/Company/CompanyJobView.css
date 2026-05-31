@@ -615,6 +615,10 @@
 }
 
 @media (max-width: 1024px) {
+  .cjv-main {
+    margin-left: 0;
+  }
+
   .cjv-layout {
     grid-template-columns: 1fr;
   }

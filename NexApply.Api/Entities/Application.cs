@@ -62,6 +62,12 @@ public class Application : BaseEntity
         MarkAsUpdated();
     }
 
+    public void MarkAsDecided()
+    {
+        Status = ApplicationStatus.Decided;
+        MarkAsUpdated();
+    }
+
     public void UpdateRecruiterNotes(string notes)
     {
         RecruiterNotes = notes;

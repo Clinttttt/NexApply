@@ -29,7 +29,8 @@ public class GetStudentProfileHandler(AppDbContext context, CurrentUser currentU
             LinkedIn = profile.LinkedIn,
             GitHub = profile.GitHub,
             Portfolio = profile.Portfolio,
-            ResumeFilePath = profile.ResumeFilePath
+            ResumeFilePath = profile.ResumeFilePath,
+            ProfilePictureUrl = profile.ProfilePictureUrl
         });
     }
 }

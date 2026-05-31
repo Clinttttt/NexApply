@@ -26,7 +26,8 @@ public class UpdateStudentProfileHandler(AppDbContext context, CurrentUser curre
             request.GraduationYear,
             request.LinkedIn,
             request.GitHub,
-            request.Portfolio
+            request.Portfolio,
+            request.ProfilePictureUrl
         );
 
         await context.SaveChangesAsync(ct);
@@ -42,7 +43,8 @@ public class UpdateStudentProfileHandler(AppDbContext context, CurrentUser curre
             LinkedIn = profile.LinkedIn,
             GitHub = profile.GitHub,
             Portfolio = profile.Portfolio,
-            ResumeFilePath = profile.ResumeFilePath
+            ResumeFilePath = profile.ResumeFilePath,
+            ProfilePictureUrl = profile.ProfilePictureUrl
         });
     }
 }

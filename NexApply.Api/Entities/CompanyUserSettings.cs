@@ -7,6 +7,7 @@ public class CompanyUserSettings : BaseEntity
 
     public bool ApplicantUpdatesEnabled { get; private set; } = true;
     public bool WeeklyDigestEnabled { get; private set; } = false;
+    public string? Testimonial { get; private set; }
 
     private CompanyUserSettings() { } // EF Core
 
@@ -22,6 +23,12 @@ public class CompanyUserSettings : BaseEntity
     {
         ApplicantUpdatesEnabled = applicantUpdatesEnabled;
         WeeklyDigestEnabled = weeklyDigestEnabled;
+        MarkAsUpdated();
+    }
+
+    public void UpdateTestimonial(string? testimonial)
+    {
+        Testimonial = testimonial;
         MarkAsUpdated();
     }
 }

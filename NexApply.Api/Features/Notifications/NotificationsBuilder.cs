@@ -163,6 +163,7 @@ internal static class NotificationsBuilder
         ApplicationStatus.Shortlisted => "Shortlisted",
         ApplicationStatus.ForInterview => "For Interview",
         ApplicationStatus.Declined => "Declined",
+        ApplicationStatus.Decided => "Decided",
         _ => status.ToString()
     };
 
@@ -172,6 +173,7 @@ internal static class NotificationsBuilder
         ApplicationStatus.UnderReview => "Application under review",
         ApplicationStatus.ForInterview => "Application moved to interview stage",
         ApplicationStatus.Declined => "Application update",
+        ApplicationStatus.Decided => "Application decided",
         _ => "Application submitted"
     };
 
@@ -182,6 +184,7 @@ internal static class NotificationsBuilder
         "Shortlisted" => $"{company} has shortlisted you for the {position} position.",
         "For Interview" => $"{company} has moved your {position} application to the interview stage.",
         "Declined" => $"{company} has updated your application for {position}.",
+        "Decided" => $"{company} has made a decision on your application for {position}.",
         _ => $"{company} updated your application for {position}."
     };
 
@@ -197,6 +200,8 @@ internal static class NotificationsBuilder
             $"{company} moved your application to the interview stage. Keep an eye out for an interview schedule or messages from the recruiter.",
         "Declined" =>
             $"{company} updated your application status. You can review details and keep applying to other opportunities.",
+        "Decided" =>
+            $"{company} has made a decision on your application. You can review the latest status in My Applications.",
         _ => $"{company} updated your application. You can review the latest status in My Applications."
     };
 }

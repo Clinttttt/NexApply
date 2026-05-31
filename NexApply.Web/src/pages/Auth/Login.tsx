@@ -29,8 +29,8 @@ export function Login() {
 
     try {
       await authService.login({ email, password });
-      navigate('/dashboard');
-    } catch (error: any) {
+      navigate(authService.getDefaultDashboardRoute());
+    } catch {
       setErrorMessage('Invalid email or password. Please check your credentials and try again.');
     } finally {
       setIsLoading(false);
@@ -44,7 +44,7 @@ export function Login() {
   };
 
   useEffect(() => {
-    renderButton('google-signin-button');
+    return renderButton('google-signin-button');
   }, [renderButton, activeRole]);
 
   const handleForgotPassword = () => {
@@ -54,7 +54,6 @@ export function Login() {
   return (
     <div className="login-shell">
       <AuthLeftPanel
-        eyebrow="Trusted by 12,000+ students"
         title='Your next<br/><span class="left-title-accent">opportunity</span><br/>starts here.'
         subtitle="Browse thousands of listings, track your applications, and let your resume match you to roles automatically."
       />

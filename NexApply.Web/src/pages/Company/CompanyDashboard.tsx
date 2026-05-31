@@ -8,14 +8,16 @@ import './CompanyDashboard.css';
 // ── Helpers ──────────────────────────────────────────────
 
 const getStatusModifier = (status: string): 'submitted' | 'review' | 'shortlisted' | 'interview' | 'declined' => {
+  const key = status.replace(/\s+/g, '');
   const statusMap: Record<string, 'submitted' | 'review' | 'shortlisted' | 'interview' | 'declined'> = {
-    'Submitted': 'submitted',
-    'UnderReview': 'review',
-    'Shortlisted': 'shortlisted',
-    'ForInterview': 'interview',
-    'Declined': 'declined'
+    Submitted: 'submitted',
+    UnderReview: 'review',
+    Shortlisted: 'shortlisted',
+    Interview: 'interview',
+    ForInterview: 'interview',
+    Declined: 'declined'
   };
-  return statusMap[status] || 'submitted';
+  return statusMap[key] || 'submitted';
 };
 
 const getTypeModifier = (jobType: string): 'blue' | 'green' => {
@@ -82,6 +84,7 @@ const RecruiterDashboard: React.FC = () => {
   const [dashboard, setDashboard] = useState<CompanyDashboardDto | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -103,12 +106,13 @@ const RecruiterDashboard: React.FC = () => {
 
   return (
     <div className="rec-shell">
-      <CompanySidebar />
+      <CompanySidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       <div className="rec-main">
         <CompanyHeader
           title="Dashboard"
           subtitle="Manage your job postings and applicants"
+          onMenuToggle={() => setIsSidebarOpen((value) => !value)}
         />
 
         {/* Body */}
@@ -172,10 +176,12 @@ const RecruiterDashboard: React.FC = () => {
                         <span className="rec-applicant-name">{applicant.studentName}</span>
                         <span className="rec-applicant-role">{applicant.jobTitle}</span>
                       </div>
-                      <span className={`rec-status-badge rec-status-badge--${getStatusModifier(applicant.status)}`}>
-                        {applicant.status}
-                      </span>
-                      <span className="rec-applicant-date">{formatDate(applicant.appliedAt)}</span>
+                      <div className="rec-applicant-meta">
+                        <span className={`rec-status-badge rec-status-badge--${getStatusModifier(applicant.status)}`}>
+                          {applicant.status}
+                        </span>
+                        <span className="rec-applicant-date">{formatDate(applicant.appliedAt)}</span>
+                      </div>
                     </li>
                   ))}
                 </ul>

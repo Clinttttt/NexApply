@@ -14,6 +14,6 @@ public class UpdateApplicationStatusValidator : AbstractValidator<UpdateApplicat
         RuleFor(x => x.Status)
             .NotEmpty()
             .Must(status => Enum.TryParse<ApplicationStatus>(status, ignoreCase: true, out _))
-            .WithMessage("Status must be one of: Submitted, UnderReview, Shortlisted, ForInterview, Declined");
+            .WithMessage("Status must be one of: Submitted, UnderReview, Shortlisted, ForInterview, Declined, Decided");
     }
 }

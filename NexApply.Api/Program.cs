@@ -26,6 +26,8 @@ using NexApply.Api.Features.Messages.GetMessages;
 using NexApply.Api.Features.Messages.SendMessage;
 using NexApply.Api.Features.Notifications;
 using NexApply.Api.Features.Profile;
+using NexApply.Api.Features.PublicStats.GetPublicStats;
+using NexApply.Api.Features.PublicStats.GetPublicFeedback;
 using NexApply.Api.Features.SavedJobs;
 using NexApply.Api.Features.StudentDashboard;
 using NexApply.Api.Features.StudentSettings;
@@ -179,6 +181,8 @@ app.MapInterviewsEndpoints();
 app.MapGetConversations();
 app.MapGetMessages();
 app.MapSendMessage();
+app.MapGetPublicStats();
+app.MapGetPublicFeedback();
 
 app.Run();
 

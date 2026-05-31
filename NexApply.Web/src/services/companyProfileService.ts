@@ -1,3 +1,4 @@
+import type { AxiosError } from 'axios';
 import apiClient from '../lib/apiClient';
 import type { Result } from '../types';
 
@@ -56,11 +57,12 @@ export const companyProfileService = {
     try {
       const response = await apiClient.get<CompanyProfileDto>('/company/profile');
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || 'Failed to load profile',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to load profile',
+        statusCode: axiosError.response?.status
       };
     }
   },
@@ -69,11 +71,12 @@ export const companyProfileService = {
     try {
       const response = await apiClient.put<CompanyProfileDto>('/company/profile', command);
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || 'Failed to update profile',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to update profile',
+        statusCode: axiosError.response?.status
       };
     }
   }

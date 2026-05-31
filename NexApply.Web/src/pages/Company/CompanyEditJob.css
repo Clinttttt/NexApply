@@ -220,3 +220,41 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+@media (max-width: 1024px) {
+  .cpj-main {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .cpj-body {
+    padding: 16px;
+  }
+
+  .cpj-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .cpj-tag-input-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cpj-tag-add-btn {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cpj-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cpj-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

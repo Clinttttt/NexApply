@@ -33,6 +33,7 @@ export interface ResumeStrengthDto {
 
 export interface StudentDashboardDto {
   studentName: string;
+  profilePictureUrl?: string | null;
   appliedCount: number;
   underReviewCount: number;
   shortlistedCount: number;

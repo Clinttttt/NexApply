@@ -448,6 +448,7 @@
 
 /* ── View Button ── */
 .btn-view {
+    display: inline-block;
     padding: 6px 14px;
     font-family: var(--font-primary);
     font-size: 13px;
@@ -457,6 +458,7 @@
     border: 1px solid var(--color-slate-200);
     border-radius: 7px;
     cursor: pointer;
+    text-decoration: none;
     transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
     white-space: nowrap;
 }
@@ -617,4 +619,77 @@
 .pipeline__step.step--declined.step--done .pipeline__label,
 .pipeline__step.step--declined.step--active .pipeline__label {
     color: #DC2626;
+}
+
+@media (max-width: 768px) {
+    .applications-body {
+        padding: var(--space-5) var(--space-4);
+    }
+
+    .stat-strip {
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: stretch;
+    }
+
+    .stat-divider {
+        display: none;
+    }
+
+    .stat-item {
+        min-width: 45%;
+    }
+
+    .pipeline {
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+
+    .pipeline__label {
+        white-space: normal;
+    }
+}
+
+@media (max-width: 480px) {
+    .applications-body {
+        padding: var(--space-4) var(--space-3);
+    }
+
+    .btn-browse {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-wrap {
+        min-width: 0;
+    }
+
+    .filter-wrap {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .sort-wrap {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .filter-select {
+        width: 100%;
+    }
+
+    .app-card__top {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .app-card__actions {
+        justify-content: space-between;
+        width: 100%;
+    }
 }

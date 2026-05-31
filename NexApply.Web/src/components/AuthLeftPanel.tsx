@@ -1,5 +1,9 @@
+import { useEffect, useState } from 'react';
+import { testimonialService } from '../services/testimonialService';
+import { publicStatsService } from '../services/publicStatsService';
+
 interface AuthLeftPanelProps {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
   subtitle: string;
 }
@@ -12,38 +16,41 @@ interface Testimonial {
   color: 'blue' | 'green' | 'amber' | 'purple';
 }
 
-const testimonials: Testimonial[] = [
-  {
-    quote: 'Got my first internship offer within 2 weeks of uploading my resume.',
-    initials: 'KR',
-    name: 'Kira Reyes',
-    role: 'Full-Stack Intern · CodeBridge Co.',
-    color: 'blue'
-  },
-  {
-    quote: 'The resume matching feature showed me roles I actually qualified for. Game changer.',
-    initials: 'MG',
-    name: 'Marco Guerrero',
-    role: 'React Intern · NovaByte Inc.',
-    color: 'green'
-  },
-  {
-    quote: 'Applied to 6 companies in one morning. The pipeline tracker kept me sane during interviews.',
-    initials: 'SC',
-    name: 'Sofia Cruz',
-    role: 'API Developer Intern · ApexCore Solutions',
-    color: 'amber'
-  },
-  {
-    quote: 'Landed a full-time role straight out of college. NexApply made the process so much less overwhelming.',
-    initials: 'RO',
-    name: 'Rachel Ong',
-    role: 'Backend Engineer · TechSpark PH',
-    color: 'purple'
-  }
-];
+const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase();
+const getColor = (index: number): 'blue' | 'green' | 'amber' | 'purple' => 
+  (['blue', 'green', 'amber', 'purple'] as const)[index % 4];
 
 export function AuthLeftPanel({ eyebrow, title, subtitle }: AuthLeftPanelProps) {
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [stats, setStats] = useState<{ activeListings: number | null; companies: number | null; students: number | null }>({ 
+    activeListings: null, 
+    companies: null,
+    students: null
+  });
+
+  useEffect(() => {
+    const loadTestimonials = async () => {
+      const result = await testimonialService.getTestimonials();
+      if (result.isSuccess && result.value && result.value.length > 0) {
+        const mapped = result.value.map((t, i) => ({
+          quote: t.testimonial,
+          initials: getInitials(t.studentName),
+          name: t.studentName,
+          role: t.role,
+          color: getColor(i),
+        }));
+        setTestimonials(mapped);
+      }
+    };
+    const loadStats = async () => {
+      const result = await publicStatsService.getStats();
+      if (result.isSuccess && result.value) {
+        setStats(result.value);
+      }
+    };
+    loadTestimonials();
+    loadStats();
+  }, []);
   return (
     <div className="auth-left">
       {/* Decorative grid */}
@@ -72,10 +79,12 @@ export function AuthLeftPanel({ eyebrow, title, subtitle }: AuthLeftPanelProps) 
           </div>
 
           {/* Eyebrow */}
-          <div className="left-eyebrow">
-            <span className="eyebrow-dot"></span>
-            {eyebrow}
-          </div>
+          {(eyebrow || (stats.students !== null && stats.students > 0)) && (
+            <div className="left-eyebrow">
+              <span className="eyebrow-dot"></span>
+              {eyebrow || `Trusted by ${stats.students?.toLocaleString()}+ students`}
+            </div>
+          )}
         </div>
 
         {/* Headline */}
@@ -87,12 +96,12 @@ export function AuthLeftPanel({ eyebrow, title, subtitle }: AuthLeftPanelProps) 
         {/* Stats */}
         <div className="left-stats">
           <div className="left-stat">
-            <div className="stat-value">2,400+</div>
+            <div className="stat-value">{stats.activeListings !== null ? `${stats.activeListings.toLocaleString()}+` : '---'}</div>
             <div className="stat-label">Active listings</div>
           </div>
           <div className="stat-divider"></div>
           <div className="left-stat">
-            <div className="stat-value">840</div>
+            <div className="stat-value">{stats.companies !== null ? stats.companies.toLocaleString() : '---'}</div>
             <div className="stat-label">Companies</div>
           </div>
           <div className="stat-divider"></div>
@@ -103,36 +112,37 @@ export function AuthLeftPanel({ eyebrow, title, subtitle }: AuthLeftPanelProps) 
         </div>
 
         {/* Testimonials */}
-        <div className="ticker-wrap">
-          <div className="ticker-track">
-            {/* First set */}
-            {testimonials.map((t, i) => (
-              <div key={i} className="ticker-card">
-                <div className="ticker-author">
-                  <div className={`ticker-avatar ticker-avatar--${t.color}`}>{t.initials}</div>
-                  <div>
-                    <span className="ticker-name">{t.name}</span>
-                    <span className="ticker-role">{t.role}</span>
+        {testimonials.length > 0 && (
+          <div className="ticker-wrap">
+            <div className="ticker-track">
+              {testimonials.map((t, i) => (
+                <div key={i} className="ticker-card">
+                  <div className="ticker-author">
+                    <div className={`ticker-avatar ticker-avatar--${t.color}`}>{t.initials}</div>
+                    <div>
+                      <span className="ticker-name">{t.name}</span>
+                      <span className="ticker-role">{t.role}</span>
+                    </div>
                   </div>
+                  <p className="ticker-quote">{t.quote}</p>
                 </div>
-                <p className="ticker-quote">{t.quote}</p>
-              </div>
-            ))}
-            {/* Duplicate for infinite scroll */}
-            {testimonials.map((t, i) => (
-              <div key={`dup-${i}`} className="ticker-card">
-                <div className="ticker-author">
-                  <div className={`ticker-avatar ticker-avatar--${t.color}`}>{t.initials}</div>
-                  <div>
-                    <span className="ticker-name">{t.name}</span>
-                    <span className="ticker-role">{t.role}</span>
+              ))}
+              {/* Duplicate for infinite scroll only if multiple testimonials */}
+              {testimonials.length > 1 && testimonials.map((t, i) => (
+                <div key={`dup-${i}`} className="ticker-card">
+                  <div className="ticker-author">
+                    <div className={`ticker-avatar ticker-avatar--${t.color}`}>{t.initials}</div>
+                    <div>
+                      <span className="ticker-name">{t.name}</span>
+                      <span className="ticker-role">{t.role}</span>
+                    </div>
                   </div>
+                  <p className="ticker-quote">{t.quote}</p>
                 </div>
-                <p className="ticker-quote">{t.quote}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

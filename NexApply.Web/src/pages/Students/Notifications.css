@@ -739,6 +739,7 @@
     font-weight: 700;
     cursor: pointer;
     font-family: var(--font-primary);
+    text-decoration: none;
     transition: all var(--transition-base);
     box-shadow: 0 4px 12px rgba(29,78,216,.28);
 }
@@ -814,3 +815,29 @@
         color: var(--color-red-700);
         border-color: var(--color-red-100);
     }
+
+@media (max-width: 1024px) {
+    .notif-body {
+        grid-template-columns: 1fr;
+        overflow: visible;
+    }
+
+    .notif-sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--color-slate-200);
+    }
+
+    .notif-detail-panel {
+        border-left: none;
+        border-top: 1px solid var(--color-slate-200);
+    }
+}
+
+@media (max-width: 768px) {
+    .notif-sidebar,
+    .notif-list-section,
+    .nd-content {
+        padding-left: var(--space-4);
+        padding-right: var(--space-4);
+    }
+}

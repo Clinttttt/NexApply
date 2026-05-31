@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {Sidebar} from "../../components/Sidebar";
 import {PageHeader} from "../../components/PageHeader";
+import { CustomDropdown } from "../../components/ui/CustomDropdown";
 import "./JobBoard.css";
 import { jobListingService, type JobBoardJobDto } from "../../services/jobListingService";
 import { savedJobsService } from "../../services/savedJobsService";
@@ -56,7 +57,7 @@ const mapJobBoardDto = (job: JobBoardJobDto): JobItem => ({
   postedDate: formatPostedDate(job.postedAt),
   salary: job.salary,
   applicants: job.applicants,
-  matchPct: 0,
+  matchPct: job.matchPercentage,
   logoColor: pickLogoColor(job.company),
   logoText: buildLogoText(job.company),
   skills: job.skills ?? [],
@@ -102,6 +103,7 @@ function normalizeBulletLines(lines: string[]): string[] {
 export default function JobBoard() {
   const navigate = useNavigate();
 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [jobs, setJobs] = useState<JobItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -200,7 +202,8 @@ export default function JobBoard() {
     // Optimistic UI update
     setSavedJobIds((prev) => {
       const next = new Set(prev);
-      willSave ? next.add(jobId) : next.delete(jobId);
+      if (willSave) next.add(jobId);
+      else next.delete(jobId);
       return next;
     });
 
@@ -212,7 +215,8 @@ export default function JobBoard() {
       // Revert on failure
       setSavedJobIds((prev) => {
         const next = new Set(prev);
-        willSave ? next.delete(jobId) : next.add(jobId);
+        if (willSave) next.delete(jobId);
+        else next.add(jobId);
         return next;
       });
     }
@@ -242,7 +246,7 @@ export default function JobBoard() {
 
   return (
     <div className="app-shell">
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       <main className="main-content">
         <PageHeader
@@ -254,6 +258,7 @@ export default function JobBoard() {
                 ? "Failed to load jobs"
                 : `${filteredJobs.length} listings — updated today`
           }
+          onMenuToggle={() => setIsSidebarOpen((value) => !value)}
         >
           <div className="header-actions">
             <a
@@ -315,38 +320,41 @@ export default function JobBoard() {
               </div>
 
               <div className="jb-filters">
-                <select
-                  className="filter-select"
+                <CustomDropdown
+                  options={[
+                    { value: '', label: 'All Types' },
+                    { value: 'Full-time', label: 'Full-time' },
+                    { value: 'Internship', label: 'Internship' },
+                    { value: 'Part-time', label: 'Part-time' },
+                    { value: 'Contract', label: 'Contract' },
+                    { value: 'Freelance', label: 'Freelance' },
+                  ]}
                   value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value)}
-                >
-                  <option value="">All Types</option>
-                  <option value="Full-time">Full-time</option>
-                  <option value="Internship">Internship</option>
-                  <option value="Part-time">Part-time</option>
-                  <option value="Contract">Contract</option>
-                  <option value="Freelance">Freelance</option>
-                </select>
-
-                <select
+                  onChange={(val) => setTypeFilter(val as string)}
                   className="filter-select"
+                />
+
+                <CustomDropdown
+                  options={[
+                    { value: '', label: 'All Setups' },
+                    { value: 'Remote', label: 'Remote' },
+                    { value: 'On-site', label: 'On-site' },
+                    { value: 'Hybrid', label: 'Hybrid' },
+                  ]}
                   value={setupFilter}
-                  onChange={(e) => setSetupFilter(e.target.value)}
-                >
-                  <option value="">All Setups</option>
-                  <option value="Remote">Remote</option>
-                  <option value="On-site">On-site</option>
-                  <option value="Hybrid">Hybrid</option>
-                </select>
-
-                <select
+                  onChange={(val) => setSetupFilter(val as string)}
                   className="filter-select"
+                />
+
+                <CustomDropdown
+                  options={[
+                    { value: 'Recent', label: 'Most Recent' },
+                    { value: 'Match', label: 'Best Match' },
+                  ]}
                   value={sortOrder}
-                  onChange={(e) => setSortOrder(e.target.value)}
-                >
-                  <option value="Recent">Most Recent</option>
-                  <option value="Match">Best Match</option>
-                </select>
+                  onChange={(val) => setSortOrder(val as string)}
+                  className="filter-select"
+                />
 
                 {hasActiveFilters && (
                   <button className="btn-clear-filters" onClick={clearFilters}>
@@ -448,6 +456,9 @@ export default function JobBoard() {
                         <span className="jb-tag jb-tag--setup">{job.setup}</span>
                         {appliedJobIds.has(job.id) && (
                           <span className="jb-tag jb-tag--applied">Applied</span>
+                        )}
+                        {job.matchPct > 0 && (
+                          <span className="jb-tag jb-tag--match">{job.matchPct}% Match</span>
                         )}
                         <span className="jb-tag jb-tag--location">
                           <svg

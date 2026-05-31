@@ -1,3 +1,4 @@
+import type { AxiosError } from 'axios';
 import apiClient from '../lib/apiClient';
 import type { Result } from '../types';
 
@@ -40,11 +41,12 @@ export const companyInterviewsService = {
     try {
       const response = await apiClient.get<CompanyInterviewsDto>('/company/interviews');
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || error.response?.data?.message || 'Failed to load interviews',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to load interviews',
+        statusCode: axiosError.response?.status
       };
     }
   },
@@ -53,11 +55,12 @@ export const companyInterviewsService = {
     try {
       const response = await apiClient.post<InterviewDto>('/company/interviews', command);
       return { isSuccess: true, value: response.data };
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; message?: string }>;
       return {
         isSuccess: false,
-        error: error.response?.data?.error || error.response?.data?.message || 'Failed to schedule interview',
-        statusCode: error.response?.status
+        error: axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to schedule interview',
+        statusCode: axiosError.response?.status
       };
     }
   }

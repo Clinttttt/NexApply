@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../../services/authService';
 import { AuthLeftPanel } from '../../components/AuthLeftPanel';
 import { useGoogleOneTap } from '../../hooks/useGoogleOneTap';
@@ -9,6 +9,7 @@ import './auth.css';
 type UserRole = 'Student' | 'Recruiter';
 
 export default function Register() {
+  const navigate = useNavigate();
   const [activeRole, setActiveRole] = useState<UserRole>('Student');
   const { renderButton } = useGoogleOneTap(activeRole);
   const [displayName, setDisplayName] = useState('');
@@ -79,16 +80,15 @@ export default function Register() {
         email,
         password,
         confirmPassword,
-        role: activeRole === 'Recruiter' ? 1 : 0 // 0 = Student, 1 = Company
+        role: activeRole === 'Recruiter' ? 1 : 0
       });
 
       if (result.isSuccess) {
-        // Registration successful, tokens are already stored
-        window.location.href = '/dashboard';
+        navigate(authService.getDefaultDashboardRoute());
       } else {
         setErrorMessage(result.error || 'Registration failed. Please try again.');
       }
-    } catch (error) {
+    } catch {
       setErrorMessage('An unexpected error occurred');
     } finally {
       setIsLoading(false);
@@ -96,7 +96,7 @@ export default function Register() {
   };
 
   useEffect(() => {
-    renderButton('google-signup-button');
+    return renderButton('google-signup-button');
   }, [renderButton, activeRole]);
 
   return (

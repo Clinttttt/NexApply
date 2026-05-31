@@ -6,6 +6,7 @@
 .rec-sidebar {
     width: 248px;
     min-width: 248px;
+    max-width: 100%;
     height: 100vh;
     display: flex;
     flex-direction: column;
@@ -40,7 +41,7 @@
     font-size: var(--text-4xl);
     font-weight: 700;
     color: var(--color-slate-900);
-    letter-spacing: -0.3px;
+    letter-spacing: 0;
     flex: 1;
 }
 
@@ -89,6 +90,14 @@
     color: var(--color-white);
     flex-shrink: 0;
     letter-spacing: 0.3px;
+    overflow: hidden;
+}
+
+.rec-company-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: var(--radius-md);
 }
 
 .rec-company-meta {
@@ -261,15 +270,35 @@ button.rec-nav-item {
     border-top: 1px solid var(--color-slate-100);
 }
 
+/* Mobile Overlay */
+.rec-sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(15, 23, 42, 0.5);
+    z-index: 99;
+    opacity: 0;
+    transition: opacity var(--transition-base);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+.rec-sidebar-overlay.is-visible {
+    display: block;
+    opacity: 1;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
     .rec-sidebar {
-        transform: translateX(-248px);
-        transition: transform var(--transition-slow);
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: none;
     }
 
     .rec-sidebar.is-open {
         transform: translateX(0);
-        box-shadow: var(--shadow-lg);
+        box-shadow: 4px 0 24px rgba(15, 23, 42, 0.15);
     }
 }

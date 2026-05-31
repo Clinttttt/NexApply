@@ -87,6 +87,7 @@ public class AppDbContext : DbContext
             e.Property(s => s.Portfolio).HasMaxLength(500);
             e.Property(s => s.ResumeFilePath).HasMaxLength(500);
             e.Property(s => s.ParsedResumeText).HasColumnType("text");
+            e.Property(s => s.Feedback).HasColumnType("text");
             e.Property(s => s.CreatedAt).IsRequired();
 
             e.HasOne(s => s.User)

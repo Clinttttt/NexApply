@@ -195,6 +195,7 @@ const Stepper: React.FC<StepperProps> = ({ currentStep }) => (
 const CompanyPostJob: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -256,28 +257,32 @@ const CompanyPostJob: React.FC = () => {
   useEffect(() => {
     if (!duplicateFrom) return;
 
-    setCurrentStep(1);
-    setSubmitError(null);
+    const timer = window.setTimeout(() => {
+      setCurrentStep(1);
+      setSubmitError(null);
 
-    setForm({
-      jobTitle: duplicateFrom.title ?? '',
-      jobType: mapJobTypeToPostKey(duplicateFrom.jobType),
-      location: duplicateFrom.location ?? '',
-      salaryMin: duplicateFrom.salaryMin?.toString() ?? '',
-      salaryMax: duplicateFrom.salaryMax?.toString() ?? '',
-      deadline: duplicateFrom.deadline ? duplicateFrom.deadline.split('T')[0] : '',
-      selectedWorkSetup: mapWorkSetupToPostLabel(duplicateFrom.workSetup),
-      roleSummary: duplicateFrom.description ?? '',
-      responsibilities: 'prefilled',
-      benefits: '',
-      qualifications: duplicateFrom.qualifications ?? '',
-      experienceLevel: duplicateFrom.experienceLevel ?? '',
-      openings: duplicateFrom.openings ?? 1,
-    });
+      setForm({
+        jobTitle: duplicateFrom.title ?? '',
+        jobType: mapJobTypeToPostKey(duplicateFrom.jobType),
+        location: duplicateFrom.location ?? '',
+        salaryMin: duplicateFrom.salaryMin?.toString() ?? '',
+        salaryMax: duplicateFrom.salaryMax?.toString() ?? '',
+        deadline: duplicateFrom.deadline ? duplicateFrom.deadline.split('T')[0] : '',
+        selectedWorkSetup: mapWorkSetupToPostLabel(duplicateFrom.workSetup),
+        roleSummary: duplicateFrom.description ?? '',
+        responsibilities: 'prefilled',
+        benefits: '',
+        qualifications: duplicateFrom.qualifications ?? '',
+        experienceLevel: duplicateFrom.experienceLevel ?? '',
+        openings: duplicateFrom.openings ?? 1,
+      });
 
-    setResponsibilities(normalizeBullets(duplicateFrom.responsibilities));
-    setBenefits(normalizeBullets(duplicateFrom.benefits ?? ''));
-    setSkills((duplicateFrom.requiredSkills ?? '').split(',').map(s => s.trim()).filter(Boolean));
+      setResponsibilities(normalizeBullets(duplicateFrom.responsibilities));
+      setBenefits(normalizeBullets(duplicateFrom.benefits ?? ''));
+      setSkills((duplicateFrom.requiredSkills ?? '').split(',').map(s => s.trim()).filter(Boolean));
+    }, 0)
+
+    return () => window.clearTimeout(timer)
   }, [duplicateFrom]);
 
   // ── Derived ─────────────────────────────────────────────
@@ -402,12 +407,13 @@ const CompanyPostJob: React.FC = () => {
 
   return (
     <div className="app-shell">
-      <CompanySidebar />
+      <CompanySidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       <div className="main-content">
         <CompanyHeader
           title="Post a Job"
           subtitle="Create a new listing for candidates to discover"
+          onMenuToggle={() => setIsSidebarOpen((value) => !value)}
         />
 
         <div className="page-body">

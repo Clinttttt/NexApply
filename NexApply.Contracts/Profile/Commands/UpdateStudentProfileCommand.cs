@@ -13,5 +13,6 @@ public record UpdateStudentProfileCommand(
     int? GraduationYear,
     string? LinkedIn,
     string? GitHub,
-    string? Portfolio
+    string? Portfolio,
+    string? ProfilePictureUrl
 ) : IRequest<Result<StudentProfileDto>>;

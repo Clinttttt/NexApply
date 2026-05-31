@@ -9,6 +9,7 @@ using System.IO.Compression;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using Tesseract;
 
 namespace NexApply.Api.Features.Profile.UploadResume;
 
@@ -49,7 +50,10 @@ public class UploadResumeHandler(AppDbContext context, CurrentUser currentUser, 
         if (request.ContentType == "application/pdf")
             return ExtractPdfText(request.FileData, request.FileName);
 
-        return $"Uploaded resume image: {request.FileName}";
+        if (request.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+            return ExtractImageTextWithOcr(request.FileData, request.FileName);
+
+        return $"Uploaded resume: {request.FileName}";
     }
 
     private static string ExtractDocxText(byte[] fileData, string fileName)
@@ -237,6 +241,30 @@ public class UploadResumeHandler(AppDbContext context, CurrentUser currentUser, 
         }
 
         return decoded.ToString();
+    }
+
+    private static string ExtractImageTextWithOcr(byte[] fileData, string fileName)
+    {
+        try
+        {
+            var tessDataPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tessdata");
+            
+            if (!Directory.Exists(tessDataPath))
+            {
+                return $"Uploaded resume image: {fileName} (OCR data not available)";
+            }
+
+            using var engine = new TesseractEngine(tessDataPath, "eng", EngineMode.Default);
+            using var img = Pix.LoadFromMemory(fileData);
+            using var page = engine.Process(img);
+            
+            var extractedText = page.GetText();
+            return NormalizeExtractedText(extractedText, fileName);
+        }
+        catch
+        {
+            return $"Uploaded resume image: {fileName}";
+        }
     }
 
     private static string NormalizeExtractedText(string text, string fileName)

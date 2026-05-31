@@ -25,6 +25,9 @@
     flex-direction: column;
     overflow-y: auto;
     min-height: 100vh;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
 }
 
 /* Body */
@@ -33,6 +36,10 @@
     display: flex;
     flex-direction: column;
     gap: 28px;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 
@@ -42,6 +49,8 @@
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 16px;
+    width: 100%;
+    max-width: 100%;
 }
 
 .rec-action-card {
@@ -55,6 +64,9 @@
     text-decoration: none;
     transition: box-shadow var(--transition-base), border-color var(--transition-base), transform var(--transition-fast);
     cursor: pointer;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
 }
 
     .rec-action-card:hover {
@@ -147,6 +159,10 @@
     flex-direction: column;
     gap: 20px;
     box-shadow: var(--shadow-sm);
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 .rec-panel-header {
@@ -251,6 +267,14 @@
     overflow: hidden;
     text-overflow: ellipsis;
     line-height: 1.3;
+}
+
+.rec-applicant-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    min-width: 0;
 }
 
 .rec-applicant-date {
@@ -415,6 +439,8 @@
 @media (max-width: 1024px) {
     .rec-main {
         margin-left: 0;
+        width: 100%;
+        max-width: 100%;
     }
 
     .rec-lower-grid {
@@ -468,6 +494,7 @@
     .rec-applicant-row,
     .rec-listing-row {
         padding: 10px 12px;
+        gap: 10px;
     }
 
     .rec-applicant-avatar {
@@ -502,7 +529,55 @@
         border-radius: 10px;
     }
 
+    .rec-panel-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .rec-applicant-row,
+    .rec-listing-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .rec-applicant-info,
+    .rec-listing-info {
+        width: 100%;
+    }
+
+    .rec-applicant-meta {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .rec-listing-stats {
+        align-items: flex-start;
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
     .rec-lower-grid {
         gap: 16px;
+    }
+}
+
+@media (max-width: 430px) {
+    .rec-actions-grid {
+        gap: 8px;
+    }
+
+    .rec-action-card {
+        padding: 14px 12px;
+    }
+
+    .rec-body {
+        padding: 12px;
+    }
+
+    .rec-panel {
+        padding: 14px 12px;
     }
 }

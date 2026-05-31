@@ -23,6 +23,7 @@ public class GetStudentSettingsHandler : IRequestHandler<GetStudentSettingsQuery
         var userId = Guid.Parse(_currentUser.UserId);
 
         var user = await _context.Users
+            .Include(u => u.StudentProfile)
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Id == userId, ct);
 
@@ -35,7 +36,8 @@ public class GetStudentSettingsHandler : IRequestHandler<GetStudentSettingsQuery
         {
             Email = user.Email,
             HasPassword = hasPassword,
-            SignInMethod = hasPassword ? "Email & Password" : "Google One Tap"
+            SignInMethod = hasPassword ? "Email & Password" : "Google One Tap",
+            Feedback = user.StudentProfile?.Feedback
         });
     }
 }

@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Sidebar } from '../../components/Sidebar';
 import { PageHeader } from '../../components/PageHeader';
-import { authService } from '../../services/authService';
 import { studentSettingsService } from '../../services/studentSettingsService';
 import '../Company/CompanySettings.css';
 
@@ -12,18 +11,24 @@ type StudentPreferenceState = {
 };
 
 const STORAGE_KEY = 'nexapply.student.settings.v1';
+const MESSAGE_DISMISS_MS = 3000;
+const DEFAULT_STUDENT_PREFERENCES: StudentPreferenceState = {
+  jobAlertsEnabled: true,
+  messageNotificationsEnabled: true,
+};
 
 const readPreferences = (): StudentPreferenceState => {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { jobAlertsEnabled: true, messageNotificationsEnabled: true };
+    if (!raw) return DEFAULT_STUDENT_PREFERENCES;
     const parsed = JSON.parse(raw) as Partial<StudentPreferenceState>;
     return {
-      jobAlertsEnabled: parsed.jobAlertsEnabled ?? true,
-      messageNotificationsEnabled: parsed.messageNotificationsEnabled ?? true,
+      jobAlertsEnabled: parsed.jobAlertsEnabled ?? DEFAULT_STUDENT_PREFERENCES.jobAlertsEnabled,
+      messageNotificationsEnabled:
+        parsed.messageNotificationsEnabled ?? DEFAULT_STUDENT_PREFERENCES.messageNotificationsEnabled,
     };
   } catch {
-    return { jobAlertsEnabled: true, messageNotificationsEnabled: true };
+    return DEFAULT_STUDENT_PREFERENCES;
   }
 };
 
@@ -31,157 +36,78 @@ const writePreferences = (prefs: StudentPreferenceState) => {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
 };
 
+const useAutoDismiss = (message: string | null, clearMessage: () => void) => {
+  useEffect(() => {
+    if (!message) return;
+    const timerId = window.setTimeout(clearMessage, MESSAGE_DISMISS_MS);
+    return () => window.clearTimeout(timerId);
+  }, [message, clearMessage]);
+};
+
 export default function StudentSettings() {
   const initialPrefs = useMemo(() => readPreferences(), []);
   const [jobAlertsEnabled, setJobAlertsEnabled] = useState(initialPrefs.jobAlertsEnabled);
   const [messageNotificationsEnabled, setMessageNotificationsEnabled] = useState(initialPrefs.messageNotificationsEnabled);
-  const [prefsDirty, setPrefsDirty] = useState(false);
   const [prefsMessage, setPrefsMessage] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const [accountEmail, setAccountEmail] = useState<string>('');
-  const [signInMethod, setSignInMethod] = useState<string>('Email & Password');
-  const [hasPassword, setHasPassword] = useState<boolean>(true);
-  const [accountLoading, setAccountLoading] = useState(true);
   const [accountError, setAccountError] = useState<string | null>(null);
 
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isSavingPassword, setIsSavingPassword] = useState(false);
-  const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
-  const [passwordError, setPasswordError] = useState<string | null>(null);
-
-  const [securitySending, setSecuritySending] = useState(false);
-  const [passwordSetupStarted, setPasswordSetupStarted] = useState(false);
-  const [resetCode, setResetCode] = useState('');
-  const [setupPassword, setSetupPassword] = useState('');
-  const [setupConfirmPassword, setSetupConfirmPassword] = useState('');
-  const [settingPassword, setSettingPassword] = useState(false);
-  const [securityMessage, setSecurityMessage] = useState<string | null>(null);
-  const [securityError, setSecurityError] = useState<string | null>(null);
+  const [testimonialText, setTestimonialText] = useState('');
+  const [testimonialSaving, setTestimonialSaving] = useState(false);
+  const [testimonialMessage, setTestimonialMessage] = useState<string | null>(null);
+  const [testimonialError, setTestimonialError] = useState<string | null>(null);
 
   const loadAccount = async () => {
-    setAccountLoading(true);
     setAccountError(null);
 
     const result = await studentSettingsService.getSettings();
     if (result.isSuccess && result.value) {
-      setAccountEmail(result.value.email || '');
-      setSignInMethod(result.value.signInMethod || 'Email & Password');
-      setHasPassword(Boolean(result.value.hasPassword));
+      setTestimonialText(result.value.feedback || '');
     } else {
       setAccountError(result.error || 'Failed to load settings.');
     }
-
-    setAccountLoading(false);
   };
 
   useEffect(() => {
-    loadAccount();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void Promise.resolve().then(loadAccount);
   }, []);
 
-  // Auto-dismiss success messages
-  useEffect(() => {
-    if (!prefsMessage) return;
-    const t = window.setTimeout(() => setPrefsMessage(null), 3000);
-    return () => window.clearTimeout(t);
-  }, [prefsMessage]);
+  useAutoDismiss(prefsMessage, () => setPrefsMessage(null));
+  useAutoDismiss(testimonialMessage, () => setTestimonialMessage(null));
 
-  useEffect(() => {
-    if (!passwordMessage) return;
-    const t = window.setTimeout(() => setPasswordMessage(null), 3000);
-    return () => window.clearTimeout(t);
-  }, [passwordMessage]);
-
-  useEffect(() => {
-    if (!securityMessage) return;
-    const t = window.setTimeout(() => setSecurityMessage(null), 3000);
-    return () => window.clearTimeout(t);
-  }, [securityMessage]);
-
-  const onSavePreferences = () => {
-    writePreferences({ jobAlertsEnabled, messageNotificationsEnabled });
-    setPrefsDirty(false);
+  const autoSavePreferences = (prefs: StudentPreferenceState) => {
+    writePreferences(prefs);
     setPrefsMessage('Preferences saved.');
   };
 
-  const onChangePassword = async (e: React.FormEvent) => {
+  const onSaveTestimonial = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSavingPassword(true);
-    setPasswordError(null);
-    setPasswordMessage(null);
+    setTestimonialSaving(true);
+    setTestimonialError(null);
+    setTestimonialMessage(null);
 
-    const result = await authService.changePassword({
-      currentPassword,
-      newPassword,
-      confirmPassword,
-    });
+    const result = await studentSettingsService.updateTestimonial(testimonialText);
 
     if (result.isSuccess) {
-      setPasswordMessage('Password updated successfully.');
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
+      setTestimonialMessage('Testimonial saved successfully.');
     } else {
-      setPasswordError(result.error || 'Failed to change password.');
+      setTestimonialError(result.error || 'Failed to save testimonial.');
     }
 
-    setIsSavingPassword(false);
-  };
-
-  const onSendPasswordSetupEmail = async () => {
-    if (!accountEmail) return;
-    setSecuritySending(true);
-    setSecurityError(null);
-    setSecurityMessage(null);
-
-    const result = await authService.forgotPassword({ email: accountEmail });
-    if (result.isSuccess) {
-      setSecurityMessage('Verification code sent.');
-      setPasswordSetupStarted(true);
-    } else {
-      setSecurityError(result.error || 'Failed to send password setup email.');
-    }
-
-    setSecuritySending(false);
-  };
-
-  const onSetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!accountEmail) return;
-
-    setSettingPassword(true);
-    setSecurityError(null);
-    setSecurityMessage(null);
-
-    const result = await authService.resetPassword({
-      email: accountEmail,
-      resetCode,
-      newPassword: setupPassword,
-      confirmPassword: setupConfirmPassword,
-    });
-
-    if (result.isSuccess) {
-      setSecurityMessage('Password set successfully.');
-      setResetCode('');
-      setSetupPassword('');
-      setSetupConfirmPassword('');
-      setPasswordSetupStarted(false);
-      await loadAccount();
-    } else {
-      setSecurityError(result.error || 'Failed to set password.');
-    }
-
-    setSettingPassword(false);
+    setTestimonialSaving(false);
   };
 
   return (
     <div className="app-shell">
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       <main className="main-content">
-        <PageHeader title="Settings" subtitle="Manage your student preferences" />
+        <PageHeader
+          title="Settings"
+          subtitle="Manage your student preferences"
+          onMenuToggle={() => setIsSidebarOpen((value) => !value)}
+        />
 
         <div className="page-body cs-page">
           <div className="cs-grid">
@@ -224,9 +150,9 @@ export default function StudentSettings() {
                     type="checkbox"
                     checked={jobAlertsEnabled}
                     onChange={(e) => {
-                      setJobAlertsEnabled(e.target.checked);
-                      setPrefsDirty(true);
-                      setPrefsMessage(null);
+                      const newValue = e.target.checked;
+                      setJobAlertsEnabled(newValue);
+                      autoSavePreferences({ jobAlertsEnabled: newValue, messageNotificationsEnabled });
                     }}
                   />
                   <span className="cs-slider" />
@@ -243,9 +169,9 @@ export default function StudentSettings() {
                     type="checkbox"
                     checked={messageNotificationsEnabled}
                     onChange={(e) => {
-                      setMessageNotificationsEnabled(e.target.checked);
-                      setPrefsDirty(true);
-                      setPrefsMessage(null);
+                      const newValue = e.target.checked;
+                      setMessageNotificationsEnabled(newValue);
+                      autoSavePreferences({ jobAlertsEnabled, messageNotificationsEnabled: newValue });
                     }}
                   />
                   <span className="cs-slider" />
@@ -257,164 +183,42 @@ export default function StudentSettings() {
                   {prefsMessage}
                 </div>
               )}
-
-              <div className="cs-actions" style={{ justifyContent: 'space-between' }}>
-                <span className="cs-card-subtitle" style={{ margin: 0 }}>
-                  {prefsDirty ? 'Unsaved changes' : 'Up to date'}
-                </span>
-                <button
-                  className="cs-btn cs-btn--primary"
-                  type="button"
-                  disabled={!prefsDirty}
-                  onClick={onSavePreferences}
-                >
-                  Save
-                </button>
-              </div>
             </section>
 
-            {/* Security */}
+            {/* Testimonial */}
             <section className="cs-card cs-card--wide">
-              <h3 className="cs-card-title">Security</h3>
-              <p className="cs-card-subtitle">Keep your account protected.</p>
+              <h3 className="cs-card-title">Testimonial</h3>
+              <p className="cs-card-subtitle">Share your experience with NexApply.</p>
 
-              <div className="cs-note" style={{ marginBottom: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                  <span><strong>Sign-in method:</strong> {accountLoading ? 'Loading…' : signInMethod}</span>
-                  {accountEmail ? <span><strong>Email:</strong> {accountEmail}</span> : null}
-                </div>
-              </div>
-
-              {accountError ? (
+              {accountError && (
                 <div className="cs-alert cs-alert--error">{accountError}</div>
-              ) : null}
-
-              {hasPassword ? (
-                <form className="cs-form" onSubmit={onChangePassword}>
-                  <div className="cs-form-grid">
-                    <label className="cs-field">
-                      <span className="cs-label">Current password</span>
-                      <input
-                        className="cs-input"
-                        type="password"
-                        value={currentPassword}
-                        onChange={(e) => setCurrentPassword(e.target.value)}
-                        required
-                      />
-                    </label>
-                    <label className="cs-field">
-                      <span className="cs-label">New password</span>
-                      <input
-                        className="cs-input"
-                        type="password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        required
-                      />
-                    </label>
-                    <label className="cs-field">
-                      <span className="cs-label">Confirm new password</span>
-                      <input
-                        className="cs-input"
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                      />
-                    </label>
-                  </div>
-
-                  {(passwordError || passwordMessage) && (
-                    <div className={`cs-alert ${passwordError ? 'cs-alert--error' : 'cs-alert--ok'}`}>
-                      {passwordError || passwordMessage}
-                    </div>
-                  )}
-
-                  <div className="cs-actions">
-                    <button className="cs-btn cs-btn--ghost" type="button" onClick={() => authService.logout()}>
-                      Log out
-                    </button>
-                    <button className="cs-btn cs-btn--primary" type="submit" disabled={isSavingPassword}>
-                      {isSavingPassword ? 'Saving…' : 'Update password'}
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                <>
-                  <div className="cs-note" style={{ marginBottom: 12 }}>
-                    This account was created using Google One Tap and doesn’t have a password yet. To enable email sign-in,
-                    request a verification code and set a password below.
-                  </div>
-
-                  {(securityError || securityMessage) && (
-                    <div className={`cs-alert ${securityError ? 'cs-alert--error' : 'cs-alert--ok'}`}>
-                      {securityError || securityMessage}
-                    </div>
-                  )}
-
-                  <div className="cs-actions" style={{ justifyContent: 'space-between' }}>
-                    <button className="cs-btn cs-btn--ghost" type="button" onClick={() => authService.logout()}>
-                      Log out
-                    </button>
-                    <button
-                      className="cs-btn cs-btn--primary"
-                      type="button"
-                      disabled={!accountEmail || securitySending}
-                      onClick={onSendPasswordSetupEmail}
-                    >
-                      {securitySending ? 'Sending…' : (passwordSetupStarted ? 'Resend code' : 'Send code')}
-                    </button>
-                  </div>
-
-                  {passwordSetupStarted && (
-                    <form className="cs-form" onSubmit={onSetPassword}>
-                      <div className="cs-form-grid">
-                        <label className="cs-field">
-                          <span className="cs-label">Verification code</span>
-                          <input
-                            className="cs-input"
-                            inputMode="numeric"
-                            placeholder="6-digit code"
-                            value={resetCode}
-                            onChange={(e) => setResetCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                            required
-                          />
-                        </label>
-                        <label className="cs-field">
-                          <span className="cs-label">New password</span>
-                          <input
-                            className="cs-input"
-                            type="password"
-                            value={setupPassword}
-                            onChange={(e) => setSetupPassword(e.target.value)}
-                            required
-                          />
-                        </label>
-                        <label className="cs-field">
-                          <span className="cs-label">Confirm new password</span>
-                          <input
-                            className="cs-input"
-                            type="password"
-                            value={setupConfirmPassword}
-                            onChange={(e) => setSetupConfirmPassword(e.target.value)}
-                            required
-                          />
-                        </label>
-                      </div>
-
-                      <div className="cs-actions">
-                        <button
-                          className="cs-btn cs-btn--primary"
-                          type="submit"
-                          disabled={settingPassword}
-                        >
-                          {settingPassword ? 'Saving…' : 'Set password'}
-                        </button>
-                      </div>
-                    </form>
-                  )}
-                </>
               )}
+
+              <form className="cs-form" onSubmit={onSaveTestimonial}>
+                <label className="cs-field">
+                  <textarea
+                    className="cs-input"
+                    rows={4}
+                    placeholder="Share how NexApply helped you land your dream job..."
+                    value={testimonialText}
+                    onChange={(e) => setTestimonialText(e.target.value)}
+                    maxLength={200}
+                  />
+                  <span className="cs-field-hint">{testimonialText.length}/200 characters</span>
+                </label>
+
+                {(testimonialError || testimonialMessage) && (
+                  <div className={`cs-alert ${testimonialError ? 'cs-alert--error' : 'cs-alert--ok'}`}>
+                    {testimonialError || testimonialMessage}
+                  </div>
+                )}
+
+                <div className="cs-actions">
+                  <button className="cs-btn cs-btn--primary" type="submit" disabled={testimonialSaving || !testimonialText.trim()}>
+                    {testimonialSaving ? 'Saving…' : 'Save Testimonial'}
+                  </button>
+                </div>
+              </form>
             </section>
           </div>
         </div>
@@ -422,4 +226,3 @@ export default function StudentSettings() {
     </div>
   );
 }
-

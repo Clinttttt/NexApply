@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {Sidebar} from "../../components/Sidebar";
 import {PageHeader} from "../../components/PageHeader";
+import { CustomDropdown } from "../../components/ui/CustomDropdown";
 import "./SavedJobs.css";
 import { savedJobsService } from "../../services/savedJobsService";
 import { applicationService } from "../../services/applicationService";
@@ -65,6 +66,7 @@ export  function SavedJobs() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [activeFilter, setActiveFilter] = useState<FilterTab>("All");
   const [sortBy, setSortBy] = useState<SortOption>("recent");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -165,10 +167,14 @@ export  function SavedJobs() {
 
   return (
     <div className="app-shell">
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       <main className="main-content">
-        <PageHeader title="Saved Jobs" subtitle={`${savedJobs.length} saved jobs`}>
+        <PageHeader
+          title="Saved Jobs"
+          subtitle={`${savedJobs.length} saved jobs`}
+          onMenuToggle={() => setIsSidebarOpen((value) => !value)}
+        >
           <Link to="/job-board" className="sj-browse-btn">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8" />
@@ -229,15 +235,16 @@ export  function SavedJobs() {
                 />
               </div>
 
-              <select
-                className="sj-sort-select"
+              <CustomDropdown
+                options={[
+                  { value: 'recent', label: 'Most Recent' },
+                  { value: 'company', label: 'Company A–Z' },
+                  { value: 'type', label: 'Job Type' },
+                ]}
                 value={sortBy}
-                onChange={handleSortChange}
-              >
-                <option value="recent">Most Recent</option>
-                <option value="company">Company A–Z</option>
-                <option value="type">Job Type</option>
-              </select>
+                onChange={(val) => handleSortChange({ target: { value: val } } as any)}
+                className="sj-sort-select"
+              />
             </div>
           </div>
 

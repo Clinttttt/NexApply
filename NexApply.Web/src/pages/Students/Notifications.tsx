@@ -47,6 +47,36 @@ const IconCatAll = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none">
 
 // ── Date group ordering for stable display ────────────────────────────────────
 const DATE_GROUP_ORDER = ["Today", "Yesterday", "This Week"];
+const APPLICATION_STATUS_LABELS: Record<string, string> = {
+  "0": "Submitted",
+  "1": "Under Review",
+  "2": "Shortlisted",
+  "3": "For Interview",
+  "4": "Declined",
+  "5": "Decided",
+  Submitted: "Submitted",
+  UnderReview: "Under Review",
+  Shortlisted: "Shortlisted",
+  ForInterview: "For Interview",
+  Declined: "Declined",
+  Decided: "Decided",
+};
+const APPLICATION_STAGE_LABELS: Record<string, string> = {
+  "0": "Submitted",
+  "1": "Submitted",
+  "2": "Under Review",
+  "3": "Shortlisted",
+  "4": "For Interview",
+  "5": "Decided",
+};
+
+function formatApplicationStatus(value: string): string {
+  return APPLICATION_STATUS_LABELS[value] || value;
+}
+
+function formatApplicationStage(value: string): string {
+  return APPLICATION_STAGE_LABELS[value] || formatApplicationStatus(value);
+}
 
 function getDateGroup(date: Date): string {
   const now = new Date();
@@ -78,6 +108,8 @@ function getTimeAgo(createdAt: string): string {
 }
 
 function getIconFor(dto: NotificationDto): { iconSvg: string; iconBg: string; badgeCss: string; actionTagCss: string } {
+  const actionLabel = formatApplicationStatus(dto.actionLabel);
+
   if (dto.category === "Saved") {
     return { iconSvg: IconSaved, iconBg: "notif-icon--red", badgeCss: "badge--red", actionTagCss: "tag--danger" };
   }
@@ -89,17 +121,20 @@ function getIconFor(dto: NotificationDto): { iconSvg: string; iconBg: string; ba
   }
 
   // Application
-  if (dto.actionLabel === "Shortlisted") {
+  if (actionLabel === "Shortlisted") {
     return { iconSvg: IconCheck, iconBg: "notif-icon--green", badgeCss: "badge--green", actionTagCss: "tag--shortlisted" };
   }
-  if (dto.actionLabel === "Under Review") {
+  if (actionLabel === "Under Review") {
     return { iconSvg: IconApplication, iconBg: "notif-icon--amber", badgeCss: "badge--amber", actionTagCss: "tag--review" };
   }
-  if (dto.actionLabel === "For Interview") {
+  if (actionLabel === "For Interview") {
     return { iconSvg: IconInterview, iconBg: "notif-icon--green", badgeCss: "badge--green", actionTagCss: "tag--interview" };
   }
-  if (dto.actionLabel === "Submitted") {
+  if (actionLabel === "Submitted") {
     return { iconSvg: IconApplication, iconBg: "notif-icon--slate", badgeCss: "badge--slate", actionTagCss: "tag--submitted" };
+  }
+  if (actionLabel === "Declined" || actionLabel === "Decided") {
+    return { iconSvg: IconApplication, iconBg: "notif-icon--red", badgeCss: "badge--red", actionTagCss: "tag--danger" };
   }
 
   return { iconSvg: IconApplication, iconBg: "notif-icon--blue", badgeCss: "badge--blue", actionTagCss: "tag--match" };
@@ -109,6 +144,7 @@ function mapNotification(dto: NotificationDto): NotificationItem {
   const createdAt = dto.createdAt;
   const date = new Date(createdAt);
   const { iconSvg, iconBg, badgeCss, actionTagCss } = getIconFor(dto);
+  const actionLabel = formatApplicationStatus(dto.actionLabel);
 
   return {
     id: dto.id,
@@ -122,8 +158,8 @@ function mapNotification(dto: NotificationDto): NotificationItem {
     iconSvg,
     iconBg,
     badgeCss,
-    actionLabel: dto.actionLabel,
-    actionTagCss: dto.actionLabel ? actionTagCss : "",
+    actionLabel,
+    actionTagCss: actionLabel ? actionTagCss : "",
     primaryAction: dto.primaryAction,
     secondaryAction: dto.secondaryAction,
     metaItems: dto.metaItems || {},
@@ -139,6 +175,7 @@ export function Notifications() {
   const [readFilter, setReadFilter] = useState("all");
   const [selectedNotif, setSelectedNotif] = useState<NotificationItem | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -329,12 +366,13 @@ export function Notifications() {
 
   return (
     <div className="app-shell">
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       <main className="main-content">
         <PageHeader
           title="Notifications"
           subtitle={`${unreadCount} unread — stay on top of your job hunt`}
+          onMenuToggle={() => setIsSidebarOpen((value) => !value)}
         >
           <div className="search-wrap">
             <svg className="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none">
@@ -655,20 +693,29 @@ export function Notifications() {
 
                 {Object.keys(selectedNotif.metaItems).length > 0 && (
                   <div className="nd-meta-grid">
-                    {Object.entries(selectedNotif.metaItems).map(([k, v]) => (
-                      <div key={k} className="nd-meta-item">
-                        <span className="nd-meta-label">{k}</span>
-                        <span className="nd-meta-value">{v}</span>
-                      </div>
-                    ))}
+                    {Object.entries(selectedNotif.metaItems)
+                      .filter(([k]) => !['JobId', 'ApplicationId'].includes(k))
+                      .map(([k, v]) => {
+                        const displayValue = k === 'Stage'
+                          ? formatApplicationStage(v)
+                          : k === 'Status'
+                            ? formatApplicationStatus(v)
+                            : v;
+                        return (
+                          <div key={k} className="nd-meta-item">
+                            <span className="nd-meta-label">{k}</span>
+                            <span className="nd-meta-value">{displayValue}</span>
+                          </div>
+                        );
+                      })}
                   </div>
                 )}
 
                 {selectedNotif.primaryAction && (
                   <div className="nd-actions">
-                    <button className="nd-btn-primary">
+                    <Link to={selectedNotif.metaItems.JobId ? `/job/${selectedNotif.metaItems.JobId}` : '#'} className="nd-btn-primary">
                       {selectedNotif.primaryAction}
-                    </button>
+                    </Link>
                     {selectedNotif.secondaryAction && (
                       <button className="nd-btn-secondary">
                         {selectedNotif.secondaryAction}

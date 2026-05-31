@@ -12,4 +12,5 @@ public class StudentProfileDto
     public string? GitHub { get; set; }
     public string? Portfolio { get; set; }
     public string? ResumeFilePath { get; set; }
+    public string? ProfilePictureUrl { get; set; }
 }

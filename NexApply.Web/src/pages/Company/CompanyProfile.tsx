@@ -136,6 +136,7 @@ export function CompanyProfile() {
   const [isSaving,       setIsSaving]       = useState(false);
   const [showSavedBanner, setShowSavedBanner] = useState(false);
   const [loadError,      setLoadError]      = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [perkInput,      setPerkInput]      = useState('');
   const [uploadedLogoUrl, setUploadedLogoUrl] = useState<string | null>(null);
@@ -302,9 +303,13 @@ export function CompanyProfile() {
   if (isLoading) {
     return (
       <div className="app-shell">
-        <CompanySidebar />
+        <CompanySidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         <div className="main-content">
-          <CompanyHeader title="Company Profile" subtitle="Manage your company's public presence on NexApply" />
+          <CompanyHeader
+            title="Company Profile"
+            subtitle="Manage your company's public presence on NexApply"
+            onMenuToggle={() => setIsSidebarOpen((value) => !value)}
+          />
           <div className="page-body">
             <CompanyProfileSkeleton />
           </div>
@@ -316,9 +321,13 @@ export function CompanyProfile() {
   if (loadError && !profile.companyName) {
     return (
       <div className="app-shell">
-        <CompanySidebar />
+        <CompanySidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         <div className="main-content">
-          <CompanyHeader title="Company Profile" subtitle="Manage your company's public presence on NexApply" />
+          <CompanyHeader
+            title="Company Profile"
+            subtitle="Manage your company's public presence on NexApply"
+            onMenuToggle={() => setIsSidebarOpen((value) => !value)}
+          />
           <div className="page-body">
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', color: '#DC2626', gap: '16px' }}>
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -335,9 +344,13 @@ export function CompanyProfile() {
 
   return (
     <div className="app-shell">
-      <CompanySidebar />
+      <CompanySidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <div className="main-content">
-        <CompanyHeader title="Company Profile" subtitle="Manage your company's public presence on NexApply" />
+        <CompanyHeader
+          title="Company Profile"
+          subtitle="Manage your company's public presence on NexApply"
+          onMenuToggle={() => setIsSidebarOpen((value) => !value)}
+        />
 
         <div className="page-body">
 

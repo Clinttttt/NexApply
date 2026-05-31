@@ -85,6 +85,7 @@ export default function StudentMessages() {
   const [error, setError] = useState<string | null>(null)
   const [messages, setMessages] = useState<MessageItem[]>([])
   const [notifUnreadCount, setNotifUnreadCount] = useState(0)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -199,9 +200,13 @@ export default function StudentMessages() {
 
   return (
     <div className="app-shell student-messages-page">
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <main className="main-content">
-        <PageHeader title="Messages" subtitle="Chat with companies">
+        <PageHeader
+          title="Messages"
+          subtitle="Chat with companies"
+          onMenuToggle={() => setIsSidebarOpen(v => !v)}
+        >
           <div className="search-wrap">
             <svg className="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none">
               <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" />

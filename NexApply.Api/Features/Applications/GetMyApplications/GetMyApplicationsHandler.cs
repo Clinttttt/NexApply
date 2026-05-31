@@ -55,6 +55,7 @@ public class GetMyApplicationsHandler(AppDbContext context, CurrentUser currentU
         ApplicationStatus.Shortlisted => "Shortlisted",
         ApplicationStatus.ForInterview => "For Interview",
         ApplicationStatus.Declined => "Declined",
+        ApplicationStatus.Decided => "Decided",
         _ => status.ToString()
     };
 
@@ -65,6 +66,7 @@ public class GetMyApplicationsHandler(AppDbContext context, CurrentUser currentU
         ApplicationStatus.Shortlisted => 2,
         ApplicationStatus.ForInterview => 3,
         ApplicationStatus.Declined => 4,
+        ApplicationStatus.Decided => 4,
         _ => 0
     };
 

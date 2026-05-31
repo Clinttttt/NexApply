@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {CompanySidebar} from '../../components/CompanySidebar';
 import {CompanyHeader} from '../../components/CompanyHeader';
@@ -30,6 +30,7 @@ function formatDate(dateStr?: string) {
 export function CompanyJobView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [job, setJob] = useState<JobListingDetailsDto | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +70,7 @@ export function CompanyJobView() {
     }
   };
 
-  const loadJobDetails = async () => {
+  const loadJobDetails = useCallback(async () => {
     if (!id) return;
     setIsLoading(true);
     const result = await jobListingService.getJobListingDetails(id);
@@ -79,11 +80,14 @@ export function CompanyJobView() {
       setError(result.error || 'Failed to load job details');
     }
     setIsLoading(false);
-  };
+  }, [id]);
 
   useEffect(() => {
-    loadJobDetails();
-  }, [id]);
+    const timer = window.setTimeout(() => {
+      void loadJobDetails();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [loadJobDetails]);
 
   const handleStatusUpdate = async (action: 'pause' | 'close' | 'activate') => {
     if (!id || !job) return;
@@ -167,9 +171,13 @@ export function CompanyJobView() {
   if (isLoading) {
     return (
       <div className="cjv-shell">
-        <CompanySidebar />
+        <CompanySidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         <div className="cjv-main">
-          <CompanyHeader title="Job Details" subtitle="Loading..." />
+          <CompanyHeader
+            title="Job Details"
+            subtitle="Loading..."
+            onMenuToggle={() => setIsSidebarOpen((value) => !value)}
+          />
           <div className="cjv-body">
             <div className="cjv-layout">
               <div className="cjv-content">
@@ -239,9 +247,13 @@ export function CompanyJobView() {
   if (error || !job) {
     return (
       <div className="cjv-shell">
-        <CompanySidebar />
+        <CompanySidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         <div className="cjv-main">
-          <CompanyHeader title="Job Details" subtitle="Error" />
+          <CompanyHeader
+            title="Job Details"
+            subtitle="Error"
+            onMenuToggle={() => setIsSidebarOpen((value) => !value)}
+          />
           <div className="cjv-body" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
             <div style={{ textAlign: 'center', color: '#DC2626' }}>{error || 'Job not found'}</div>
           </div>
@@ -252,12 +264,13 @@ export function CompanyJobView() {
 
   return (
     <div className="cjv-shell">
-      <CompanySidebar  />
+      <CompanySidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       <div className="cjv-main">
         <CompanyHeader
           title="Job Details"
           subtitle="Full listing overview and management"
+          onMenuToggle={() => setIsSidebarOpen((value) => !value)}
         />
 
         <div className="cjv-body">

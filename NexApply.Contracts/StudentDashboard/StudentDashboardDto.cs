@@ -3,6 +3,7 @@ namespace NexApply.Contracts.StudentDashboard;
 public class StudentDashboardDto
 {
     public string StudentName { get; set; } = string.Empty;
+    public string? ProfilePictureUrl { get; set; }
     public int AppliedCount { get; set; }
     public int UnderReviewCount { get; set; }
     public int ShortlistedCount { get; set; }

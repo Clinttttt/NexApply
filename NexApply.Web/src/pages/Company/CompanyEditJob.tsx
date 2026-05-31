@@ -22,6 +22,7 @@ const WORK_SETUPS = [
 export function CompanyEditJob() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -123,9 +124,13 @@ export function CompanyEditJob() {
   if (isLoading) {
     return (
       <div className="cpj-shell">
-        <CompanySidebar />
+        <CompanySidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         <div className="cpj-main">
-          <CompanyHeader title="Edit Job Listing" subtitle="Loading..." />
+          <CompanyHeader
+            title="Edit Job Listing"
+            subtitle="Loading..."
+            onMenuToggle={() => setIsSidebarOpen((value) => !value)}
+          />
           <div className="cpj-body">
             {/* Basic Information Skeleton */}
             <div className="cpj-card">
@@ -214,9 +219,13 @@ export function CompanyEditJob() {
   if (error && !formData.title) {
     return (
       <div className="cpj-shell">
-        <CompanySidebar />
+        <CompanySidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         <div className="cpj-main">
-          <CompanyHeader title="Edit Job Listing" subtitle="Error" />
+          <CompanyHeader
+            title="Edit Job Listing"
+            subtitle="Error"
+            onMenuToggle={() => setIsSidebarOpen((value) => !value)}
+          />
           <div className="cpj-body" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
             <div style={{ textAlign: 'center', color: '#DC2626' }}>{error}</div>
           </div>
@@ -227,9 +236,13 @@ export function CompanyEditJob() {
 
   return (
     <div className="cpj-shell">
-      <CompanySidebar />
+      <CompanySidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <div className="cpj-main">
-        <CompanyHeader title="Edit Job Listing" subtitle="Update job details and requirements" />
+        <CompanyHeader
+          title="Edit Job Listing"
+          subtitle="Update job details and requirements"
+          onMenuToggle={() => setIsSidebarOpen((value) => !value)}
+        />
 
         <div className="cpj-body">
           <form onSubmit={handleSubmit}>

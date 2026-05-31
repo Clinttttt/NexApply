@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import './Applications.css'
 import {Sidebar} from '../../components/Sidebar'
 import {PageHeader} from '../../components/PageHeader'
+import { CustomDropdown } from '../../components/ui/CustomDropdown'
 import { applicationService } from '../../services/applicationService'
 
 // ─────────────────────────────────────────
@@ -23,6 +24,28 @@ interface AppItem {
 }
 
 const PIPELINE_STEPS = ['Submitted', 'Under Review', 'Shortlisted', 'For Interview', 'Decided']
+const STATUS_LABELS: Record<string, string> = {
+  '0': 'Submitted',
+  '1': 'Under Review',
+  '2': 'Shortlisted',
+  '3': 'For Interview',
+  '4': 'Declined',
+  '5': 'Decided',
+  Submitted: 'Submitted',
+  UnderReview: 'Under Review',
+  Shortlisted: 'Shortlisted',
+  ForInterview: 'For Interview',
+  Declined: 'Declined',
+  Decided: 'Decided',
+}
+const STATUS_PIPELINE_STAGES: Record<string, number> = {
+  'Submitted': 0,
+  'Under Review': 1,
+  'Shortlisted': 2,
+  'For Interview': 3,
+  'Declined': 4,
+  'Decided': 4,
+}
 
 // ─────────────────────────────────────────
 //  HELPERS
@@ -34,7 +57,22 @@ const getStatusBadgeClass = (status: string): string => ({
   'Shortlisted':  'status-badge--shortlisted',
   'For Interview':'status-badge--interview',
   'Declined':     'status-badge--declined',
+  'Decided':      'status-badge--declined',
 }[status] ?? '')
+
+const normalizeStatus = (status: unknown): string => {
+  const key = String(status ?? '')
+  return STATUS_LABELS[key] ?? key
+}
+
+const normalizePipelineStage = (status: string, pipelineStage: unknown): number => {
+  if (status in STATUS_PIPELINE_STAGES) return STATUS_PIPELINE_STAGES[status]
+
+  const numericStage = Number(pipelineStage)
+  return Number.isInteger(numericStage) && numericStage >= 0 && numericStage < PIPELINE_STEPS.length
+    ? numericStage
+    : 0
+}
 
 const getInitials = (company: string): string => {
   const words = company.split(' ').filter(Boolean)
@@ -66,6 +104,7 @@ export default function Applications() {
   const [applications, setApplications] = useState<AppItem[]>([])
   const [isLoading, setIsLoading]       = useState(true)
   const [loadError, setLoadError]       = useState<string | null>(null)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [searchQuery, setSearchQuery]     = useState('')
   const [statusFilter, setStatusFilter]   = useState('')
   const [jobTypeFilter, setJobTypeFilter] = useState('')
@@ -78,18 +117,21 @@ export default function Applications() {
 
       const result = await applicationService.getMyApplications()
       if (result.isSuccess && result.value) {
-        const items: AppItem[] = result.value.map(a => ({
-          applicationId: a.applicationId,
-          jobListingId: a.jobListingId,
-          company: a.companyName,
-          role: a.jobTitle,
-          status: a.status,
-          jobType: a.jobType,
-          location: a.location,
-          appliedAt: a.appliedAt,
-          appliedDate: new Date(a.appliedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-          pipelineStage: a.pipelineStage
-        }))
+        const items: AppItem[] = result.value.map(a => {
+          const status = normalizeStatus(a.status)
+          return {
+            applicationId: a.applicationId,
+            jobListingId: a.jobListingId,
+            company: a.companyName,
+            role: a.jobTitle,
+            status,
+            jobType: a.jobType,
+            location: a.location,
+            appliedAt: a.appliedAt,
+            appliedDate: new Date(a.appliedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+            pipelineStage: normalizePipelineStage(status, a.pipelineStage)
+          }
+        })
         setApplications(items)
       } else {
         setLoadError(result.error || 'Failed to load applications')
@@ -133,12 +175,13 @@ export default function Applications() {
   // ── Render ─────────────────────────────
   return (
     <div className="app-shell">
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       <main className="main-content">
         <PageHeader
           title="My Applications"
           subtitle={`${applications.length} applications — last updated today`}
+          onMenuToggle={() => setIsSidebarOpen(v => !v)}
         >
           <Link to="/browse-jobs" className="btn-browse">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -198,9 +241,9 @@ export default function Applications() {
             <div className="stat-divider"></div>
             <div className="stat-item">
               <span className="stat-item__value stat-item__value--declined">
-                {applications.filter(a => a.status === 'Declined').length}
+                {applications.filter(a => a.status === 'Declined' || a.status === 'Decided').length}
               </span>
-              <span className="stat-item__label">Declined</span>
+              <span className="stat-item__label">Decided</span>
             </div>
           </div>
 
@@ -222,30 +265,46 @@ export default function Applications() {
             </div>
 
             <div className="filter-wrap">
-              <select className="filter-select" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-                <option value="">All Statuses</option>
-                <option value="Submitted">Submitted</option>
-                <option value="Under Review">Under Review</option>
-                <option value="Shortlisted">Shortlisted</option>
-                <option value="For Interview">For Interview</option>
-                <option value="Declined">Declined</option>
-              </select>
-              <select className="filter-select" value={jobTypeFilter} onChange={e => setJobTypeFilter(e.target.value)}>
-                <option value="">All Job Types</option>
-                <option value="Full-time">Full-time</option>
-                <option value="Part-time">Part-time</option>
-                <option value="Internship">Internship</option>
-                <option value="Contract">Contract</option>
-              </select>
+              <CustomDropdown
+                options={[
+                  { value: '', label: 'All Statuses' },
+                  { value: 'Submitted', label: 'Submitted' },
+                  { value: 'Under Review', label: 'Under Review' },
+                  { value: 'Shortlisted', label: 'Shortlisted' },
+                  { value: 'For Interview', label: 'For Interview' },
+                  { value: 'Declined', label: 'Declined' },
+                  { value: 'Decided', label: 'Decided' },
+                ]}
+                value={statusFilter}
+                onChange={(val) => setStatusFilter(val as string)}
+                className="filter-select"
+              />
+              <CustomDropdown
+                options={[
+                  { value: '', label: 'All Job Types' },
+                  { value: 'Full-time', label: 'Full-time' },
+                  { value: 'Part-time', label: 'Part-time' },
+                  { value: 'Internship', label: 'Internship' },
+                  { value: 'Contract', label: 'Contract' },
+                ]}
+                value={jobTypeFilter}
+                onChange={(val) => setJobTypeFilter(val as string)}
+                className="filter-select"
+              />
             </div>
 
             <div className="sort-wrap">
               <span className="sort-label">Sort by</span>
-              <select className="filter-select" value={sortOrder} onChange={e => setSortOrder(e.target.value)}>
-                <option value="Most Recent">Most Recent</option>
-                <option value="Oldest">Oldest</option>
-                <option value="Status">Status</option>
-              </select>
+              <CustomDropdown
+                options={[
+                  { value: 'Most Recent', label: 'Most Recent' },
+                  { value: 'Oldest', label: 'Oldest' },
+                  { value: 'Status', label: 'Status' },
+                ]}
+                value={sortOrder}
+                onChange={(val) => setSortOrder(val as string)}
+                className="filter-select"
+              />
             </div>
 
             {hasFilters && (
@@ -301,8 +360,9 @@ export default function Applications() {
                         </div>
                       </div>
                       <div className="app-card__actions">
-                        <span className={`status-badge ${badgeClass}`}>{app.status}</span>
-                        <button className="btn-view">View Listing</button>
+                        <span className={`status-badge ${badgeClass}`}>
+                          {app.status}
+                        </span>
                       </div>
                     </div>
 

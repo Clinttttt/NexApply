@@ -1,5 +1,6 @@
 using NexApply.Api.Features.CompanySettings.GetCompanySettings;
 using NexApply.Api.Features.CompanySettings.UpdateCompanySettings;
+using NexApply.Api.Features.CompanySettings.UpdateCompanyTestimonial;
 
 namespace NexApply.Api.Features.CompanySettings;
 
@@ -9,6 +10,7 @@ public static class CompanySettingsEndpoints
     {
         app.MapGetCompanySettings();
         app.MapUpdateCompanySettings();
+        app.MapUpdateCompanyTestimonial();
     }
 }
 

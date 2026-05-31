@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import './CompanyInterviews.css'
 import {CompanySidebar} from '../../components/CompanySidebar';
 import {CompanyHeader} from '../../components/CompanyHeader';
+import { CustomDropdown } from '../../components/ui/CustomDropdown';
 import { ScheduleInterviewModal } from '../../components/modal/ScheduleInterviewModal';
 import { companyInterviewsService } from '../../services/companyInterviewsService';
 
@@ -24,6 +25,18 @@ interface InterviewItem {
   feedback: string
   rating: number
   recommendation: string
+}
+
+interface ScheduleResult {
+  interview: {
+    scheduledAt: string
+    durationMins: number
+    format: string
+    location: string
+    notes: string
+  }
+  interviewTime: string
+  interviewerName: string
 }
 
 // ─────────────────────────────────────────
@@ -97,6 +110,7 @@ const statusCss = (status: string) =>
 export default function CompanyInterviews() {
 
   // ── State ──────────────────────────────
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [interviews, setInterviews]         = useState<InterviewItem[]>([])
   const [isLoading, setIsLoading]           = useState(true)
   const [error, setError]                   = useState<string | null>(null)
@@ -228,7 +242,7 @@ export default function CompanyInterviews() {
     setRescheduleTarget(null)
   }
 
-  const handleConfirmSchedule = async (result: any) => {
+  const handleConfirmSchedule = async (result: ScheduleResult) => {
     const { interview: form, interviewTime, interviewerName } = result
     const [hours, mins] = interviewTime.split(':').map(Number)
     const scheduledAt = new Date(form.scheduledAt)
@@ -284,10 +298,14 @@ export default function CompanyInterviews() {
   // ── Render ─────────────────────────────
   return (
     <div className="app-shell">
-      <CompanySidebar />
+      <CompanySidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       <div className="main-content">
-        <CompanyHeader title="Interviews" subtitle="Schedule and manage candidate interviews" />
+        <CompanyHeader
+          title="Interviews"
+          subtitle="Schedule and manage candidate interviews"
+          onMenuToggle={() => setIsSidebarOpen(v => !v)}
+        />
 
         <div className="page-body">
 
@@ -439,19 +457,29 @@ export default function CompanyInterviews() {
                   />
                 </div>
                 <div className="filter-controls">
-                  <select className="filter-select" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-                    <option value="">All Statuses</option>
-                    <option value="Scheduled">Scheduled</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Cancelled">Cancelled</option>
-                    <option value="No-show">No-show</option>
-                  </select>
-                  <select className="filter-select" value={formatFilter} onChange={e => setFormatFilter(e.target.value)}>
-                    <option value="">All Formats</option>
-                    <option value="Video Call">Video Call</option>
-                    <option value="On-site">On-site</option>
-                    <option value="Phone">Phone</option>
-                  </select>
+                  <CustomDropdown
+                    options={[
+                      { value: '', label: 'All Statuses' },
+                      { value: 'Scheduled', label: 'Scheduled' },
+                      { value: 'Completed', label: 'Completed' },
+                      { value: 'Cancelled', label: 'Cancelled' },
+                      { value: 'No-show', label: 'No-show' },
+                    ]}
+                    value={statusFilter}
+                    onChange={(val) => setStatusFilter(val as string)}
+                    className="filter-select"
+                  />
+                  <CustomDropdown
+                    options={[
+                      { value: '', label: 'All Formats' },
+                      { value: 'Video Call', label: 'Video Call' },
+                      { value: 'On-site', label: 'On-site' },
+                      { value: 'Phone', label: 'Phone' },
+                    ]}
+                    value={formatFilter}
+                    onChange={(val) => setFormatFilter(val as string)}
+                    className="filter-select"
+                  />
                 </div>
               </div>
 

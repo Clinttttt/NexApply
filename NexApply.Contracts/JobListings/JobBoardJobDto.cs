@@ -14,6 +14,7 @@ public class JobBoardJobDto
     public DateTime PostedAt { get; set; }
     public int Applicants { get; set; }
     public string Salary { get; set; } = string.Empty;
+    public int MatchPercentage { get; set; }
 
     public List<string> Skills { get; set; } = [];
     public string About { get; set; } = string.Empty;

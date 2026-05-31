@@ -2,38 +2,33 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CompanySidebar } from '../../components/CompanySidebar';
 import { CompanyHeader } from '../../components/CompanyHeader';
-import { authService } from '../../services/authService';
 import { companySettingsService } from '../../services/companySettingsService';
 import './CompanySettings.css';
 
-export default function CompanySettings() {
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+const MESSAGE_DISMISS_MS = 3000;
 
-  const [accountEmail, setAccountEmail] = useState<string>('');
-  const [signInMethod, setSignInMethod] = useState<string>('Email & Password');
-  const [hasPassword, setHasPassword] = useState<boolean>(true);
-  const [securityMessage, setSecurityMessage] = useState<string | null>(null);
-  const [securityError, setSecurityError] = useState<string | null>(null);
-  const [securitySending, setSecuritySending] = useState(false);
-  const [passwordSetupStarted, setPasswordSetupStarted] = useState(false);
-  const [resetCode, setResetCode] = useState('');
-  const [setupPassword, setSetupPassword] = useState('');
-  const [setupConfirmPassword, setSetupConfirmPassword] = useState('');
-  const [settingPassword, setSettingPassword] = useState(false);
-  const [securityOpen, setSecurityOpen] = useState(true);
+const useAutoDismiss = (message: string | null, clearMessage: () => void) => {
+  useEffect(() => {
+    if (!message) return;
+    const timerId = window.setTimeout(clearMessage, MESSAGE_DISMISS_MS);
+    return () => window.clearTimeout(timerId);
+  }, [message, clearMessage]);
+};
+
+export default function CompanySettings() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const [settingsLoading, setSettingsLoading] = useState(true);
 
   const [emailUpdatesEnabled, setEmailUpdatesEnabled] = useState(false);
   const [weeklyDigestEnabled, setWeeklyDigestEnabled] = useState(false);
-  const [settingsDirty, setSettingsDirty] = useState(false);
-  const [settingsLoading, setSettingsLoading] = useState(true);
-  const [settingsSaving, setSettingsSaving] = useState(false);
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
   const [settingsError, setSettingsError] = useState<string | null>(null);
+
+  const [testimonialText, setTestimonialText] = useState('');
+  const [testimonialSaving, setTestimonialSaving] = useState(false);
+  const [testimonialMessage, setTestimonialMessage] = useState<string | null>(null);
+  const [testimonialError, setTestimonialError] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -44,10 +39,7 @@ export default function CompanySettings() {
       if (result.isSuccess && result.value) {
         setEmailUpdatesEnabled(result.value.applicantUpdatesEnabled);
         setWeeklyDigestEnabled(result.value.weeklyDigestEnabled);
-        setAccountEmail(result.value.email || '');
-        setSignInMethod(result.value.signInMethod || 'Email & Password');
-        setHasPassword(Boolean(result.value.hasPassword));
-        setSettingsDirty(false);
+        setTestimonialText(result.value.testimonial || '');
       } else {
         setSettingsError(result.error || 'Failed to load settings.');
       }
@@ -58,128 +50,54 @@ export default function CompanySettings() {
     load();
   }, []);
 
-  // Auto-dismiss success toast after 3s
-  useEffect(() => {
-    if (!settingsMessage) return;
-    const t = window.setTimeout(() => setSettingsMessage(null), 3000);
-    return () => window.clearTimeout(t);
-  }, [settingsMessage]);
+  useAutoDismiss(settingsMessage, () => setSettingsMessage(null));
+  useAutoDismiss(testimonialMessage, () => setTestimonialMessage(null));
 
-  // Auto-dismiss security success toast after 3s
-  useEffect(() => {
-    if (!securityMessage) return;
-    const t = window.setTimeout(() => setSecurityMessage(null), 3000);
-    return () => window.clearTimeout(t);
-  }, [securityMessage]);
-
-  const onSaveNotificationSettings = async () => {
-    setSettingsSaving(true);
+  const autoSaveNotificationSettings = async (applicantUpdatesEnabled: boolean, weeklyDigestEnabled: boolean) => {
     setSettingsError(null);
     setSettingsMessage(null);
 
     const result = await companySettingsService.updateSettings({
-      applicantUpdatesEnabled: emailUpdatesEnabled,
+      applicantUpdatesEnabled,
       weeklyDigestEnabled,
     });
 
     if (result.isSuccess && result.value) {
       setEmailUpdatesEnabled(result.value.applicantUpdatesEnabled);
       setWeeklyDigestEnabled(result.value.weeklyDigestEnabled);
-      setAccountEmail(result.value.email || '');
-      setSignInMethod(result.value.signInMethod || 'Email & Password');
-      setHasPassword(Boolean(result.value.hasPassword));
-      setSettingsDirty(false);
       setSettingsMessage('Notification preferences saved.');
     } else {
       setSettingsError(result.error || 'Failed to save settings.');
     }
-
-    setSettingsSaving(false);
   };
 
-  const onSendPasswordSetupEmail = async () => {
-    if (!accountEmail) return;
-    setSecuritySending(true);
-    setSecurityError(null);
-    setSecurityMessage(null);
-
-    const result = await authService.forgotPassword({ email: accountEmail });
-    if (result.isSuccess) {
-      setSecurityMessage('Verification code sent.');
-      setPasswordSetupStarted(true);
-    } else {
-      setSecurityError(result.error || 'Failed to send password setup email.');
-    }
-
-    setSecuritySending(false);
-  };
-
-  const onSetPassword = async (e: React.FormEvent) => {
+  const onSaveTestimonial = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!accountEmail) return;
+    setTestimonialSaving(true);
+    setTestimonialError(null);
+    setTestimonialMessage(null);
 
-    setSettingPassword(true);
-    setSecurityError(null);
-    setSecurityMessage(null);
-
-    const result = await authService.resetPassword({
-      email: accountEmail,
-      resetCode,
-      newPassword: setupPassword,
-      confirmPassword: setupConfirmPassword,
-    });
+    const result = await companySettingsService.updateTestimonial(testimonialText);
 
     if (result.isSuccess) {
-      setSecurityMessage('Password set successfully.');
-      setResetCode('');
-      setSetupPassword('');
-      setSetupConfirmPassword('');
-      setPasswordSetupStarted(false);
-
-      // Refresh settings so UI switches from "Google One Tap" -> "Email & Password"
-      const refreshed = await companySettingsService.getSettings();
-      if (refreshed.isSuccess && refreshed.value) {
-        setAccountEmail(refreshed.value.email || '');
-        setSignInMethod(refreshed.value.signInMethod || 'Email & Password');
-        setHasPassword(Boolean(refreshed.value.hasPassword));
-      }
+      setTestimonialMessage('Testimonial saved successfully.');
     } else {
-      setSecurityError(result.error || 'Failed to set password.');
+      setTestimonialError(result.error || 'Failed to save testimonial.');
     }
 
-    setSettingPassword(false);
-  };
-
-  const onChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSaving(true);
-    setError(null);
-    setMessage(null);
-
-    const result = await authService.changePassword({
-      currentPassword,
-      newPassword,
-      confirmPassword,
-    });
-
-    if (result.isSuccess) {
-      setMessage('Password updated successfully.');
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-    } else {
-      setError(result.error || 'Failed to change password.');
-    }
-
-    setIsSaving(false);
+    setTestimonialSaving(false);
   };
 
   return (
     <div className="app-shell">
-      <CompanySidebar />
+      <CompanySidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       <div className="main-content">
-        <CompanyHeader title="Settings" subtitle="Manage your recruiter workspace preferences" />
+        <CompanyHeader
+          title="Settings"
+          subtitle="Manage your recruiter workspace preferences"
+          onMenuToggle={() => setIsSidebarOpen((value) => !value)}
+        />
 
         <div className="page-body cs-page">
           <div className="cs-grid">
@@ -230,9 +148,9 @@ export default function CompanySettings() {
                     type="checkbox"
                     checked={emailUpdatesEnabled}
                     onChange={(e) => {
-                      setEmailUpdatesEnabled(e.target.checked);
-                      setSettingsDirty(true);
-                      setSettingsMessage(null);
+                      const newValue = e.target.checked;
+                      setEmailUpdatesEnabled(newValue);
+                      autoSaveNotificationSettings(newValue, weeklyDigestEnabled);
                     }}
                     disabled={settingsLoading}
                   />
@@ -250,9 +168,9 @@ export default function CompanySettings() {
                     type="checkbox"
                     checked={weeklyDigestEnabled}
                     onChange={(e) => {
-                      setWeeklyDigestEnabled(e.target.checked);
-                      setSettingsDirty(true);
-                      setSettingsMessage(null);
+                      const newValue = e.target.checked;
+                      setWeeklyDigestEnabled(newValue);
+                      autoSaveNotificationSettings(emailUpdatesEnabled, newValue);
                     }}
                     disabled={settingsLoading}
                   />
@@ -265,175 +183,43 @@ export default function CompanySettings() {
                   {settingsError || settingsMessage}
                 </div>
               )}
-
-              <div className="cs-actions" style={{ justifyContent: 'space-between' }}>
-                <span className="cs-card-subtitle" style={{ margin: 0 }}>
-                  {settingsLoading ? 'Loading preferences…' : settingsDirty ? 'Unsaved changes' : 'Up to date'}
-                </span>
-                <button
-                  className="cs-btn cs-btn--primary"
-                  type="button"
-                  disabled={settingsLoading || settingsSaving || !settingsDirty}
-                  onClick={onSaveNotificationSettings}
-                >
-                  {settingsSaving ? 'Saving…' : 'Save'}
-                </button>
-              </div>
             </section>
 
-            {/* Security */}
+            {/* Testimonial */}
             <section className="cs-card cs-card--wide">
-              <div className="cs-card-header">
-                <div>
-                  <h3 className="cs-card-title">Security</h3>
-                  <p className="cs-card-subtitle">Keep your account protected.</p>
-                </div>
-                <button
-                  className="cs-btn cs-btn--ghost cs-btn--sm"
-                  type="button"
-                  onClick={() => setSecurityOpen((v) => !v)}
-                >
-                  {securityOpen ? 'Hide' : 'Show'}
-                </button>
-              </div>
+              <h3 className="cs-card-title">Testimonial</h3>
+              <p className="cs-card-subtitle">Share your company's experience with NexApply.</p>
 
-              {securityOpen && (
-                <>
-                  <div className="cs-note" style={{ marginBottom: 12 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                      <span><strong>Sign-in method:</strong> {signInMethod}</span>
-                      {accountEmail ? <span><strong>Email:</strong> {accountEmail}</span> : null}
-                    </div>
-                  </div>
-
-                  {hasPassword ? (
-                    <form className="cs-form" onSubmit={onChangePassword}>
-                      <div className="cs-form-grid">
-                        <label className="cs-field">
-                          <span className="cs-label">Current password</span>
-                          <input
-                            className="cs-input"
-                            type="password"
-                            value={currentPassword}
-                            onChange={(e) => setCurrentPassword(e.target.value)}
-                            required
-                          />
-                        </label>
-                        <label className="cs-field">
-                          <span className="cs-label">New password</span>
-                          <input
-                            className="cs-input"
-                            type="password"
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                            required
-                          />
-                        </label>
-                        <label className="cs-field">
-                          <span className="cs-label">Confirm new password</span>
-                          <input
-                            className="cs-input"
-                            type="password"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            required
-                          />
-                        </label>
-                      </div>
-
-                      {(error || message) && (
-                        <div className={`cs-alert ${error ? 'cs-alert--error' : 'cs-alert--ok'}`}>
-                          {error || message}
-                        </div>
-                      )}
-
-                      <div className="cs-actions">
-                        <button className="cs-btn cs-btn--ghost" type="button" onClick={() => authService.logout()}>
-                          Log out
-                        </button>
-                        <button className="cs-btn cs-btn--primary" type="submit" disabled={isSaving}>
-                          {isSaving ? 'Saving…' : 'Update password'}
-                        </button>
-                      </div>
-                    </form>
-                  ) : (
-                    <>
-                      <div className="cs-note" style={{ marginBottom: 12 }}>
-                        This account was created using Google One Tap and doesn’t have a password yet. To enable email sign-in,
-                        request a verification code and set a password below.
-                      </div>
-
-                      {(securityError || securityMessage) && (
-                        <div className={`cs-alert ${securityError ? 'cs-alert--error' : 'cs-alert--ok'}`}>
-                          {securityError || securityMessage}
-                        </div>
-                      )}
-
-                      <div className="cs-actions" style={{ justifyContent: 'space-between' }}>
-                        <button className="cs-btn cs-btn--ghost" type="button" onClick={() => authService.logout()}>
-                          Log out
-                        </button>
-                        <button
-                          className="cs-btn cs-btn--primary"
-                          type="button"
-                          disabled={!accountEmail || securitySending}
-                          onClick={onSendPasswordSetupEmail}
-                        >
-                          {securitySending ? 'Sending…' : (passwordSetupStarted ? 'Resend code' : 'Send code')}
-                        </button>
-                      </div>
-
-                      {passwordSetupStarted && (
-                        <form className="cs-form" onSubmit={onSetPassword}>
-                          <div className="cs-form-grid">
-                            <label className="cs-field">
-                              <span className="cs-label">Verification code</span>
-                              <input
-                                className="cs-input"
-                                inputMode="numeric"
-                                placeholder="6-digit code"
-                                value={resetCode}
-                                onChange={(e) => setResetCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                required
-                              />
-                            </label>
-                            <label className="cs-field">
-                              <span className="cs-label">New password</span>
-                              <input
-                                className="cs-input"
-                                type="password"
-                                value={setupPassword}
-                                onChange={(e) => setSetupPassword(e.target.value)}
-                                required
-                              />
-                            </label>
-                            <label className="cs-field">
-                              <span className="cs-label">Confirm new password</span>
-                              <input
-                                className="cs-input"
-                                type="password"
-                                value={setupConfirmPassword}
-                                onChange={(e) => setSetupConfirmPassword(e.target.value)}
-                                required
-                              />
-                            </label>
-                          </div>
-
-                          <div className="cs-actions">
-                            <button
-                              className="cs-btn cs-btn--primary"
-                              type="submit"
-                              disabled={settingPassword}
-                            >
-                              {settingPassword ? 'Saving…' : 'Set password'}
-                            </button>
-                          </div>
-                        </form>
-                      )}
-                    </>
-                  )}
-                </>
+              {settingsError && (
+                <div className="cs-alert cs-alert--error">{settingsError}</div>
               )}
+
+              <form className="cs-form" onSubmit={onSaveTestimonial}>
+                <label className="cs-field">
+
+                  <textarea
+                    className="cs-input"
+                    rows={4}
+                    placeholder="Share how NexApply helped your company find great talent..."
+                    value={testimonialText}
+                    onChange={(e) => setTestimonialText(e.target.value)}
+                    maxLength={200}
+                  />
+                  <span className="cs-field-hint">{testimonialText.length}/200 characters</span>
+                </label>
+
+                {(testimonialError || testimonialMessage) && (
+                  <div className={`cs-alert ${testimonialError ? 'cs-alert--error' : 'cs-alert--ok'}`}>
+                    {testimonialError || testimonialMessage}
+                  </div>
+                )}
+
+                <div className="cs-actions">
+                  <button className="cs-btn cs-btn--primary" type="submit" disabled={testimonialSaving || !testimonialText.trim()}>
+                    {testimonialSaving ? 'Saving…' : 'Save Testimonial'}
+                  </button>
+                </div>
+              </form>
             </section>
           </div>
         </div>

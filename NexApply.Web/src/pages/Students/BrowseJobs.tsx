@@ -2,9 +2,11 @@ import { useEffect, useState, useMemo } from 'react'
 import './BrowseJobs.css'
 import {Sidebar} from '../../components/Sidebar'
 import {PageHeader} from '../../components/PageHeader'
+import { CustomDropdown } from '../../components/ui/CustomDropdown'
 import { jobListingService, type StudentBrowseJobDto } from '../../services/jobListingService'
 import { applicationService } from '../../services/applicationService'
 import { savedJobsService } from '../../services/savedJobsService'
+import { lockBodyScroll } from '../../lib/bodyScrollLock'
 
 // ─────────────────────────────────────────
 //  INTERFACES
@@ -139,6 +141,8 @@ export function BrowseJobs() {
   const [selectedJob, setSelectedJob] = useState<JobListing | null>(null)
   const [isLoadingJobs, setIsLoadingJobs] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [locationSearch, setLocationSearch] = useState('')
   const [sortBy, setSortBy] = useState('recent')
@@ -164,6 +168,22 @@ export function BrowseJobs() {
   const [hasMore, setHasMore] = useState(false)
 
   // ── Computed ───────────────────────────
+  useEffect(() => {
+    if (!isFiltersOpen) return;
+    return lockBodyScroll();
+  }, [isFiltersOpen]);
+
+  useEffect(() => {
+    if (!isFiltersOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsFiltersOpen(false);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isFiltersOpen]);
+
   useEffect(() => {
     const loadJobs = async () => {
       setIsLoadingJobs(true)
@@ -412,9 +432,13 @@ export function BrowseJobs() {
   // ── Render ─────────────────────────────
   return (
     <div className="app-shell">
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <main className="main-content">
-        <PageHeader title="Browse Jobs" subtitle={`${filteredJobs.length} listings — updated today`}>
+        <PageHeader
+          title="Browse Jobs"
+          subtitle={`${filteredJobs.length} listings — updated today`}
+          onMenuToggle={() => setIsSidebarOpen(v => !v)}
+        >
           <div className="search-wrap">
             <svg className="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none">
               <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" />
@@ -428,6 +452,17 @@ export function BrowseJobs() {
               onChange={e => setSearchQuery(e.target.value)}
             />
           </div>
+          <button
+            type="button"
+            className="filters-toggle-btn"
+            onClick={() => setIsFiltersOpen(v => !v)}
+            aria-label="Toggle filters"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            Filters
+          </button>
           <button className="notif-btn">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
               <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"
@@ -440,7 +475,13 @@ export function BrowseJobs() {
         <div className="browse-body">
 
           {/* ══ LEFT — FILTER PANEL ══ */}
-          <aside className="filter-panel">
+          <button
+            type="button"
+            className={`filter-overlay ${isFiltersOpen ? 'is-visible' : ''}`}
+            onClick={() => setIsFiltersOpen(false)}
+            aria-label="Close filters"
+          />
+          <aside className={`filter-panel ${isFiltersOpen ? 'is-open' : ''}`}>
 
             <div className="filter-header">
               <span className="filter-title">Filters</span>
@@ -632,11 +673,16 @@ export function BrowseJobs() {
               <span className="results-count"><strong>{filteredJobs.length}</strong> jobs found</span>
               <div className="sort-wrap">
                 <span className="sort-label">Sort by</span>
-                <select className="sort-select" value={sortBy} onChange={e => setSortBy(e.target.value)}>
-                  <option value="recent">Most Recent</option>
-                  <option value="match">Best Match</option>
-                  <option value="company">Company A-Z</option>
-                </select>
+                <CustomDropdown
+                  options={[
+                    { value: 'recent', label: 'Most Recent' },
+                    { value: 'match', label: 'Best Match' },
+                    { value: 'company', label: 'Company A-Z' },
+                  ]}
+                  value={sortBy}
+                  onChange={(val) => setSortBy(val as string)}
+                  className="sort-select"
+                />
               </div>
             </div>
 

@@ -31,6 +31,7 @@ function normalizeLink(urlOrHandle?: string) {
 export default function CompanyApplicantProfile() {
   const { applicationId } = useParams()
 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [applicant, setApplicant] = useState<ApplicantDto | null>(null)
@@ -83,10 +84,14 @@ export default function CompanyApplicantProfile() {
 
   return (
     <div className="app-shell">
-      <CompanySidebar />
+      <CompanySidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       <div className="main-content">
-        <CompanyHeader title="Applicant Profile" subtitle="Review candidate info for this application" />
+        <CompanyHeader
+          title="Applicant Profile"
+          subtitle="Review candidate info for this application"
+          onMenuToggle={() => setIsSidebarOpen(v => !v)}
+        />
 
         <div className="cap-page">
           <div className="cap-topbar">

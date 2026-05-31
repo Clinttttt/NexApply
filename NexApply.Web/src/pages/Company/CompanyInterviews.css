@@ -777,7 +777,7 @@
 /* ---- Card Main Row ---- */
 .interview-card-main {
     display: grid;
-    grid-template-columns: 130px 1fr 80px 85px 50px;
+    grid-template-columns: minmax(96px, 130px) minmax(0, 1fr) minmax(72px, 80px) minmax(72px, 85px) 50px;
     align-items: center;
     padding: 16px 18px;
     gap: 14px;

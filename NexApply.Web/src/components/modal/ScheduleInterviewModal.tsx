@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './ScheduleInterviewModal.css';
 import { jobListingService } from '../../services/jobListingService';
 
@@ -54,36 +54,42 @@ export const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({
   const [jobListings, setJobListings] = useState<Array<{ id: string; title: string }>>([]);
   const [isLoadingJobs, setIsLoadingJobs] = useState(false);
 
-  useEffect(() => {
-    if (!isVisible) return;
-
-    setInterview(initialInterview || {
-      candidateName: '',
-      jobTitle: '',
-      scheduledAt: new Date().toISOString().split('T')[0],
-      durationMins: 60,
-      format: '',
-      location: '',
-      notes: '',
-    });
-    setInterviewTime(initialTime || '10:00');
-    setInterviewerName(initialInterviewerName || '');
-  }, [isVisible]);
-
-  useEffect(() => {
-    if (isVisible && !isRescheduleMode) {
-      fetchJobListings();
-    }
-  }, [isVisible, isRescheduleMode]);
-
-  const fetchJobListings = async () => {
+  const fetchJobListings = useCallback(async () => {
     setIsLoadingJobs(true);
     const result = await jobListingService.getCompanyJobListings();
     if (result.isSuccess && result.value) {
       setJobListings(result.value.map(j => ({ id: j.id, title: j.title })));
     }
     setIsLoadingJobs(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible) return;
+    const timer = window.setTimeout(() => {
+      setInterview(initialInterview || {
+        candidateName: '',
+        jobTitle: '',
+        scheduledAt: new Date().toISOString().split('T')[0],
+        durationMins: 60,
+        format: '',
+        location: '',
+        notes: '',
+      });
+      setInterviewTime(initialTime || '10:00');
+      setInterviewerName(initialInterviewerName || '');
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [isVisible, initialInterview, initialTime, initialInterviewerName]);
+
+  useEffect(() => {
+    if (isVisible && !isRescheduleMode) {
+      const timer = window.setTimeout(() => {
+        void fetchJobListings();
+      }, 0);
+      return () => window.clearTimeout(timer);
+    }
+  }, [isVisible, isRescheduleMode, fetchJobListings]);
 
   const handleConfirm = () => {
     if (!interview.candidateName || !interview.jobTitle || !interview.format) {

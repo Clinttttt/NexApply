@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using NexApply.Api.Common;
 using NexApply.Api.Data;
+using NexApply.Api.Entities.Enums;
 using NexApply.Contracts.Common;
 using NexApply.Contracts.CompanyDashboard;
 
@@ -58,7 +59,7 @@ public class GetCompanyDashboardHandler : IRequestHandler<GetCompanyDashboardQue
                 ApplicationId = a.Id,
                 StudentName = a.Student.FullName,
                 JobTitle = a.JobListing.Title,
-                Status = a.Status.ToString(),
+                Status = FormatApplicationStatus(a.Status),
                 AppliedAt = a.CreatedAt
             })
             .ToListAsync(ct);
@@ -94,4 +95,15 @@ public class GetCompanyDashboardHandler : IRequestHandler<GetCompanyDashboardQue
 
         return Result<CompanyDashboardDto>.Success(dashboard);
     }
+
+    private static string FormatApplicationStatus(ApplicationStatus status) => status switch
+    {
+        ApplicationStatus.Submitted => "Submitted",
+        ApplicationStatus.UnderReview => "Under Review",
+        ApplicationStatus.Shortlisted => "Shortlisted",
+        ApplicationStatus.ForInterview => "Interview",
+        ApplicationStatus.Declined => "Declined",
+        ApplicationStatus.Decided => "Decided",
+        _ => "Submitted"
+    };
 }

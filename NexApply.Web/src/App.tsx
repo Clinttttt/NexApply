@@ -1,8 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { authService } from './services/authService';
 import { Login } from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
+import { ForgotPassword } from './pages/Auth/ForgotPassword';
 import { BrowseJobs }  from './pages/Students/BrowseJobs';
 import { CompanyProfile } from './pages/Company/CompanyProfile';
 import { Dashboard } from './pages/Students/StudentDashboard';
@@ -40,48 +42,197 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
 
      
-          <Route path="/browse-jobs" element={ <ProtectedRoute> <BrowseJobs /> </ProtectedRoute> } />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={['Student']}>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
 
-          <Route path="/company-profile" element={ <ProtectedRoute> <CompanyProfile /> </ProtectedRoute> } />
-        
-          <Route path="/dashboard" element = { <Dashboard /> }/>
+          <Route
+            path="/browse-jobs"
+            element={
+              <ProtectedRoute allowedRoles={['Student']}>
+                <BrowseJobs />
+              </ProtectedRoute>
+            }
+          />
 
-          <Route path="/my-applications" element={ <Applications /> } />
+          <Route
+            path="/my-applications"
+            element={
+              <ProtectedRoute allowedRoles={['Student']}>
+                <Applications />
+              </ProtectedRoute>
+            }
+          />
 
-          <Route path="/job-board" element={ <JobBoard /> } />
+          <Route
+            path="/job-board"
+            element={
+              <ProtectedRoute allowedRoles={['Student']}>
+                <JobBoard />
+              </ProtectedRoute>
+            }
+          />
 
-          <Route path="/notifications" element={ <Notifications /> } />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute allowedRoles={['Student']}>
+                <Notifications />
+              </ProtectedRoute>
+            }
+          />
 
-          <Route path="/saved-jobs" element={ <SavedJobs /> } />
-          
-          <Route path="/student-profile" element={ <StudentProfile /> } />
+          <Route
+            path="/saved-jobs"
+            element={
+              <ProtectedRoute allowedRoles={['Student']}>
+                <SavedJobs />
+              </ProtectedRoute>
+            }
+          />
 
-          <Route path="/messages" element={ <ProtectedRoute> <StudentMessages /> </ProtectedRoute> } />
-         
-          <Route path="/company-dashboard" element={ <CompanyDashboard /> } />
+          <Route
+            path="/student-profile"
+            element={
+              <ProtectedRoute allowedRoles={['Student']}>
+                <StudentProfile />
+              </ProtectedRoute>
+            }
+          />
 
-          <Route path="/company-post-job" element={ <CompanyPostJob /> } />
+          <Route
+            path="/messages"
+            element={
+              <ProtectedRoute allowedRoles={['Student']}>
+                <StudentMessages />
+              </ProtectedRoute>
+            }
+          />
 
-          <Route path="/company-manage-jobs" element={ <CompanyManageJobs /> } />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute allowedRoles={['Student']}>
+                <StudentSettings />
+              </ProtectedRoute>
+            }
+          />
 
-          <Route path="/company-applicants" element={ <CompanyApplicants /> } />
-          <Route path="/company-applicants/:applicationId" element={ <CompanyApplicantProfile /> } />
+          <Route
+            path="/company-dashboard"
+            element={
+              <ProtectedRoute allowedRoles={['Company']}>
+                <CompanyDashboard />
+              </ProtectedRoute>
+            }
+          />
 
-          <Route path="/company-interviews" element={ <CompanyInterviews /> } />
+          <Route
+            path="/company-post-job"
+            element={
+              <ProtectedRoute allowedRoles={['Company']}>
+                <CompanyPostJob />
+              </ProtectedRoute>
+            }
+          />
 
-          <Route path="/company-messages" element={ <CompanyMessages /> } />
+          <Route
+            path="/company-manage-jobs"
+            element={
+              <ProtectedRoute allowedRoles={['Company']}>
+                <CompanyManageJobs />
+              </ProtectedRoute>
+            }
+          />
 
-          <Route path="/company/jobs/:id" element={ <CompanyJobView /> } />
+          <Route
+            path="/company-applicants"
+            element={
+              <ProtectedRoute allowedRoles={['Company']}>
+                <CompanyApplicants />
+              </ProtectedRoute>
+            }
+          />
 
-          <Route path="/company/jobs/:id/edit" element={ <CompanyEditJob /> } />
+          <Route
+            path="/company-applicants/:applicationId"
+            element={
+              <ProtectedRoute allowedRoles={['Company']}>
+                <CompanyApplicantProfile />
+              </ProtectedRoute>
+            }
+          />
 
-          <Route path="/company/settings" element={ <ProtectedRoute> <CompanySettings /> </ProtectedRoute> } />
+          <Route
+            path="/company-interviews"
+            element={
+              <ProtectedRoute allowedRoles={['Company']}>
+                <CompanyInterviews />
+              </ProtectedRoute>
+            }
+          />
 
-          <Route path="/settings" element={ <ProtectedRoute> <StudentSettings /> </ProtectedRoute> } />
+          <Route
+            path="/company-messages"
+            element={
+              <ProtectedRoute allowedRoles={['Company']}>
+                <CompanyMessages />
+              </ProtectedRoute>
+            }
+          />
 
-          <Route path="/" element={<Navigate to="/dashboard" replace />}  />
+          <Route
+            path="/company/jobs/:id"
+            element={
+              <ProtectedRoute allowedRoles={['Company']}>
+                <CompanyJobView />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/company/jobs/:id/edit"
+            element={
+              <ProtectedRoute allowedRoles={['Company']}>
+                <CompanyEditJob />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/company-profile"
+            element={
+              <ProtectedRoute allowedRoles={['Company']}>
+                <CompanyProfile />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/company/settings"
+            element={
+              <ProtectedRoute allowedRoles={['Company']}>
+                <CompanySettings />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/"
+            element={
+              authService.isAuthenticated()
+                ? <Navigate to={authService.getDefaultDashboardRoute()} replace />
+                : <Navigate to="/login" replace />
+            }
+          />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
