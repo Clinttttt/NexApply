@@ -6,6 +6,7 @@ import { CustomDropdown } from "../../components/ui/CustomDropdown";
 import "./SavedJobs.css";
 import { savedJobsService } from "../../services/savedJobsService";
 import { applicationService } from "../../services/applicationService";
+import { SavedJobsSkeleton } from "./SavedJobsSkeleton";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -187,10 +188,7 @@ export  function SavedJobs() {
         <div className="sj-body">
 
           {isLoading && (
-            <div className="sj-empty">
-              <p className="sj-empty-title">Loading saved jobs…</p>
-              <p className="sj-empty-sub">Please wait.</p>
-            </div>
+            <SavedJobsSkeleton />
           )}
 
           {!isLoading && loadError && (

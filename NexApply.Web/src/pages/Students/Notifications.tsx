@@ -4,6 +4,7 @@ import {Sidebar} from "../../components/Sidebar";
 import {PageHeader} from "../../components/PageHeader";
 import "./Notifications.css";
 import { notificationsService, type NotificationDto } from "../../services/notificationsService";
+import { NotificationsSkeleton } from "./NotificationsSkeleton";
 
 // ── Models ───────────────────────────────────────────────────────────────────
 
@@ -501,20 +502,7 @@ export function Notifications() {
           <section className="notif-list-section">
 
             {isLoading ? (
-              <div className="notif-empty">
-                <div className="notif-empty-icon">
-                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"
-                      stroke="#CBD5E1"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </div>
-                <p className="notif-empty-title">Loading notifications…</p>
-                <p className="notif-empty-sub">Please wait.</p>
-              </div>
+              <NotificationsSkeleton />
             ) : loadError ? (
               <div className="notif-empty">
                 <div className="notif-empty-icon">

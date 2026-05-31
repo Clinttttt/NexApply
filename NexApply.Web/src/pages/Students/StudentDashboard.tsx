@@ -8,6 +8,7 @@ import {
   type StudentDashboardDto,
   type StudentDashboardJobMatchDto
 } from '../../services/studentDashboardService';
+import { DashboardSkeleton } from './DashboardSkeleton';
 import './StudentDashboard.css';
 
 const emptyDashboard: StudentDashboardDto = {
@@ -200,6 +201,10 @@ export function Dashboard() {
             </div>
           )}
 
+          {isLoading ? (
+            <DashboardSkeleton />
+          ) : (
+            <>
           <div className="activity-banner">
             <div className="banner-pipeline">
               <div className="bp-item">
@@ -468,6 +473,8 @@ export function Dashboard() {
               </div>
             </div>
           </div>
+            </>
+          )}
         </div>
       </main>
     </div>

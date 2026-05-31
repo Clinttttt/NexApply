@@ -7,6 +7,7 @@ import { jobListingService, type StudentBrowseJobDto } from '../../services/jobL
 import { applicationService } from '../../services/applicationService'
 import { savedJobsService } from '../../services/savedJobsService'
 import { lockBodyScroll } from '../../lib/bodyScrollLock'
+import { BrowseJobsSkeleton } from './BrowseJobsSkeleton'
 
 // ─────────────────────────────────────────
 //  INTERFACES
@@ -687,10 +688,7 @@ export function BrowseJobs() {
             </div>
 
             {isLoadingJobs ? (
-              <div className="empty-state">
-                <p className="empty-title">Loading matched jobs...</p>
-                <p className="empty-sub">Checking active listings against your resume.</p>
-              </div>
+              <BrowseJobsSkeleton />
             ) : loadError ? (
               <div className="empty-state">
                 <p className="empty-title">Could not load jobs</p>

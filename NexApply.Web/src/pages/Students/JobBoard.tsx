@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {Sidebar} from "../../components/Sidebar";
 import {PageHeader} from "../../components/PageHeader";
 import { CustomDropdown } from "../../components/ui/CustomDropdown";
+import { JobBoardSkeleton } from "./JobBoardSkeleton";
 import "./JobBoard.css";
 import { jobListingService, type JobBoardJobDto } from "../../services/jobListingService";
 import { savedJobsService } from "../../services/savedJobsService";
@@ -379,23 +380,7 @@ export default function JobBoard() {
             {/* ── Job List ── */}
             <div className="job-list">
               {isLoading ? (
-                <div className="empty-state">
-                  <svg
-                    width="32"
-                    height="32"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <circle cx="11" cy="11" r="8" />
-                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                  </svg>
-                  <p className="empty-state__title">Loading jobs…</p>
-                  <p className="empty-state__sub">Please wait.</p>
-                </div>
+                <JobBoardSkeleton />
               ) : loadError ? (
                 <div className="empty-state">
                   <svg

@@ -5,6 +5,7 @@ import {Sidebar} from '../../components/Sidebar'
 import {PageHeader} from '../../components/PageHeader'
 import { CustomDropdown } from '../../components/ui/CustomDropdown'
 import { applicationService } from '../../services/applicationService'
+import { ApplicationsSkeleton } from './ApplicationsSkeleton'
 
 // ─────────────────────────────────────────
 //  INTERFACES
@@ -195,10 +196,7 @@ export default function Applications() {
         <div className="applications-body">
 
           {isLoading && (
-            <div className="empty-state">
-              <p className="empty-state__title">Loading applications…</p>
-              <p className="empty-state__sub">Please wait.</p>
-            </div>
+            <ApplicationsSkeleton />
           )}
 
           {!isLoading && loadError && (

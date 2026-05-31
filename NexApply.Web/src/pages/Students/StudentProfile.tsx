@@ -5,6 +5,7 @@ import pdfWorkerSrc from 'pdfjs-dist/build/pdf.worker.mjs?url';
 import { Sidebar } from '../../components/Sidebar';
 import { PageHeader } from '../../components/PageHeader';
 import { studentProfileService, type UpdateStudentProfileCommand } from '../../services/studentProfileService';
+import { ProfileSkeleton } from './ProfileSkeleton';
 import './StudentProfile.css';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
@@ -649,6 +650,9 @@ export function StudentProfile() {
           )}
         </PageHeader>
 
+        {isLoading ? (
+          <ProfileSkeleton />
+        ) : (
         <div className="profile-body">
           <div className="profile-grid">
             {/* LEFT COLUMN */}
@@ -1357,6 +1361,7 @@ export function StudentProfile() {
             </div>
           </div>
         </div>
+        )}
       </main>
     </div>
   );
