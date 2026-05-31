@@ -458,6 +458,9 @@
 .field-input::placeholder,
 .field-textarea::placeholder {
   color: #94A3B8;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .field-input:focus,
