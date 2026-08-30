@@ -1,0 +1,37 @@
+
+.student-messages-page .main-content {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-slate-50);
+}
+
+.student-messages-page .messages-shell {
+  border: 1px solid var(--color-slate-200);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  margin: 0 24px 24px;
+  min-height: 560px;
+}
+
+@media (max-width: 900px) {
+  .student-messages-page .messages-shell {
+    height: auto;
+    min-height: 520px;
+  }
+}
+
+@media (max-width: 700px) {
+  .student-messages-page .messages-shell {
+    height: auto;
+    min-height: 0;
+    margin: 0 16px 16px;
+  }
+}
+
+.student-messages-page .conv-panel-title {
+  font-size: var(--text-2xl);
+}
+
+.student-messages-page .chat-empty-state {
+  padding: 24px;
+}

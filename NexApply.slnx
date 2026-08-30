@@ -1,7 +1,6 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="NexApply.Api/NexApply.Api.csproj" />
-    <Project Path="NexApply.Contracts/NexApply.Contracts.csproj" Id="6c7c853c-68b5-49a6-8058-0164d4b0bfe3" />
     <Project Path="NexApply.Tests/NexApply.Tests.csproj" />
   </Folder>
 </Solution>

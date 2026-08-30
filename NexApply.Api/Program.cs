@@ -1,198 +1,65 @@
-using FluentValidation;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.Google;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.IdentityModel.Tokens.Experimental;
-using Microsoft.OpenApi.Models;
-using NexApply.Api;
-using NexApply.Api.Common;
-using NexApply.Api.Common.Behaviors;
-using NexApply.Api.Common.Middleware;
-using NexApply.Api.Data;
 using NexApply.Api.Features.Applications;
 using NexApply.Api.Features.Auth;
-using NexApply.Api.Features.Auth.Login;
-using NexApply.Api.Features.Auth.LoginWithEmail;
 using NexApply.Api.Features.CompanyApplicants;
 using NexApply.Api.Features.CompanyDashboard;
-using NexApply.Api.Features.CompanySettings;
 using NexApply.Api.Features.CompanyProfile;
+using NexApply.Api.Features.CompanySettings;
 using NexApply.Api.Features.Interviews;
 using NexApply.Api.Features.JobListings;
-using NexApply.Api.Features.Messages.GetConversations;
-using NexApply.Api.Features.Messages.GetMessages;
-using NexApply.Api.Features.Messages.SendMessage;
+using NexApply.Api.Features.Messages;
 using NexApply.Api.Features.Notifications;
 using NexApply.Api.Features.Profile;
-using NexApply.Api.Features.PublicStats.GetPublicStats;
-using NexApply.Api.Features.PublicStats.GetPublicFeedback;
+using NexApply.Api.Features.PublicStats;
 using NexApply.Api.Features.SavedJobs;
 using NexApply.Api.Features.StudentDashboard;
 using NexApply.Api.Features.StudentSettings;
-using NexApply.Api.Services;
-using System.Xml.Linq;
+using NexApply.Api.Shared.Extensions;
+using NexApply.Api.Shared.Middleware;
 
-// Load environment variables from .env file
 DotNetEnv.Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services
+    .AddApplication()
+    .AddPersistence(builder.Configuration)
+    .AddApiAuthentication(builder.Configuration)
+    .AddApiCors(builder.Configuration)
+    .AddApiDocumentation()
+    .AddAuthFeature()
+    .AddProblemDetails()
+    .AddExceptionHandler<GlobalExceptionHandler>();
 
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddHttpClient();
-builder.Services.AddControllers();
-builder.Services.AddAuthorization();
-
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["AppSettings:Issuer"],
-            ValidAudience = builder.Configuration["AppSettings:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(builder.Configuration["AppSettings:Token"]!))
-        };
-    })
-    .AddGoogle(options =>
-    {
-        options.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? "";
-        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? "";
-        options.CallbackPath = "/api/auth/google-callback";
-        options.SaveTokens = true;
-        options.Scope.Add("email");
-        options.Scope.Add("profile");
-    })
-    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
-    {
-        options.Cookie.Name = "NexApply.Auth";
-        options.Cookie.HttpOnly = true;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-        options.Cookie.SameSite = SameSiteMode.Lax;
-        options.ExpireTimeSpan = TimeSpan.FromDays(7);
-        options.SlidingExpiration = true;
-    });
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy.WithOrigins(
-                  "http://localhost:5173",
-                  "http://localhost:7181",
-                  "http://localhost:5076",
-                  "http://localhost:3000",
-                  "https://nice-bay-046df3600.7.azurestaticapps.net",
-                  "https://www.next-apply.cloud-ip.cc"
-              )
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
-    });
-});
-builder.Services.AddSwaggerGen(options =>
-{
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        In = ParameterLocation.Header,
-        Description = "Please enter a valid token",
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        Scheme = "Bearer",
-        BearerFormat = "JWT"
-    });
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
-});
-builder.Services.AddValidatorsFromAssembly(typeof(ApplicationAssemblyMarker).Assembly);
-builder.Services.AddMediatR(cfg =>
-{
-    cfg.RegisterServicesFromAssembly(typeof(ApplicationAssemblyMarker).Assembly);
-    cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
-});
-
-
-
-
-
-//------------------SERVICES---------------------------------//
-builder.Services.AddScoped<TokenService>();
-builder.Services.AddScoped<CurrentUser>();
-builder.Services.AddScoped<IEmailService, SmtpEmailService>();
-
-
-
-
-
-
-
-
-//------------------PIPELINE---------------------------------//
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-
     app.UseSwaggerUI();
 }
 
-app.UseCors("AllowAll");
-
-app.UseMiddleware<GlobalExceptionMiddleware>();
-
+app.UseExceptionHandler();
+app.UseCors(CorsServices.PolicyName);
 app.UseHttpsRedirection();
-
 app.UseAuthentication();
-
 app.UseAuthorization();
 
-app.MapControllers();
-
-app.MapAuthEndpoints();
-app.MapProfileEndpoints();
-app.MapJobListingsEndpoints();
-app.MapApplicationsEndpoints();
-app.MapSavedJobsEndpoints();
-app.MapNotificationsEndpoints();
-app.MapCompanyProfileEndpoints();
-app.MapCompanyDashboardEndpoints();
-app.MapCompanySettingsEndpoints();
-app.MapStudentDashboardEndpoints();
-app.MapStudentSettingsEndpoints();
-app.MapCompanyApplicantsEndpoints();
-app.MapInterviewsEndpoints();
-app.MapGetConversations();
-app.MapGetMessages();
-app.MapSendMessage();
-app.MapGetPublicStats();
-app.MapGetPublicFeedback();
+app.MapAuth();
+app.MapProfile();
+app.MapApplications();
+app.MapJobListings();
+app.MapSavedJobs();
+app.MapNotifications();
+app.MapMessages();
+app.MapInterviews();
+app.MapStudentDashboard();
+app.MapStudentSettings();
+app.MapCompanyProfile();
+app.MapCompanySettings();
+app.MapCompanyDashboard();
+app.MapCompanyApplicants();
+app.MapPublicStats();
 
 app.Run();
 
-// Make Program class accessible to integration tests
-public partial class Program { }
+public partial class Program;

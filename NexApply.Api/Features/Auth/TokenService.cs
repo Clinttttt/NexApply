@@ -1,9 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using NexApply.Contracts.Auth;
 using NexApply.Api.Data;
-using NexApply.Api.Entities;
+using NexApply.Api.Domain;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -50,9 +48,9 @@ public class TokenService(AppDbContext context, IConfiguration configuration)
         return refreshToken;
     }
 
-    public async Task<TokenResponseDto> CreateTokenResponse(User user)
+    public async Task<TokenResponse> CreateTokenResponse(User user)
     {
-        return new TokenResponseDto
+        return new TokenResponse
         {
             AccessToken = CreateToken(user),
             RefreshToken = await GenerateAndSaveRefreshToken(user)

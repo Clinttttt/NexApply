@@ -1,4 +1,4 @@
-// Google One Tap Configuration
+
 window.googleConfig = {
   clientId: '7329258126-0t1m7td7lm4ltekdm3v2bne6fndke9qj.apps.googleusercontent.com'
 };
@@ -7,14 +7,11 @@ let googleInitialized = false;
 
 const getGoogleIdentity = () => window.google?.accounts?.id;
 
-// Initialize Google Sign-In
 window.initGoogleSignIn = () => {
   const googleIdentity = getGoogleIdentity();
 
   if (googleIdentity) {
     if (googleInitialized) {
-      // We intentionally allow re-initialization so the latest
-      // window.handleGoogleCallback (and role selection) is used.
       console.log('Google Sign-In re-initializing');
     }
 
@@ -33,7 +30,6 @@ window.initGoogleSignIn = () => {
   }
 };
 
-// Prompt Google One Tap
 window.promptGoogleOneTap = () => {
   const googleIdentity = getGoogleIdentity();
 
@@ -44,7 +40,6 @@ window.promptGoogleOneTap = () => {
   }
 };
 
-// Render Google Sign-In button
 window.renderGoogleButton = (elementId) => {
   const googleIdentity = getGoogleIdentity();
   const element = document.getElementById(elementId);

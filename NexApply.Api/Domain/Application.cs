@@ -1,0 +1,76 @@
+using NexApply.Api.Domain.Common;
+using NexApply.Api.Domain.Enums;
+
+namespace NexApply.Api.Domain;
+
+public class Application : Entity
+{
+    public Guid StudentId { get; private set; }
+    public Guid JobListingId { get; private set; }
+    public string? CoverLetter { get; private set; }
+    public string? ResumeUrl { get; private set; }
+    public ApplicationStatus Status { get; private set; } = ApplicationStatus.Submitted;
+    public string? RecruiterNotes { get; private set; }
+
+    public StudentProfile Student { get; private set; } = null!;
+    public JobListing JobListing { get; private set; } = null!;
+
+    private Application() { }
+
+    public static Application Create(
+        Guid studentId,
+        Guid jobListingId,
+        string? coverLetter,
+        string? resumeUrl)
+    {
+        return new Application
+        {
+            StudentId = studentId,
+            JobListingId = jobListingId,
+            CoverLetter = coverLetter,
+            ResumeUrl = resumeUrl
+        };
+    }
+
+    public void MoveToUnderReview()
+    {
+        Status = ApplicationStatus.UnderReview;
+        MarkAsUpdated();
+    }
+
+    public void MarkAsSubmitted()
+    {
+        Status = ApplicationStatus.Submitted;
+        MarkAsUpdated();
+    }
+
+    public void Shortlist()
+    {
+        Status = ApplicationStatus.Shortlisted;
+        MarkAsUpdated();
+    }
+
+    public void MoveToInterview()
+    {
+        Status = ApplicationStatus.ForInterview;
+        MarkAsUpdated();
+    }
+
+    public void Decline()
+    {
+        Status = ApplicationStatus.Declined;
+        MarkAsUpdated();
+    }
+
+    public void MarkAsDecided()
+    {
+        Status = ApplicationStatus.Decided;
+        MarkAsUpdated();
+    }
+
+    public void UpdateRecruiterNotes(string notes)
+    {
+        RecruiterNotes = notes;
+        MarkAsUpdated();
+    }
+}

@@ -7,13 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Features\JobListings\ApproveJobListing\**" />
-    <Content Remove="Features\JobListings\ApproveJobListing\**" />
-    <EmbeddedResource Remove="Features\JobListings\ApproveJobListing\**" />
-    <None Remove="Features\JobListings\ApproveJobListing\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="DotNetEnv" Version="3.1.1" />
     <PackageReference Include="FluentValidation" Version="12.1.1" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
@@ -23,6 +16,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.14" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -31,24 +25,6 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.4" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.17.0" />
     <PackageReference Include="Tesseract" Version="5.2.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\NexApply.Contracts\NexApply.Contracts.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Features\Applications\ViewAll\" />
-    <Folder Include="Features\Applications\UpdateStatus\" />
-    <Folder Include="Features\Auth\Logout\" />
-    <Folder Include="Features\JobListings\CreateJobListing\" />
-    <Folder Include="Features\JobListings\EditJobListing\" />
-    <Folder Include="Features\JobListings\DeleteJobListing\" />
-    <Folder Include="Features\JobListings\BrowseJobListings\" />
-    <Folder Include="Features\ResumeMatching\Match\" />
-    <Folder Include="Features\ResumeMatching\Parse\" />
-    <Folder Include="Features\ResumeMatching\Upload\" />
-    <Folder Include="Features\Search\SearchListings\" />
   </ItemGroup>
 
   <ItemGroup>

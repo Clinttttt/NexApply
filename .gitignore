@@ -374,3 +374,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+NexApply.Api/uploads/

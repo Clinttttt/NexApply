@@ -1,14 +1,9 @@
-/* Import Google Fonts */
+
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:wght@600;700&display=swap');
 
 @import "tailwindcss";
 
-/* =========================================
-   NexApply — Global Design System
-   ========================================= */
-
 :root {
-    /* ---- Color Palette ---- */
     --color-white: #FFFFFF;
     --color-primary: #1D4ED8;
     --color-primary-light: #3B82F6;
@@ -16,8 +11,7 @@
     --color-primary-bg: #EFF6FF;
     --color-primary-bg-light: #DBEAFE;
     --color-primary-border: #BFDBFE;
-    
-    /* Slate Grays */
+
     --color-slate-900: #0F172A;
     --color-slate-800: #1E293B;
     --color-slate-700: #334155;
@@ -28,28 +22,26 @@
     --color-slate-200: #E2E8F0;
     --color-slate-100: #F1F5F9;
     --color-slate-50: #F8FAFC;
-    
-    /* Accent Colors */
+
     --color-amber-700: #D97706;
     --color-amber-600: #F59E0B;
     --color-amber-100: #FEF3C7;
     --color-amber-50: #FDE68A;
-    
+
     --color-green-700: #047857;
     --color-green-600: #059669;
     --color-green-500: #10B981;
     --color-green-100: #D1FAE5;
     --color-green-50: #A7F3D0;
-    
+
     --color-red-700: #B91C1C;
     --color-red-600: #DC2626;
     --color-red-100: #FEE2E2;
     --color-red-50: #FEF2F2;
-    
-    /* ---- Typography ---- */
+
     --font-primary: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --font-display: 'Fraunces', serif;
-    
+
     --text-xs: 10px;
     --text-sm: 11px;
     --text-base: 12px;
@@ -64,8 +56,7 @@
     --text-7xl: 28px;
     --text-8xl: 32px;
     --text-9xl: 36px;
-    
-    /* ---- Spacing ---- */
+
     --space-1: 4px;
     --space-2: 8px;
     --space-3: 12px;
@@ -74,28 +65,24 @@
     --space-6: 24px;
     --space-7: 28px;
     --space-8: 32px;
-    
-    /* ---- Border Radius ---- */
+
     --radius-sm: 6px;
     --radius-md: 8px;
     --radius-lg: 10px;
     --radius-xl: 12px;
     --radius-2xl: 14px;
     --radius-full: 9999px;
-    
-    /* ---- Shadows ---- */
+
     --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
     --shadow-md: 0 2px 8px rgba(15, 23, 42, 0.08);
     --shadow-lg: 0 4px 20px rgba(15, 23, 42, 0.08);
     --shadow-primary: 0 2px 8px rgba(29, 78, 216, 0.3);
-    
-    /* ---- Transitions ---- */
+
     --transition-fast: 0.12s ease;
     --transition-base: 0.15s ease;
     --transition-slow: 0.2s ease;
 }
 
-/* ---- Global Resets ---- */
 * {
     margin: 0;
     padding: 0;
@@ -120,10 +107,9 @@ body {
     overflow-x: hidden;
 }
 
-/* ---- Global Scrollbar Hiding ---- */
 * {
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
 *::-webkit-scrollbar {
@@ -140,7 +126,6 @@ body {
     background: transparent;
 }
 
-/* ---- Utility Classes ---- */
 .text-primary { color: var(--color-primary); }
 .text-slate-900 { color: var(--color-slate-900); }
 .text-slate-600 { color: var(--color-slate-600); }
@@ -159,7 +144,6 @@ body {
 .rounded-xl { border-radius: var(--radius-xl); }
 .rounded-full { border-radius: var(--radius-full); }
 
-/* ---- App Shell Layout ---- */
 .app-shell {
     display: flex;
     height: 100vh;
@@ -180,10 +164,6 @@ body {
         margin-left: 0;
     }
 }
-
-/* =========================================
-   Resume Preview Area
-   ========================================= */
 
 .resume-preview-area {
     background: var(--color-white);
@@ -276,10 +256,6 @@ body {
     font-style: italic;
 }
 
-/* =========================================
-   Global Modal Styles (for portals)
-   ========================================= */
-
 .modal-backdrop {
     position: fixed !important;
     top: 0 !important;
@@ -308,18 +284,12 @@ body {
     z-index: 100000 !important;
 }
 
-/* =========================================
-   Pipeline/Progress Track Styles
-   ========================================= */
-
-/* ── Progress Track Base ── */
 .progress-track,
 .pipeline-track {
     display: flex;
     align-items: center;
 }
 
-/* ── Step Base ── */
 .progress-step,
 .pipeline-step {
     display: flex;
@@ -329,7 +299,6 @@ body {
     flex-shrink: 0;
 }
 
-/* ── Step Node/Dot ── */
 .step-node,
 .pipeline-step-dot {
     width: 10px;
@@ -340,7 +309,6 @@ body {
     transition: all var(--transition-base);
 }
 
-/* ── Step Label ── */
 .step-label,
 .pipeline-step-label {
     font-size: var(--text-xs);
@@ -350,11 +318,6 @@ body {
     text-align: center;
 }
 
-/* =========================================
-   STATE RULES
-   ========================================= */
-
-/* Done → Blue (default for all completed steps) */
 .step--done .step-node,
 .pipeline-step.done .pipeline-step-dot {
     background-color: #1D4ED8;
@@ -366,7 +329,6 @@ body {
     color: #1D4ED8;
 }
 
-/* Active → Amber (default for active steps) */
 .step--active .step-node,
 .pipeline-step.active .pipeline-step-dot {
     background-color: #FFFFFF;
@@ -382,7 +344,6 @@ body {
     font-weight: 600;
 }
 
-/* Inactive → Gray */
 .pipeline-step.inactive .pipeline-step-dot {
     background: #F1F5F9;
     border-color: #E2E8F0;
@@ -392,11 +353,6 @@ body {
     color: #94A3B8;
 }
 
-/* =========================================
-   SPECIFIC STEP OVERRIDES
-   ========================================= */
-
-/* Under Review (done) → Filled amber circle */
 .step--review.step--done .step-node {
     background-color: #D97706;
     border-color: #D97706;
@@ -406,7 +362,6 @@ body {
     color: #D97706;
 }
 
-/* Under Review (active) → White center with amber border + glow */
 .step--review.step--active .step-node,
 .pipeline-step.active.pipeline-step--review .pipeline-step-dot {
     background-color: #FFFFFF;
@@ -422,7 +377,6 @@ body {
     font-weight: 600;
 }
 
-/* Shortlisted (done or active) → Blue */
 .step--shortlisted.step--done .step-node,
 .pipeline-step.done.pipeline-step--shortlisted .pipeline-step-dot {
     background-color: #1D4ED8;
@@ -449,7 +403,6 @@ body {
     font-weight: 600;
 }
 
-/* For Interview (done) → Filled green circle */
 .step--interview.step--done .step-node,
 .pipeline-step.done.pipeline-step--interview .pipeline-step-dot {
     background-color: #059669;
@@ -461,7 +414,6 @@ body {
     color: #059669;
 }
 
-/* For Interview (active) → White center with green border + glow */
 .step--interview.step--active .step-node,
 .pipeline-step.active.pipeline-step--interview .pipeline-step-dot {
     background-color: #FFFFFF;
@@ -477,7 +429,6 @@ body {
     font-weight: 600;
 }
 
-/* Declined (done) → Filled red circle */
 .step--declined.step--done .step-node,
 .pipeline-step.done.pipeline-step--declined .pipeline-step-dot {
     background-color: #DC2626;
@@ -489,7 +440,6 @@ body {
     color: #DC2626;
 }
 
-/* Declined (active) → White center with red border + glow */
 .step--declined.step--active .step-node,
 .pipeline-step.active.pipeline-step--declined .pipeline-step-dot {
     background-color: #FFFFFF;
@@ -505,10 +455,6 @@ body {
     font-weight: 600;
 }
 
-/* =========================================
-   CONNECTOR LINES
-   ========================================= */
-
 .step-line,
 .pipeline-connector {
     flex: 1;
@@ -523,12 +469,10 @@ body {
     background-color: #BFDBFE;
 }
 
-/* ── Pipeline-specific spacing ── */
 .pipeline-connector {
     margin-bottom: 28px;
 }
 
-/* ── Pipeline step count ── */
 .pipeline-step-count {
     font-size: 13px;
     font-weight: 700;
@@ -538,10 +482,6 @@ body {
 .pipeline-step.inactive .pipeline-step-count {
     color: #CBD5E1;
 }
-
-/* =========================================
-   Animations
-   ========================================= */
 
 @keyframes spin {
     from {
@@ -556,10 +496,6 @@ body {
     animation: spin 1s linear infinite;
 }
 
-/* ---- Mobile shell guard ----
-   Page styles in this app are global CSS files, and several legacy pages
-   redefine .main-content with the desktop sidebar offset. Keep the mobile
-   shell behavior authoritative here so route-level CSS cannot squeeze pages. */
 @media (max-width: 1024px) {
     .app-shell,
     .rec-shell {

@@ -1,0 +1,82 @@
+using NexApply.Api.Domain.Common;
+
+namespace NexApply.Api.Domain;
+
+public class StudentProfile : Entity
+{
+    public Guid UserId { get; private set; }
+    public string FullName { get; private set; } = string.Empty;
+    public string? Phone { get; private set; }
+    public string? Location { get; private set; }
+    public string? University { get; private set; }
+    public string? Course { get; private set; }
+    public int? GraduationYear { get; private set; }
+    public string? LinkedIn { get; private set; }
+    public string? GitHub { get; private set; }
+    public string? Portfolio { get; private set; }
+    public string? ResumeFilePath { get; private set; }
+    public string? ParsedResumeText { get; private set; }
+    public string? Feedback { get; private set; }
+    public string? ProfilePictureUrl { get; private set; }
+
+    public User User { get; private set; } = null!;
+    public ICollection<Application> Applications { get; private set; } = [];
+    public ICollection<SavedJob> SavedJobs { get; private set; } = [];
+    public Resume? Resume { get; private set; }
+
+    private StudentProfile() { }
+
+    public static StudentProfile Create(Guid userId, string fullName)
+    {
+        return new StudentProfile
+        {
+            UserId = userId,
+            FullName = fullName
+        };
+    }
+
+    public void UpdateProfile(
+        string fullName,
+        string? phone,
+        string? location,
+        string? university,
+        string? course,
+        int? graduationYear,
+        string? linkedIn,
+        string? gitHub,
+        string? portfolio,
+        string? profilePictureUrl)
+    {
+        FullName = fullName;
+        Phone = phone;
+        Location = location;
+        University = university;
+        Course = course;
+        GraduationYear = graduationYear;
+        LinkedIn = linkedIn;
+        GitHub = gitHub;
+        Portfolio = portfolio;
+        ProfilePictureUrl = profilePictureUrl;
+        MarkAsUpdated();
+    }
+
+    public void UpdateResume(string filePath, string parsedText)
+    {
+        ResumeFilePath = filePath;
+        ParsedResumeText = parsedText;
+        MarkAsUpdated();
+    }
+
+    public void ClearUploadedResume()
+    {
+        ResumeFilePath = null;
+        ParsedResumeText = null;
+        MarkAsUpdated();
+    }
+
+    public void UpdateFeedback(string? feedback)
+    {
+        Feedback = feedback;
+        MarkAsUpdated();
+    }
+}

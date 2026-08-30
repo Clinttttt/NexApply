@@ -1,0 +1,132 @@
+
+@media (max-width: 768px) {
+    .page-container,
+    .dashboard-container,
+    .browse-container,
+    .company-dashboard-container {
+        margin-left: 0 !important;
+        padding: 60px 16px 16px !important;
+        width: 100% !important;
+    }
+
+    .page-header,
+    .dashboard-header,
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 12px;
+    }
+
+    .page-header h1,
+    .dashboard-header h1 {
+        font-size: var(--text-4xl) !important;
+    }
+
+    .stats-grid,
+    .cards-grid,
+    .jobs-grid,
+    .applicants-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+        min-width: 600px;
+    }
+
+    .card,
+    .stat-card,
+    .job-card {
+        padding: 16px !important;
+    }
+
+    .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .btn-group button,
+    .btn-group a {
+        width: 100%;
+    }
+
+    .form-row {
+        flex-direction: column !important;
+    }
+
+    .form-group {
+        width: 100% !important;
+    }
+
+    .modal-content {
+        width: 95% !important;
+        max-width: 95% !important;
+        margin: 20px auto !important;
+    }
+
+    .desktop-only {
+        display: none !important;
+    }
+
+    .mobile-only {
+        display: block !important;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .page-container,
+    .dashboard-container {
+        margin-left: 0 !important;
+        padding: 24px !important;
+    }
+
+    .stats-grid,
+    .cards-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+.mobile-only {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .mobile-only {
+        display: block;
+    }
+
+    .desktop-only {
+        display: none;
+    }
+
+    .text-responsive-xl {
+        font-size: var(--text-3xl) !important;
+    }
+
+    .text-responsive-lg {
+        font-size: var(--text-xl) !important;
+    }
+
+    .gap-responsive {
+        gap: 12px !important;
+    }
+
+    .p-responsive {
+        padding: 16px !important;
+    }
+
+    .px-responsive {
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+    }
+
+    .py-responsive {
+        padding-top: 16px !important;
+        padding-bottom: 16px !important;
+    }
+}

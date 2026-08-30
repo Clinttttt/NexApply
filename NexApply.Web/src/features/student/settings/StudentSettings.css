@@ -1,0 +1,92 @@
+.student-settings-grid {
+  grid-template-areas:
+    "profile notifications"
+    "feedback feedback";
+}
+
+.student-settings-grid > .cs-card:nth-child(1) {
+  grid-area: profile;
+}
+
+.student-settings-grid > .cs-card:nth-child(2) {
+  grid-area: notifications;
+}
+
+.student-feedback-card {
+  display: flex;
+  flex-direction: column;
+  grid-area: feedback;
+}
+
+.student-feedback-field {
+  margin-bottom: 12px;
+}
+
+.student-feedback-field textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.student-settings-actions {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.student-feedback-status {
+  margin: 0;
+  min-height: 16px;
+}
+
+@media (min-width: 1280px) {
+  .student-settings-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 0.9fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .student-settings-grid {
+    grid-template-areas:
+      "profile"
+      "notifications"
+      "feedback";
+  }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0;
+    }
+
+    .settings-container {
+        padding: 60px 16px 16px;
+    }
+
+    .settings-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 16px;
+    }
+
+    .settings-header h1 {
+        font-size: var(--text-4xl);
+    }
+
+    .settings-sections {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .settings-card {
+        padding: 16px;
+    }
+
+    .form-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .form-actions button {
+        width: 100%;
+    }
+}

@@ -1,13 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using NexApply.Api.Data;
-using NexApply.Api.Entities.Enums;
-using NexApply.Contracts.Notifications;
+using NexApply.Api.Domain.Enums;
 
 namespace NexApply.Api.Features.Notifications;
 
 internal static class NotificationsBuilder
 {
-    public static async Task<List<NotificationDto>> BuildAsync(AppDbContext context, Guid studentId, CancellationToken ct)
+    public static async Task<List<NotificationResponse>> BuildAsync(
+        AppDbContext context,
+        Guid studentId,
+        CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
         var soonDeadline = now.AddDays(3);
@@ -18,7 +20,7 @@ internal static class NotificationsBuilder
             .Include(a => a.JobListing)
                 .ThenInclude(j => j.Company)
                     .ThenInclude(c => c.CompanyProfile)
-            .ToListAsync(ct);
+            .ToListAsync(cancellationToken);
 
         var interviews = await context.Interviews
             .AsNoTracking()
@@ -27,7 +29,7 @@ internal static class NotificationsBuilder
                     .ThenInclude(j => j.Company)
                         .ThenInclude(c => c.CompanyProfile)
             .Where(i => i.Application.StudentId == studentId)
-            .ToListAsync(ct);
+            .ToListAsync(cancellationToken);
 
         var savedJobsClosingSoon = await context.SavedJobs
             .AsNoTracking()
@@ -41,9 +43,9 @@ internal static class NotificationsBuilder
                 s.JobListing.Deadline != null
                 && s.JobListing.Deadline.Value >= now
                 && s.JobListing.Deadline.Value <= soonDeadline)
-            .ToListAsync(ct);
+            .ToListAsync(cancellationToken);
 
-        var notifications = new List<NotificationDto>();
+        var notifications = new List<NotificationResponse>();
 
         foreach (var app in applications)
         {
@@ -56,7 +58,7 @@ internal static class NotificationsBuilder
             var statusLabel = FormatApplicationStatus(app.Status);
             var createdAt = app.UpdatedAt ?? app.CreatedAt;
 
-            notifications.Add(new NotificationDto
+            notifications.Add(new NotificationResponse
             {
                 Id = $"application:{app.Id}:{app.Status}",
                 Category = "Application",
@@ -89,7 +91,7 @@ internal static class NotificationsBuilder
             var position = app.JobListing.Title;
             var scheduledLocal = interview.ScheduledAt;
 
-            notifications.Add(new NotificationDto
+            notifications.Add(new NotificationResponse
             {
                 Id = $"interview:{interview.Id}",
                 Category = "Application",
@@ -126,10 +128,9 @@ internal static class NotificationsBuilder
             var daysLeft = (int)Math.Ceiling((deadline - now).TotalDays);
             var applied = job.Applications.Any(a => a.StudentId == studentId);
 
-            // If already applied, the "closing soon" alert isn't that helpful.
             if (applied) continue;
 
-            notifications.Add(new NotificationDto
+            notifications.Add(new NotificationResponse
             {
                 Id = $"savedjob:{saved.Id}:closing",
                 Category = "Saved",
@@ -205,4 +206,3 @@ internal static class NotificationsBuilder
         _ => $"{company} updated your application. You can review the latest status in My Applications."
     };
 }
-
